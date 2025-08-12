@@ -926,7 +926,70 @@
         let currentAuthData = null;
         let pendingFormData = null; // 제출 대기 중인 폼 데이터
         
-        // 즉시 전역 함수 선언
+        // 상태 업데이트 및 삭제 함수를 먼저 정의
+        window.updateStatus = async function(id, newStatus, adminName) {
+            console.log('updateStatus called:', id, newStatus, adminName);
+            if (!supabase) {
+                console.error('Supabase not initialized');
+                window.showToast('데이터베이스가 연결되지 않았습니다.', 'error');
+                return;
+            }
+            
+            try {
+                const updateData = {
+                    status: newStatus,
+                    approved_by: adminName,
+                    approved_at: new Date().toISOString()
+                };
+                
+                const { error } = await supabase
+                    .from('cancellations')
+                    .update(updateData)
+                    .eq('id', id);
+                
+                if (error) throw error;
+                
+                const statusText = newStatus === 'approved' ? '승인됨' : 
+                                  newStatus === 'rejected' ? '거절됨' : '대기중';
+                window.showToast(`상태가 ${statusText}으로 변경되었습니다 (처리자: ${adminName})`, 'success');
+                window.loadData();
+                
+            } catch (error) {
+                console.error('Update error:', error);
+                window.showToast('상태 변경 실패: ' + error.message, 'error');
+            }
+        };
+        
+        window.deleteRecord = async function(id, adminName) {
+            console.log('deleteRecord called:', id, adminName);
+            if (!supabase) {
+                console.error('Supabase not initialized');
+                window.showToast('데이터베이스가 연결되지 않았습니다.', 'error');
+                return;
+            }
+            
+            if (!confirm('정말로 이 기록을 삭제하시겠습니까?\n삭제된 데이터는 복구할 수 없습니다.')) {
+                return;
+            }
+            
+            try {
+                const { error } = await supabase
+                    .from('cancellations')
+                    .delete()
+                    .eq('id', id);
+                
+                if (error) throw error;
+                
+                window.showToast(`기록이 삭제되었습니다 (삭제자: ${adminName})`, 'success');
+                window.loadData();
+                
+            } catch (error) {
+                console.error('Delete error:', error);
+                window.showToast('삭제 실패: ' + error.message, 'error');
+            }
+        };
+        
+        // viewDetail 함수
         window.viewDetail = async function(id) {
             console.log('viewDetail called with id:', id);
             if (!supabase) {
@@ -1060,13 +1123,13 @@
             closeAuthModal();
             
             if (currentAuthAction === 'approve') {
-                updateStatus(currentAuthData, 'approved', adminName);
+                window.updateStatus(currentAuthData, 'approved', adminName);
             } else if (currentAuthAction === 'reject') {
-                updateStatus(currentAuthData, 'rejected', adminName);
+                window.updateStatus(currentAuthData, 'rejected', adminName);
             } else if (currentAuthAction === 'pending') {
-                updateStatus(currentAuthData, 'pending', adminName);
+                window.updateStatus(currentAuthData, 'pending', adminName);
             } else if (currentAuthAction === 'delete') {
-                deleteRecord(currentAuthData, adminName);
+                window.deleteRecord(currentAuthData, adminName);
             }
         };
         
@@ -1074,6 +1137,7 @@
             console.log('updateStatus called:', id, newStatus, adminName);
             if (!supabase) {
                 console.error('Supabase not initialized');
+                showToast('데이터베이스가 연결되지 않았습니다.', 'error');
                 return;
             }
             
@@ -1093,12 +1157,12 @@
                 
                 const statusText = newStatus === 'approved' ? '승인됨' : 
                                   newStatus === 'rejected' ? '거절됨' : '대기중';
-                showToast(`상태가 ${statusText}으로 변경되었습니다 (처리자: ${adminName})`, 'success');
-                loadData();
+                window.showToast(`상태가 ${statusText}으로 변경되었습니다 (처리자: ${adminName})`, 'success');
+                window.loadData();
                 
             } catch (error) {
                 console.error('Update error:', error);
-                showToast('상태 변경 실패: ' + error.message, 'error');
+                window.showToast('상태 변경 실패: ' + error.message, 'error');
             }
         };
         
@@ -1106,6 +1170,7 @@
             console.log('deleteRecord called:', id, adminName);
             if (!supabase) {
                 console.error('Supabase not initialized');
+                window.showToast('데이터베이스가 연결되지 않았습니다.', 'error');
                 return;
             }
             
@@ -1121,12 +1186,12 @@
                 
                 if (error) throw error;
                 
-                showToast(`기록이 삭제되었습니다 (삭제자: ${adminName})`, 'success');
-                loadData();
+                window.showToast(`기록이 삭제되었습니다 (삭제자: ${adminName})`, 'success');
+                window.loadData();
                 
             } catch (error) {
                 console.error('Delete error:', error);
-                showToast('삭제 실패: ' + error.message, 'error');
+                window.showToast('삭제 실패: ' + error.message, 'error');
             }
         };
 
@@ -1278,7 +1343,7 @@
                 document.getElementById('submitterName').textContent = savedName;
             } else {
                 setTimeout(() => {
-                    openSubmitterModal();
+                    window.openSubmitterModal();
                 }, 1000);
             }
         }
@@ -1300,16 +1365,16 @@
                 document.getElementById('statusDot').className = 'status-dot connected';
                 document.getElementById('statusText').textContent = '연결됨';
                 
-                showToast('데이터베이스 연결 성공!', 'success');
+                window.showToast('데이터베이스 연결 성공!', 'success');
                 
                 setupRealtimeSubscription();
-                loadData();
+                window.loadData();
                 
             } catch (error) {
                 console.error('Connection error:', error);
                 document.getElementById('statusDot').className = 'status-dot disconnected';
                 document.getElementById('statusText').textContent = '연결 실패';
-                showToast('연결 실패: ' + error.message, 'error');
+                window.showToast('연결 실패: ' + error.message, 'error');
             }
         }
         
@@ -1324,8 +1389,8 @@
                     { event: '*', schema: 'public', table: 'cancellations' },
                     (payload) => {
                         console.log('Change received!', payload);
-                        loadData();
-                        showToast('데이터가 업데이트되었습니다.', 'info');
+                        window.loadData();
+                        window.showToast('데이터가 업데이트되었습니다.', 'info');
                     }
                 )
                 .subscribe();
@@ -1335,7 +1400,7 @@
             const modal = document.getElementById('confirmModal');
             const crmPreview = document.getElementById('confirmCRMPreview');
             
-            const crmText = generateCRMText(pendingFormData);
+            const crmText = window.generateCRMText(pendingFormData);
             crmPreview.innerHTML = `<pre>${crmText}</pre>`;
             
             modal.style.display = 'flex';
@@ -1412,7 +1477,7 @@
             };
             
             if (data.customer_phone || data.customer_name) {
-                updateCRMPreview(data);
+                window.updateCRMPreview(data);
             }
         }
         window.closeModal = function() {
@@ -1536,12 +1601,12 @@
                 if (error) throw error;
                 
                 allData = data || [];
-                updateTable(data);
-                updateStatistics(data);
+                window.updateTable(data);
+                window.updateStatistics(data);
                 
             } catch (error) {
                 console.error('Load error:', error);
-                showToast('데이터 로드 실패: ' + error.message, 'error');
+                window.showToast('데이터 로드 실패: ' + error.message, 'error');
             }
         };
         
