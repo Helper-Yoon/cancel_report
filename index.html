@@ -668,12 +668,12 @@
 
                     <div class="form-row-equal">
                         <div class="form-group">
-                            <label for="defense1">1차 반론 <span style="color: var(--danger);">*</span></label>
-                            <textarea id="defense1" placeholder="1차 반론 내용" required></textarea>
+                            <label for="defense1">1차 반론</label>
+                            <textarea id="defense1" placeholder="1차 반론 내용 (선택사항)"></textarea>
                         </div>
                         <div class="form-group">
-                            <label for="defense1Result">반론 결과 <span style="color: var(--danger);">*</span></label>
-                            <textarea id="defense1Result" placeholder="예: 거절, 수긍, 보류 등" required style="min-height: 100px;"></textarea>
+                            <label for="defense1Result">반론 결과</label>
+                            <textarea id="defense1Result" placeholder="예: 거절, 수긍, 보류 등 (선택사항)" style="min-height: 100px;"></textarea>
                         </div>
                     </div>
 
@@ -1150,23 +1150,37 @@
 
         // 도우미 함수들
         window.generateCRMText = function(data) {
-            return `${data.customer_phone} / ${data.customer_name}
+            let text = `${data.customer_phone} / ${data.customer_name}
 
 ※ 고객취소 양식
 
-ㅇ 사유 : ${data.reason}
-ㅇ 1차반론 / 수긍여부 : ${data.defense1} / ${data.defense1_result}
-ㅇ 2차반론 / 수긍여부 : ${data.defense2 || '없음'} / ${data.defense2_result || '해당없음'}`;
+ㅇ 사유 : ${data.reason}`;
+            
+            if (data.defense1) {
+                text += `
+ㅇ 1차반론 / 수긍여부 : ${data.defense1} / ${data.defense1_result || '없음'}`;
+            }
+            
+            if (data.defense2) {
+                text += `
+ㅇ 2차반론 / 수긍여부 : ${data.defense2} / ${data.defense2_result || '없음'}`;
+            }
+            
+            return text;
         };
         
         window.generateFullText = function(data) {
             let text = `${data.customer_name} ${data.customer_phone}
-ㅁ취소사유: ${data.reason}
-1차반론: ${data.defense1} / 결과: ${data.defense1_result}`;
+ㅁ취소사유: ${data.reason}`;
+            
+            if (data.defense1) {
+                text += `
+1차반론: ${data.defense1} / 결과: ${data.defense1_result || '없음'}`;
+            }
             
             if (data.defense2) {
                 text += `
-2차반론: ${data.defense2} / 결과: ${data.defense2_result || '해당없음'}`;
+2차반론: ${data.defense2} / 결과: ${data.defense2_result || '없음'}`;
             }
             
             return text;
@@ -1428,10 +1442,10 @@
                 customer_phone: document.getElementById('customerPhone').value,
                 customer_name: document.getElementById('customerName').value,
                 reason: document.getElementById('reason').value,
-                defense1: document.getElementById('defense1').value,
-                defense1_result: document.getElementById('defense1Result').value,
-                defense2: document.getElementById('defense2').value,
-                defense2_result: document.getElementById('defense2Result').value
+                defense1: document.getElementById('defense1').value || null,
+                defense1_result: document.getElementById('defense1Result').value || null,
+                defense2: document.getElementById('defense2').value || null,
+                defense2_result: document.getElementById('defense2Result').value || null
             };
             
             if (data.customer_phone || data.customer_name) {
@@ -1752,8 +1766,8 @@
                     customer_name: document.getElementById('customerName').value,
                     customer_phone: phoneNumber,
                     reason: document.getElementById('reason').value,
-                    defense1: document.getElementById('defense1').value,
-                    defense1_result: document.getElementById('defense1Result').value,
+                    defense1: document.getElementById('defense1').value || null,
+                    defense1_result: document.getElementById('defense1Result').value || null,
                     defense2: document.getElementById('defense2').value || null,
                     defense2_result: document.getElementById('defense2Result').value || null,
                     status: 'pending'
@@ -2464,8 +2478,10 @@
                         <div style="background: var(--bg-hover); padding: 15px; border-radius: 8px;">
                             <p><strong>취소사유:</strong></p>
                             <p style="margin-left: 20px;">${data.reason}</p>
-                            <p><strong>1차 반론:</strong> ${data.defense1}</p>
-                            <p><strong>1차 결과:</strong> ${data.defense1_result}</p>
+                            ${data.defense1 ? `
+                                <p><strong>1차 반론:</strong> ${data.defense1}</p>
+                                <p><strong>1차 결과:</strong> ${data.defense1_result || '없음'}</p>
+                            ` : ''}
                             ${data.defense2 ? `
                                 <p><strong>2차 반론:</strong> ${data.defense2}</p>
                                 <p><strong>2차 결과:</strong> ${data.defense2_result || '없음'}</p>
