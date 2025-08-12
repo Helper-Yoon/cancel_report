@@ -925,19 +925,869 @@
         let currentAuthAction = null;
         let currentAuthData = null;
         let pendingFormData = null; // 제출 대기 중인 폼 데이터
+        
+        // 즉시 전역 함수 선언
+        window.viewDetail = async function(id) {
+            console.log('viewDetail called with id:', id);
+            if (!supabase) {
+                console.error('Supabase not initialized');
+                showToast('데이터베이스가 연결되지 않았습니다.', 'error');
+                return;
+            }
+            
+            try {
+                const { data, error } = await supabase
+                    .from('cancellations')
+                    .select('*')
+                    .eq('id', id)
+                    .single();
+                
+                if (error) throw error;
+                
+                const modal = document.getElementById('detailModal');
+                const modalBody = document.getElementById('modalBody');
+                
+                const crmText = generateCRMText(data);
+                const fullText = generateFullText(data);
+                
+                modalBody.innerHTML = `
+                    <div class="info-box">
+                        <p><strong>ID:</strong> ${data.id}</p>
+                        <p><strong>제출 시간:</strong> ${new Date(data.created_at).toLocaleString()}</p>
+                        <p><strong>상태:</strong> ${data.status === 'pending' ? '대기중' : 
+                                                     data.status === 'approved' ? '승인됨' : '거절됨'}</p>
+                        ${data.approved_by ? `<p><strong>처리자:</strong> ${data.approved_by}</p>` : ''}
+                        ${data.approved_at ? `<p><strong>처리 시간:</strong> ${new Date(data.approved_at).toLocaleString()}</p>` : ''}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label style="color: var(--primary-blue);">기본 정보</label>
+                        <div style="background: var(--bg-hover); padding: 15px; border-radius: 8px;">
+                            <p><strong>날짜:</strong> ${formatDate(data.date)}</p>
+                            <p><strong>팀:</strong> ${data.submitter_team || '-'}</p>
+                            <p><strong>제출자:</strong> ${data.submitter_name || '-'}</p>
+                            <p><strong>분류:</strong> ${data.category || '-'}</p>
+                            <p><strong>유치자:</strong> ${data.recruiter}</p>
+                            <p><strong>취소자:</strong> ${data.canceller}</p>
+                            <p><strong>고객명:</strong> ${data.customer_name}</p>
+                            <p><strong>고객번호:</strong> ${data.customer_phone}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label style="color: var(--primary-blue);">취소 상세 정보</label>
+                        <div style="background: var(--bg-hover); padding: 15px; border-radius: 8px;">
+                            <p><strong>취소사유:</strong></p>
+                            <p style="margin-left: 20px;">${data.reason}</p>
+                            <p><strong>1차 반론:</strong> ${data.defense1}</p>
+                            <p><strong>1차 결과:</strong> ${data.defense1_result}</p>
+                            ${data.defense2 ? `
+                                <p><strong>2차 반론:</strong> ${data.defense2}</p>
+                                <p><strong>2차 결과:</strong> ${data.defense2_result || '없음'}</p>
+                            ` : ''}
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label style="color: var(--primary-blue);">CRM 입력 양식</label>
+                        <div class="crm-output">
+                            <pre>${crmText}</pre>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label style="color: var(--primary-blue);">엑셀 출력 양식</label>
+                        <div class="crm-output">
+                            <pre>${fullText}</pre>
+                        </div>
+                    </div>
+                    
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="copyToClipboard(\`${crmText.replace(/`/g, '\\`')}\`)">
+                            CRM 양식 복사
+                        </button>
+                        <button class="btn btn-secondary" onclick="copyToClipboard(\`${fullText.replace(/`/g, '\\`')}\`)">
+                            전체 내용 복사
+                        </button>
+                        ${data.status === 'pending' ? `
+                            <button class="btn btn-secondary" onclick="closeModal(); openAuthModal('approve', ${data.id})">
+                                승인하기
+                            </button>
+                            <button class="btn btn-danger" onclick="closeModal(); openAuthModal('reject', ${data.id})">
+                                거절하기
+                            </button>
+                        ` : `
+                            <button class="btn btn-warning" onclick="closeModal(); openAuthModal('pending', ${data.id})">
+                                재검토하기
+                            </button>
+                        `}
+                        <button class="btn btn-delete" onclick="closeModal(); openAuthModal('delete', ${data.id})">
+                            삭제하기
+                        </button>
+                    </div>
+                `;
+                
+                modal.style.display = 'flex';
+                
+            } catch (error) {
+                console.error('Detail error:', error);
+                showToast('상세 정보 로드 실패: ' + error.message, 'error');
+            }
+        };
+        
+        window.openAuthModal = function(action, data) {
+            console.log('openAuthModal called:', action, data);
+            currentAuthAction = action;
+            currentAuthData = data;
+            
+            const savedAdmin = localStorage.getItem('adminName');
+            const savedPassword = localStorage.getItem('adminPassword');
+            
+            if (savedAdmin && savedPassword === ADMIN_PASSWORD) {
+                console.log('Auto auth with saved credentials');
+                setTimeout(() => {
+                    handleAuthSuccess(savedAdmin);
+                }, 100);
+            } else {
+                console.log('Showing auth modal');
+                document.getElementById('authModal').style.display = 'flex';
+                document.getElementById('authName').focus();
+            }
+        };
+        
+        window.handleAuthSuccess = function(adminName) {
+            console.log('handleAuthSuccess called:', adminName, currentAuthAction, currentAuthData);
+            closeAuthModal();
+            
+            if (currentAuthAction === 'approve') {
+                updateStatus(currentAuthData, 'approved', adminName);
+            } else if (currentAuthAction === 'reject') {
+                updateStatus(currentAuthData, 'rejected', adminName);
+            } else if (currentAuthAction === 'pending') {
+                updateStatus(currentAuthData, 'pending', adminName);
+            } else if (currentAuthAction === 'delete') {
+                deleteRecord(currentAuthData, adminName);
+            }
+        };
+        
+        window.updateStatus = async function(id, newStatus, adminName) {
+            console.log('updateStatus called:', id, newStatus, adminName);
+            if (!supabase) {
+                console.error('Supabase not initialized');
+                return;
+            }
+            
+            try {
+                const updateData = {
+                    status: newStatus,
+                    approved_by: adminName,
+                    approved_at: new Date().toISOString()
+                };
+                
+                const { error } = await supabase
+                    .from('cancellations')
+                    .update(updateData)
+                    .eq('id', id);
+                
+                if (error) throw error;
+                
+                const statusText = newStatus === 'approved' ? '승인됨' : 
+                                  newStatus === 'rejected' ? '거절됨' : '대기중';
+                showToast(`상태가 ${statusText}으로 변경되었습니다 (처리자: ${adminName})`, 'success');
+                loadData();
+                
+            } catch (error) {
+                console.error('Update error:', error);
+                showToast('상태 변경 실패: ' + error.message, 'error');
+            }
+        };
+        
+        window.deleteRecord = async function(id, adminName) {
+            console.log('deleteRecord called:', id, adminName);
+            if (!supabase) {
+                console.error('Supabase not initialized');
+                return;
+            }
+            
+            if (!confirm('정말로 이 기록을 삭제하시겠습니까?\n삭제된 데이터는 복구할 수 없습니다.')) {
+                return;
+            }
+            
+            try {
+                const { error } = await supabase
+                    .from('cancellations')
+                    .delete()
+                    .eq('id', id);
+                
+                if (error) throw error;
+                
+                showToast(`기록이 삭제되었습니다 (삭제자: ${adminName})`, 'success');
+                loadData();
+                
+            } catch (error) {
+                console.error('Delete error:', error);
+                showToast('삭제 실패: ' + error.message, 'error');
+            }
+        };
 
+        // 도우미 함수들
+        window.generateCRMText = function(data) {
+            return `${data.customer_phone} / ${data.customer_name}
+
+※ 고객취소 양식
+
+ㅇ 사유 : ${data.reason}
+ㅇ 1차반론 / 수긍여부 : ${data.defense1} / ${data.defense1_result}
+ㅇ 2차반론 / 수긍여부 : ${data.defense2 || '없음'} / ${data.defense2_result || '해당없음'}`;
+        };
+        
+        window.generateFullText = function(data) {
+            let text = `${data.customer_name} ${data.customer_phone}
+ㅁ취소사유: ${data.reason}
+1차반론: ${data.defense1} / 결과: ${data.defense1_result}`;
+            
+            if (data.defense2) {
+                text += `
+2차반론: ${data.defense2} / 결과: ${data.defense2_result || '해당없음'}`;
+            }
+            
+            return text;
+        };
+        
+        window.formatDate = function(dateStr) {
+            const date = new Date(dateStr);
+            const year = date.getFullYear().toString().slice(-2);
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const day = date.getDate().toString().padStart(2, '0');
+            return `${year}.${month}.${day}.`;
+        };
+        
+        window.updateCRMPreview = function(data) {
+            const preview = document.getElementById('crmPreview');
+            
+            if (!data) {
+                preview.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <p>양식을 입력하면 CRM 형식이 여기에 표시됩니다</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const crmText = generateCRMText(data);
+            preview.innerHTML = `<pre>${crmText}</pre>`;
+        };
+        
+        window.updateTable = function(data) {
+            const tbody = document.getElementById('tableBody');
+            
+            if (!data || data.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="12" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                            등록된 취소 양식이 없습니다
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = data.map((item, index) => {
+                const crmText = generateCRMText(item);
+                return `
+                    <tr data-id="${item.id}">
+                        <td>${item.submitter_team || '-'}</td>
+                        <td>${index + 1}</td>
+                        <td>${formatDate(item.date)}</td>
+                        <td>${item.recruiter}</td>
+                        <td>${item.canceller}</td>
+                        <td>${item.customer_name}</td>
+                        <td>${item.customer_phone}</td>
+                        <td>${item.category || '-'}</td>
+                        <td class="truncate" title="${crmText.replace(/"/g, '&quot;')}">${crmText.replace(/\n/g, ' ')}</td>
+                        <td>
+                            <span class="status-badge status-${item.status}">
+                                ${item.status === 'pending' ? '대기중' : 
+                                  item.status === 'approved' ? '승인됨' : '거절됨'}
+                            </span>
+                        </td>
+                        <td>${item.approved_by || '-'}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn btn-primary" onclick="viewDetail(${item.id})">
+                                    상세
+                                </button>
+                                ${item.status === 'pending' ? `
+                                    <button class="btn btn-secondary" onclick="openAuthModal('approve', ${item.id})">
+                                        승인
+                                    </button>
+                                    <button class="btn btn-danger" onclick="openAuthModal('reject', ${item.id})">
+                                        거절
+                                    </button>
+                                ` : `
+                                    <button class="btn btn-warning" onclick="openAuthModal('pending', ${item.id})">
+                                        재검토
+                                    </button>
+                                `}
+                                <button class="btn btn-delete" onclick="openAuthModal('delete', ${item.id})" title="삭제">
+                                    🗑️
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        };
+        
+        window.updateStatistics = function(data) {
+            const today = new Date().toDateString();
+            
+            const stats = {
+                total: data.length,
+                pending: data.filter(item => item.status === 'pending').length,
+                approved: data.filter(item => item.status === 'approved').length,
+                rejected: data.filter(item => item.status === 'rejected').length,
+                today: data.filter(item => new Date(item.created_at).toDateString() === today).length
+            };
+            
+            document.getElementById('statTotal').textContent = stats.total;
+            document.getElementById('statPending').textContent = stats.pending;
+            document.getElementById('statApproved').textContent = stats.approved;
+            document.getElementById('statRejected').textContent = stats.rejected;
+            document.getElementById('statToday').textContent = stats.today;
+        };
+        
+        // 초기화 함수들
+        function loadAdminInfo() {
+            const savedAdmin = localStorage.getItem('adminName');
+            const savedPassword = localStorage.getItem('adminPassword');
+            
+            if (savedAdmin && savedPassword === ADMIN_PASSWORD) {
+                document.getElementById('adminInfo').style.display = 'flex';
+                document.getElementById('adminName').textContent = savedAdmin;
+            }
+        }
+        
+        function loadSubmitterInfo() {
+            const savedTeam = localStorage.getItem('submitterTeam');
+            const savedName = localStorage.getItem('submitterName');
+            
+            if (savedTeam && savedName) {
+                document.getElementById('submitterTeam').textContent = savedTeam;
+                document.getElementById('submitterName').textContent = savedName;
+            } else {
+                setTimeout(() => {
+                    openSubmitterModal();
+                }, 1000);
+            }
+        }
+        
+        async function initializeSupabase() {
+            try {
+                document.getElementById('statusDot').className = 'status-dot connecting';
+                document.getElementById('statusText').textContent = '연결 중...';
+                
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                
+                const { data, error } = await supabase
+                    .from('cancellations')
+                    .select('count')
+                    .limit(1);
+                
+                if (error) throw error;
+                
+                document.getElementById('statusDot').className = 'status-dot connected';
+                document.getElementById('statusText').textContent = '연결됨';
+                
+                showToast('데이터베이스 연결 성공!', 'success');
+                
+                setupRealtimeSubscription();
+                loadData();
+                
+            } catch (error) {
+                console.error('Connection error:', error);
+                document.getElementById('statusDot').className = 'status-dot disconnected';
+                document.getElementById('statusText').textContent = '연결 실패';
+                showToast('연결 실패: ' + error.message, 'error');
+            }
+        }
+        
+        function setupRealtimeSubscription() {
+            if (realtimeChannel) {
+                supabase.removeChannel(realtimeChannel);
+            }
+            
+            realtimeChannel = supabase
+                .channel('cancellations-changes')
+                .on('postgres_changes', 
+                    { event: '*', schema: 'public', table: 'cancellations' },
+                    (payload) => {
+                        console.log('Change received!', payload);
+                        loadData();
+                        showToast('데이터가 업데이트되었습니다.', 'info');
+                    }
+                )
+                .subscribe();
+        }
+        
+        function showConfirmModal() {
+            const modal = document.getElementById('confirmModal');
+            const crmPreview = document.getElementById('confirmCRMPreview');
+            
+            const crmText = generateCRMText(pendingFormData);
+            crmPreview.innerHTML = `<pre>${crmText}</pre>`;
+            
+            modal.style.display = 'flex';
+            
+            setTimeout(() => {
+                const preElement = crmPreview.querySelector('pre');
+                if (preElement && window.getSelection) {
+                    const selection = window.getSelection();
+                    const range = document.createRange();
+                    range.selectNodeContents(preElement);
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+                }
+            }, 100);
+        }
+        
+        function formatPhoneNumber(value) {
+            value = value.replace(/[^0-9]/g, '');
+            let formattedValue = '';
+            
+            if (value.startsWith('02')) {
+                if (value.length <= 2) {
+                    formattedValue = value;
+                } else if (value.length <= 5) {
+                    formattedValue = value.slice(0, 2) + '-' + value.slice(2);
+                } else if (value.length <= 9) {
+                    formattedValue = value.slice(0, 2) + '-' + value.slice(2, 5) + '-' + value.slice(5);
+                } else if (value.length <= 10) {
+                    formattedValue = value.slice(0, 2) + '-' + value.slice(2, 6) + '-' + value.slice(6);
+                } else {
+                    value = value.slice(0, 10);
+                    formattedValue = value.slice(0, 2) + '-' + value.slice(2, 6) + '-' + value.slice(6);
+                }
+            }
+            else if (value.startsWith('0') && !value.startsWith('01')) {
+                if (value.length <= 3) {
+                    formattedValue = value;
+                } else if (value.length <= 6) {
+                    formattedValue = value.slice(0, 3) + '-' + value.slice(3);
+                } else if (value.length <= 10) {
+                    formattedValue = value.slice(0, 3) + '-' + value.slice(3, 6) + '-' + value.slice(6);
+                } else if (value.length <= 11) {
+                    formattedValue = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7);
+                } else {
+                    value = value.slice(0, 11);
+                    formattedValue = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7);
+                }
+            }
+            else {
+                if (value.length <= 3) {
+                    formattedValue = value;
+                } else if (value.length <= 7) {
+                    formattedValue = value.slice(0, 3) + '-' + value.slice(3);
+                } else if (value.length <= 11) {
+                    formattedValue = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7);
+                } else {
+                    value = value.slice(0, 11);
+                    formattedValue = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7);
+                }
+            }
+            
+            return formattedValue;
+        }
+        
+        function updatePreviewFromForm() {
+            const data = {
+                customer_phone: document.getElementById('customerPhone').value,
+                customer_name: document.getElementById('customerName').value,
+                reason: document.getElementById('reason').value,
+                defense1: document.getElementById('defense1').value,
+                defense1_result: document.getElementById('defense1Result').value,
+                defense2: document.getElementById('defense2').value,
+                defense2_result: document.getElementById('defense2Result').value
+            };
+            
+            if (data.customer_phone || data.customer_name) {
+                updateCRMPreview(data);
+            }
+        }
+        window.closeModal = function() {
+            document.getElementById('detailModal').style.display = 'none';
+        };
+        
+        window.closeAuthModal = function() {
+            document.getElementById('authModal').style.display = 'none';
+            document.getElementById('authForm').reset();
+            currentAuthAction = null;
+            currentAuthData = null;
+        };
+        
+        window.closeSubmitterModal = function() {
+            document.getElementById('submitterModal').style.display = 'none';
+        };
+        
+        window.closeConfirmModal = function() {
+            document.getElementById('confirmModal').style.display = 'none';
+            pendingFormData = null;
+        };
+        
+        window.openSubmitterModal = function() {
+            const modal = document.getElementById('submitterModal');
+            const savedTeam = localStorage.getItem('submitterTeam');
+            const savedName = localStorage.getItem('submitterName');
+            
+            if (savedTeam) {
+                document.getElementById('submitterTeamSelect').value = savedTeam;
+            }
+            if (savedName) {
+                document.getElementById('submitterNameInput').value = savedName;
+            }
+            
+            modal.style.display = 'flex';
+        };
+        
+        window.resetForm = function() {
+            document.getElementById('cancellationForm').reset();
+            document.getElementById('date').valueAsDate = new Date();
+            
+            const savedName = localStorage.getItem('submitterName');
+            if (savedName) {
+                document.getElementById('canceller').value = savedName;
+            }
+            
+            updateCRMPreview(null);
+        };
+        
+        window.copyCRMPreview = function() {
+            const preview = document.getElementById('crmPreview');
+            const text = preview.innerText;
+            
+            if (text.includes('양식을 입력하면')) {
+                showToast('복사할 내용이 없습니다.', 'error');
+                return;
+            }
+            
+            copyToClipboard(text);
+        };
+        
+        window.copyCRMFromModal = function() {
+            const crmPreview = document.getElementById('confirmCRMPreview');
+            const text = crmPreview.innerText;
+            copyToClipboard(text);
+            
+            const copyBtn = event.target.closest('.btn');
+            const originalHTML = copyBtn.innerHTML;
+            copyBtn.innerHTML = '<span>✅</span><span>복사 완료!</span>';
+            copyBtn.disabled = true;
+            
+            setTimeout(() => {
+                copyBtn.innerHTML = originalHTML;
+                copyBtn.disabled = false;
+            }, 2000);
+        };
+        
+        window.confirmSubmit = async function() {
+            if (!pendingFormData) return;
+            
+            try {
+                const { data, error } = await supabase
+                    .from('cancellations')
+                    .insert([pendingFormData])
+                    .select();
+                
+                if (error) throw error;
+                
+                closeConfirmModal();
+                showToast('취소 양식이 제출되었습니다!', 'success');
+                resetForm();
+                updateCRMPreview(null);
+                
+            } catch (error) {
+                console.error('Submit error:', error);
+                showToast('제출 실패: ' + error.message, 'error');
+            }
+        };
+        
+        window.loadData = async function() {
+            if (!supabase) return;
+            
+            try {
+                let query = supabase
+                    .from('cancellations')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+                
+                const teamFilter = document.getElementById('filterTeam').value;
+                if (teamFilter !== 'all') {
+                    query = query.eq('submitter_team', teamFilter);
+                }
+                
+                const dateFilter = document.getElementById('filterDate').value;
+                if (dateFilter) {
+                    query = query.eq('date', dateFilter);
+                }
+                
+                const { data, error } = await query;
+                
+                if (error) throw error;
+                
+                allData = data || [];
+                updateTable(data);
+                updateStatistics(data);
+                
+            } catch (error) {
+                console.error('Load error:', error);
+                showToast('데이터 로드 실패: ' + error.message, 'error');
+            }
+        };
+        
+        window.exportToExcel = async function() {
+            if (!supabase) {
+                showToast('데이터베이스가 연결되지 않았습니다.', 'error');
+                return;
+            }
+            
+            try {
+                let query = supabase
+                    .from('cancellations')
+                    .select('*')
+                    .order('date', { ascending: false });
+                
+                const teamFilter = document.getElementById('filterTeam').value;
+                if (teamFilter !== 'all') {
+                    query = query.eq('submitter_team', teamFilter);
+                }
+                
+                const dateFilter = document.getElementById('filterDate').value;
+                if (dateFilter) {
+                    query = query.eq('date', dateFilter);
+                }
+                
+                const { data, error } = await query;
+                
+                if (error) throw error;
+                
+                if (!data || data.length === 0) {
+                    showToast('다운로드할 데이터가 없습니다.', 'error');
+                    return;
+                }
+
+                const wb = XLSX.utils.book_new();
+                
+                const wsData = [
+                    ['', '날짜', '유치자', '취소자', '고객명', '고객번호', '분류', '취소사유']
+                ];
+                
+                data.forEach((item, index) => {
+                    wsData.push([
+                        index + 1,
+                        formatDate(item.date),
+                        item.recruiter,
+                        item.canceller,
+                        item.customer_name,
+                        item.customer_phone,
+                        item.category || '',
+                        generateFullText(item)
+                    ]);
+                });
+                
+                const ws = XLSX.utils.aoa_to_sheet(wsData);
+                
+                ws['!cols'] = [
+                    { wch: 5 },
+                    { wch: 12 },
+                    { wch: 10 },
+                    { wch: 10 },
+                    { wch: 10 },
+                    { wch: 15 },
+                    { wch: 8 },
+                    { wch: 50 }
+                ];
+                
+                XLSX.utils.book_append_sheet(wb, ws, 'SNS팀 (날짜)');
+                
+                const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+                const teamName = teamFilter !== 'all' ? `_${teamFilter.replace(/\s/g, '')}` : '';
+                XLSX.writeFile(wb, `취소양식_SNS팀${teamName}_${today}.xlsx`);
+                
+                showToast('엑셀 파일이 다운로드되었습니다!', 'success');
+                
+            } catch (error) {
+                console.error('Export error:', error);
+                showToast('엑셀 다운로드 실패: ' + error.message, 'error');
+            }
+        };
+        
+        window.copyToClipboard = function(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            showToast('클립보드에 복사되었습니다!', 'success');
+        };
+        
+        window.showToast = function(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type}`;
+            toast.style.display = 'block';
+            
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3000);
+        };
+        
         // 초기화
         window.onload = function() {
+            console.log('Window loaded, initializing...');
             initializeSupabase();
             document.getElementById('date').valueAsDate = new Date();
             loadAdminInfo();
             loadSubmitterInfo();
             
-            // 취소자 필드에 제출자 이름 자동 설정
             const savedName = localStorage.getItem('submitterName');
             if (savedName) {
                 document.getElementById('canceller').value = savedName;
             }
+            
+            // 전화번호 입력 이벤트
+            document.getElementById('customerPhone').addEventListener('input', function(e) {
+                e.target.value = formatPhoneNumber(e.target.value);
+                updatePreviewFromForm();
+            });
+            
+            // 전화번호 붙여넣기 이벤트
+            document.getElementById('customerPhone').addEventListener('paste', function(e) {
+                e.preventDefault();
+                const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+                e.target.value = formatPhoneNumber(pastedText);
+                updatePreviewFromForm();
+            });
+            
+            // 입력 시 실시간 미리보기
+            ['customerName', 'reason', 'defense1', 'defense1Result', 'defense2', 'defense2Result'].forEach(id => {
+                document.getElementById(id).addEventListener('input', updatePreviewFromForm);
+            });
+            
+            // 폼 제출 처리
+            document.getElementById('cancellationForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                if (!supabase) {
+                    showToast('데이터베이스가 연결되지 않았습니다.', 'error');
+                    return;
+                }
+                
+                const submitterTeam = localStorage.getItem('submitterTeam');
+                const submitterName = localStorage.getItem('submitterName');
+                
+                if (!submitterTeam || !submitterName) {
+                    showToast('제출자 정보를 먼저 설정해주세요.', 'error');
+                    openSubmitterModal();
+                    return;
+                }
+                
+                const phoneNumber = document.getElementById('customerPhone').value;
+                const mobileRegex = /^01[0-9]-\d{4}-\d{4}$/;
+                const seoulRegex = /^02-\d{3,4}-\d{4}$/;
+                const localRegex = /^0[3-6][0-9]-\d{3,4}-\d{4}$/;
+                
+                if (!mobileRegex.test(phoneNumber) && !seoulRegex.test(phoneNumber) && !localRegex.test(phoneNumber)) {
+                    showToast('올바른 전화번호 형식이 아닙니다.', 'error');
+                    document.getElementById('customerPhone').focus();
+                    return;
+                }
+                
+                pendingFormData = {
+                    date: document.getElementById('date').value,
+                    category: document.getElementById('category').value,
+                    submitter_team: submitterTeam,
+                    submitter_name: submitterName,
+                    recruiter: document.getElementById('recruiter').value,
+                    canceller: document.getElementById('canceller').value,
+                    customer_name: document.getElementById('customerName').value,
+                    customer_phone: phoneNumber,
+                    reason: document.getElementById('reason').value,
+                    defense1: document.getElementById('defense1').value,
+                    defense1_result: document.getElementById('defense1Result').value,
+                    defense2: document.getElementById('defense2').value || null,
+                    defense2_result: document.getElementById('defense2Result').value || null,
+                    status: 'pending'
+                };
+                
+                showConfirmModal();
+            });
+            
+            // 제출자 폼 처리
+            document.getElementById('submitterForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const team = document.getElementById('submitterTeamSelect').value;
+                const name = document.getElementById('submitterNameInput').value;
+                
+                if (team && name) {
+                    localStorage.setItem('submitterTeam', team);
+                    localStorage.setItem('submitterName', name);
+                    
+                    document.getElementById('submitterTeam').textContent = team;
+                    document.getElementById('submitterName').textContent = name;
+                    document.getElementById('canceller').value = name;
+                    
+                    closeSubmitterModal();
+                    showToast('제출자 정보가 설정되었습니다.', 'success');
+                }
+            });
+            
+            // 인증 폼 처리
+            document.getElementById('authForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const name = document.getElementById('authName').value;
+                const password = document.getElementById('authPassword').value;
+                const saveAuth = document.getElementById('saveAuth').checked;
+                
+                if (password !== ADMIN_PASSWORD) {
+                    showToast('비밀번호가 올바르지 않습니다.', 'error');
+                    document.getElementById('authPassword').focus();
+                    return;
+                }
+                
+                if (saveAuth) {
+                    localStorage.setItem('adminName', name);
+                    localStorage.setItem('adminPassword', password);
+                    document.getElementById('adminInfo').style.display = 'flex';
+                    document.getElementById('adminName').textContent = name;
+                }
+                
+                handleAuthSuccess(name);
+            });
+            
+            // 모달 외부 클릭시 닫기
+            window.onclick = function(event) {
+                const detailModal = document.getElementById('detailModal');
+                const authModal = document.getElementById('authModal');
+                const confirmModal = document.getElementById('confirmModal');
+                const submitterModal = document.getElementById('submitterModal');
+                
+                if (event.target === detailModal) {
+                    detailModal.style.display = 'none';
+                }
+                if (event.target === authModal) {
+                    closeAuthModal();
+                }
+                if (event.target === confirmModal) {
+                    closeConfirmModal();
+                }
+                if (event.target === submitterModal) {
+                    closeSubmitterModal();
+                }
+            };
         };
 
         // 제출자 정보 로드
