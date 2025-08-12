@@ -938,65 +938,7 @@
             if (savedName) {
                 document.getElementById('canceller').value = savedName;
             }
-            
-            // 전역 이벤트 리스너 등록 (한 번만)
-            setupGlobalEventListeners();
         };
-        
-        // 전역 이벤트 리스너 설정
-        function setupGlobalEventListeners() {
-            // 테이블 이벤트 위임
-            const tableBody = document.getElementById('tableBody');
-            tableBody.addEventListener('click', handleTableClick);
-            
-            // 모달 이벤트 위임
-            const modalBody = document.getElementById('modalBody');
-            modalBody.addEventListener('click', handleModalClick);
-        }
-        
-        // 테이블 클릭 처리
-        function handleTableClick(e) {
-            const button = e.target.closest('button[data-action]');
-            if (!button) return;
-            
-            const action = button.getAttribute('data-action');
-            const id = parseInt(button.getAttribute('data-id'));
-            
-            if (action === 'view') {
-                viewDetail(id);
-            } else if (action === 'approve' || action === 'reject' || action === 'pending' || action === 'delete') {
-                openAuthModal(action, id);
-            }
-        }
-        
-        // 모달 클릭 처리
-        function handleModalClick(e) {
-            const button = e.target.closest('button[data-action]');
-            if (!button) return;
-            
-            const action = button.getAttribute('data-action');
-            
-            if (action === 'copy-crm' || action === 'copy-full') {
-                const text = button.getAttribute('data-text');
-                copyToClipboard(text);
-            } else if (action === 'modal-approve') {
-                const id = parseInt(button.getAttribute('data-id'));
-                closeModal();
-                openAuthModal('approve', id);
-            } else if (action === 'modal-reject') {
-                const id = parseInt(button.getAttribute('data-id'));
-                closeModal();
-                openAuthModal('reject', id);
-            } else if (action === 'modal-pending') {
-                const id = parseInt(button.getAttribute('data-id'));
-                closeModal();
-                openAuthModal('pending', id);
-            } else if (action === 'modal-delete') {
-                const id = parseInt(button.getAttribute('data-id'));
-                closeModal();
-                openAuthModal('delete', id);
-            }
-        }
 
         // 제출자 정보 로드
         function loadSubmitterInfo() {
@@ -1123,6 +1065,7 @@
 
         // 관리자 인증 모달 열기
         function openAuthModal(action, data) {
+            console.log('openAuthModal called:', action, data);
             currentAuthAction = action;
             currentAuthData = data;
             
@@ -1131,10 +1074,12 @@
             
             if (savedAdmin && savedPassword === ADMIN_PASSWORD) {
                 // 저장된 정보가 있으면 자동 인증
+                console.log('Auto auth with saved credentials');
                 setTimeout(() => {
                     handleAuthSuccess(savedAdmin);
                 }, 100);
             } else {
+                console.log('Showing auth modal');
                 document.getElementById('authModal').style.display = 'flex';
                 document.getElementById('authName').focus();
             }
@@ -1174,6 +1119,7 @@
 
         // 인증 성공 처리
         function handleAuthSuccess(adminName) {
+            console.log('handleAuthSuccess called:', adminName, currentAuthAction, currentAuthData);
             closeAuthModal();
             
             if (currentAuthAction === 'approve') {
@@ -1518,7 +1464,11 @@
 
         // 상태 업데이트
         async function updateStatus(id, newStatus, adminName) {
-            if (!supabase) return;
+            console.log('updateStatus called:', id, newStatus, adminName);
+            if (!supabase) {
+                console.error('Supabase not initialized');
+                return;
+            }
             
             try {
                 const updateData = {
@@ -1547,7 +1497,11 @@
 
         // 레코드 삭제
         async function deleteRecord(id, adminName) {
-            if (!supabase) return;
+            console.log('deleteRecord called:', id, adminName);
+            if (!supabase) {
+                console.error('Supabase not initialized');
+                return;
+            }
             
             if (!confirm('정말로 이 기록을 삭제하시겠습니까?\n삭제된 데이터는 복구할 수 없습니다.')) {
                 return;
@@ -1572,7 +1526,11 @@
 
         // 상세 보기
         async function viewDetail(id) {
-            if (!supabase) return;
+            console.log('viewDetail called with id:', id);
+            if (!supabase) {
+                console.error('Supabase not initialized');
+                return;
+            }
             
             try {
                 const { data, error } = await supabase
@@ -1642,25 +1600,25 @@
                     </div>
                     
                     <div class="btn-group">
-                        <button class="btn btn-primary" data-action="copy-crm" data-text="${crmText.replace(/"/g, '&quot;')}">
+                        <button class="btn btn-primary" onclick="copyToClipboard(\`${crmText.replace(/`/g, '\\`')}\`)">
                             CRM 양식 복사
                         </button>
-                        <button class="btn btn-secondary" data-action="copy-full" data-text="${fullText.replace(/"/g, '&quot;')}">
+                        <button class="btn btn-secondary" onclick="copyToClipboard(\`${fullText.replace(/`/g, '\\`')}\`)">
                             전체 내용 복사
                         </button>
                         ${data.status === 'pending' ? `
-                            <button class="btn btn-secondary" data-action="modal-approve" data-id="${data.id}">
+                            <button class="btn btn-secondary" onclick="closeModal(); openAuthModal('approve', ${data.id})">
                                 승인하기
                             </button>
-                            <button class="btn btn-danger" data-action="modal-reject" data-id="${data.id}">
+                            <button class="btn btn-danger" onclick="closeModal(); openAuthModal('reject', ${data.id})">
                                 거절하기
                             </button>
                         ` : `
-                            <button class="btn btn-warning" data-action="modal-pending" data-id="${data.id}">
+                            <button class="btn btn-warning" onclick="closeModal(); openAuthModal('pending', ${data.id})">
                                 재검토하기
                             </button>
                         `}
-                        <button class="btn btn-delete" data-action="modal-delete" data-id="${data.id}">
+                        <button class="btn btn-delete" onclick="closeModal(); openAuthModal('delete', ${data.id})">
                             삭제하기
                         </button>
                     </div>
@@ -1864,6 +1822,22 @@
             }, 3000);
         }
 
+        // 전역 함수로 등록
+        window.viewDetail = viewDetail;
+        window.openAuthModal = openAuthModal;
+        window.closeModal = closeModal;
+        window.closeAuthModal = closeAuthModal;
+        window.closeSubmitterModal = closeSubmitterModal;
+        window.closeConfirmModal = closeConfirmModal;
+        window.openSubmitterModal = openSubmitterModal;
+        window.resetForm = resetForm;
+        window.copyCRMPreview = copyCRMPreview;
+        window.copyCRMFromModal = copyCRMFromModal;
+        window.confirmSubmit = confirmSubmit;
+        window.loadData = loadData;
+        window.exportToExcel = exportToExcel;
+        window.copyToClipboard = copyToClipboard;
+        
         // 모달 외부 클릭시 닫기
         window.onclick = function(event) {
             const detailModal = document.getElementById('detailModal');
