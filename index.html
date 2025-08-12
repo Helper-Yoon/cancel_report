@@ -7,6 +7,7 @@
     <meta name="description" content="취소양식 관리 시스템 - 실시간 데이터 동기화">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -68,6 +69,27 @@
             font-size: 1.8rem;
         }
 
+        .header-right {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .admin-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 15px;
+            background: var(--bg-hover);
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+
+        .admin-info span {
+            color: var(--primary-blue);
+            font-weight: 600;
+        }
+
         .connection-status {
             display: flex;
             align-items: center;
@@ -112,6 +134,14 @@
         @media (max-width: 1024px) {
             .main-content {
                 grid-template-columns: 1fr;
+            }
+            .header {
+                flex-direction: column;
+                gap: 15px;
+            }
+            .header-right {
+                width: 100%;
+                justify-content: space-between;
             }
         }
 
@@ -161,6 +191,7 @@
         input[type="text"],
         input[type="tel"],
         input[type="date"],
+        input[type="password"],
         select,
         textarea {
             width: 100%;
@@ -454,6 +485,16 @@
             color: var(--danger);
         }
 
+        .auth-modal {
+            max-width: 400px;
+        }
+
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
         .toast {
             position: fixed;
             bottom: 20px;
@@ -513,15 +554,48 @@
             filter: invert(1);
             cursor: pointer;
         }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .btn-delete {
+            background: transparent;
+            border: 1px solid var(--danger);
+            color: var(--danger);
+            padding: 6px 12px;
+            font-size: 0.85rem;
+        }
+
+        .btn-delete:hover {
+            background: var(--danger);
+            color: white;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <h1>취소양식 관리 시스템</h1>
-            <div class="connection-status">
-                <span class="status-dot connecting" id="statusDot"></span>
-                <span id="statusText">연결 중...</span>
+            <div class="header-right">
+                <div class="admin-info" id="adminInfo" style="display: none;">
+                    <span>👤</span>
+                    <span id="adminName">-</span>
+                </div>
+                <div class="connection-status">
+                    <span class="status-dot connecting" id="statusDot"></span>
+                    <span id="statusText">연결 중...</span>
+                </div>
             </div>
         </div>
 
@@ -567,7 +641,7 @@
                         </div>
                         <div class="form-group">
                             <label for="customerPhone">고객번호 <span style="color: var(--danger);">*</span></label>
-                            <input type="tel" id="customerPhone" placeholder="010-0000-0000" pattern="[0-9]{3}-[0-9]{4}-[0-9]{4}" required>
+                            <input type="tel" id="customerPhone" placeholder="01012345678 또는 010-1234-5678" maxlength="13" required>
                         </div>
                     </div>
 
@@ -721,6 +795,7 @@
         </div>
     </div>
 
+    <!-- 상세 정보 모달 -->
     <div id="detailModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -731,6 +806,41 @@
         </div>
     </div>
 
+    <!-- 관리자 인증 모달 -->
+    <div id="authModal" class="modal">
+        <div class="modal-content auth-modal">
+            <div class="modal-header">
+                <h3>관리자 인증</h3>
+                <button class="modal-close" onclick="closeAuthModal()">✕</button>
+            </div>
+            <form id="authForm" class="auth-form">
+                <div class="form-group">
+                    <label for="authName">관리자 이름</label>
+                    <input type="text" id="authName" placeholder="이름을 입력하세요" required>
+                </div>
+                <div class="form-group">
+                    <label for="authPassword">비밀번호</label>
+                    <input type="password" id="authPassword" placeholder="비밀번호를 입력하세요" required>
+                </div>
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="saveAuth">
+                        <span>이 브라우저에 정보 저장</span>
+                    </label>
+                </div>
+                <div class="btn-group">
+                    <button type="submit" class="btn btn-primary">
+                        <span>🔐</span>
+                        <span>인증하기</span>
+                    </button>
+                    <button type="button" class="btn btn-danger" onclick="closeAuthModal()">
+                        취소
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div id="toast" class="toast"></div>
 
     <script>
@@ -738,15 +848,31 @@
         const SUPABASE_URL = 'https://fsviqmumvhrtbztdgjsu.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzdmlxbXVtdmhydGJ6dGRnanN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ5NjI2NTYsImV4cCI6MjA3MDUzODY1Nn0.CXjay7-p0Psu3dYRToI77dBAt0zoHiht468dJKP-Jkk';
         
+        const ADMIN_PASSWORD = '3504'; // 관리자 비밀번호
+        
         let supabase = null;
         let realtimeChannel = null;
         let allData = [];
+        let currentAuthAction = null;
+        let currentAuthData = null;
 
         // 초기화
         window.onload = function() {
             initializeSupabase();
             document.getElementById('date').valueAsDate = new Date();
+            loadAdminInfo();
         };
+
+        // 관리자 정보 로드
+        function loadAdminInfo() {
+            const savedAdmin = localStorage.getItem('adminName');
+            const savedPassword = localStorage.getItem('adminPassword');
+            
+            if (savedAdmin && savedPassword === ADMIN_PASSWORD) {
+                document.getElementById('adminInfo').style.display = 'flex';
+                document.getElementById('adminName').textContent = savedAdmin;
+            }
+        }
 
         // Supabase 연결
         async function initializeSupabase() {
@@ -803,6 +929,154 @@
                 .subscribe();
         }
 
+        // 관리자 인증 모달 열기
+        function openAuthModal(action, data) {
+            currentAuthAction = action;
+            currentAuthData = data;
+            
+            const savedAdmin = localStorage.getItem('adminName');
+            const savedPassword = localStorage.getItem('adminPassword');
+            
+            if (savedAdmin && savedPassword === ADMIN_PASSWORD) {
+                // 저장된 정보가 있으면 자동 인증
+                handleAuthSuccess(savedAdmin);
+            } else {
+                document.getElementById('authModal').style.display = 'flex';
+                document.getElementById('authName').focus();
+            }
+        }
+
+        // 관리자 인증 모달 닫기
+        function closeAuthModal() {
+            document.getElementById('authModal').style.display = 'none';
+            document.getElementById('authForm').reset();
+            currentAuthAction = null;
+            currentAuthData = null;
+        }
+
+        // 인증 폼 처리
+        document.getElementById('authForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('authName').value;
+            const password = document.getElementById('authPassword').value;
+            const saveAuth = document.getElementById('saveAuth').checked;
+            
+            if (password !== ADMIN_PASSWORD) {
+                showToast('비밀번호가 올바르지 않습니다.', 'error');
+                document.getElementById('authPassword').focus();
+                return;
+            }
+            
+            if (saveAuth) {
+                localStorage.setItem('adminName', name);
+                localStorage.setItem('adminPassword', password);
+                document.getElementById('adminInfo').style.display = 'flex';
+                document.getElementById('adminName').textContent = name;
+            }
+            
+            handleAuthSuccess(name);
+        });
+
+        // 인증 성공 처리
+        async function handleAuthSuccess(adminName) {
+            closeAuthModal();
+            
+            if (currentAuthAction === 'approve' || currentAuthAction === 'reject') {
+                await updateStatus(currentAuthData, currentAuthAction === 'approve' ? 'approved' : 'rejected', adminName);
+            } else if (currentAuthAction === 'delete') {
+                await deleteRecord(currentAuthData, adminName);
+            }
+        }
+
+        // 전화번호 자동 포맷팅
+        function formatPhoneNumber(value) {
+            value = value.replace(/[^0-9]/g, ''); // 숫자만 추출
+            let formattedValue = '';
+            
+            // 서울 지역번호 (02)
+            if (value.startsWith('02')) {
+                if (value.length <= 2) {
+                    formattedValue = value;
+                } else if (value.length <= 5) {
+                    formattedValue = value.slice(0, 2) + '-' + value.slice(2);
+                } else if (value.length <= 9) {
+                    formattedValue = value.slice(0, 2) + '-' + value.slice(2, 5) + '-' + value.slice(5);
+                } else if (value.length <= 10) {
+                    formattedValue = value.slice(0, 2) + '-' + value.slice(2, 6) + '-' + value.slice(6);
+                } else {
+                    value = value.slice(0, 10);
+                    formattedValue = value.slice(0, 2) + '-' + value.slice(2, 6) + '-' + value.slice(6);
+                }
+            }
+            // 지역번호 (031, 032, ... 064)
+            else if (value.startsWith('0') && !value.startsWith('01')) {
+                if (value.length <= 3) {
+                    formattedValue = value;
+                } else if (value.length <= 6) {
+                    formattedValue = value.slice(0, 3) + '-' + value.slice(3);
+                } else if (value.length <= 10) {
+                    formattedValue = value.slice(0, 3) + '-' + value.slice(3, 6) + '-' + value.slice(6);
+                } else if (value.length <= 11) {
+                    formattedValue = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7);
+                } else {
+                    value = value.slice(0, 11);
+                    formattedValue = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7);
+                }
+            }
+            // 휴대폰 번호 (010, 011, 016, 017, 018, 019)
+            else {
+                if (value.length <= 3) {
+                    formattedValue = value;
+                } else if (value.length <= 7) {
+                    formattedValue = value.slice(0, 3) + '-' + value.slice(3);
+                } else if (value.length <= 11) {
+                    formattedValue = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7);
+                } else {
+                    value = value.slice(0, 11);
+                    formattedValue = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7);
+                }
+            }
+            
+            return formattedValue;
+        }
+
+        // 전화번호 입력 이벤트
+        document.getElementById('customerPhone').addEventListener('input', function(e) {
+            e.target.value = formatPhoneNumber(e.target.value);
+            updatePreviewFromForm();
+        });
+
+        // 전화번호 붙여넣기 이벤트
+        document.getElementById('customerPhone').addEventListener('paste', function(e) {
+            e.preventDefault();
+            const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+            e.target.value = formatPhoneNumber(pastedText);
+            updatePreviewFromForm();
+        });
+
+        // 입력 시 실시간 미리보기
+        ['customerName', 'reason', 'defense1', 'defense1Result', 'defense2', 'defense2Result'].forEach(id => {
+            document.getElementById(id).addEventListener('input', updatePreviewFromForm);
+        });
+
+        // 미리보기 업데이트 함수
+        function updatePreviewFromForm() {
+            const data = {
+                customer_phone: document.getElementById('customerPhone').value,
+                customer_name: document.getElementById('customerName').value,
+                reason: document.getElementById('reason').value,
+                defense1: document.getElementById('defense1').value,
+                defense1_result: document.getElementById('defense1Result').value,
+                defense2: document.getElementById('defense2').value,
+                defense2_result: document.getElementById('defense2Result').value
+            };
+            
+            if (data.customer_phone || data.customer_name) {
+                updateCRMPreview(data);
+            }
+        }
+
         // 폼 제출 처리
         document.getElementById('cancellationForm').addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -812,13 +1086,25 @@
                 return;
             }
             
+            // 전화번호 형식 검증 (휴대폰 및 지역번호 모두 지원)
+            const phoneNumber = document.getElementById('customerPhone').value;
+            const mobileRegex = /^01[0-9]-\d{4}-\d{4}$/; // 휴대폰
+            const seoulRegex = /^02-\d{3,4}-\d{4}$/; // 서울
+            const localRegex = /^0[3-6][0-9]-\d{3,4}-\d{4}$/; // 지역번호
+            
+            if (!mobileRegex.test(phoneNumber) && !seoulRegex.test(phoneNumber) && !localRegex.test(phoneNumber)) {
+                showToast('올바른 전화번호 형식이 아닙니다.', 'error');
+                document.getElementById('customerPhone').focus();
+                return;
+            }
+            
             const formData = {
                 date: document.getElementById('date').value,
                 category: document.getElementById('category').value,
                 recruiter: document.getElementById('recruiter').value,
                 canceller: document.getElementById('canceller').value,
                 customer_name: document.getElementById('customerName').value,
-                customer_phone: document.getElementById('customerPhone').value,
+                customer_phone: phoneNumber,
                 reason: document.getElementById('reason').value,
                 defense1: document.getElementById('defense1').value,
                 defense1_result: document.getElementById('defense1Result').value,
@@ -946,17 +1232,20 @@
                                     상세
                                 </button>
                                 ${item.status === 'pending' ? `
-                                    <button class="btn btn-secondary" onclick="updateStatus(${item.id}, 'approved')">
+                                    <button class="btn btn-secondary" onclick="openAuthModal('approve', ${item.id})">
                                         승인
                                     </button>
-                                    <button class="btn btn-danger" onclick="updateStatus(${item.id}, 'rejected')">
+                                    <button class="btn btn-danger" onclick="openAuthModal('reject', ${item.id})">
                                         거절
                                     </button>
                                 ` : `
-                                    <button class="btn btn-warning" onclick="updateStatus(${item.id}, 'pending')">
+                                    <button class="btn btn-warning" onclick="openAuthModal('approve', ${item.id})">
                                         재검토
                                     </button>
                                 `}
+                                <button class="btn btn-delete" onclick="openAuthModal('delete', ${item.id})" title="삭제">
+                                    🗑️
+                                </button>
                             </div>
                         </td>
                     </tr>
@@ -965,11 +1254,8 @@
         }
 
         // 상태 업데이트
-        async function updateStatus(id, newStatus) {
+        async function updateStatus(id, newStatus, adminName) {
             if (!supabase) return;
-            
-            const adminName = prompt('관리자 이름을 입력하세요:');
-            if (!adminName) return;
             
             try {
                 const updateData = {
@@ -986,10 +1272,36 @@
                 if (error) throw error;
                 
                 showToast(`상태가 변경되었습니다: ${newStatus}`, 'success');
+                loadData();
                 
             } catch (error) {
                 console.error('Update error:', error);
                 showToast('상태 변경 실패: ' + error.message, 'error');
+            }
+        }
+
+        // 레코드 삭제
+        async function deleteRecord(id, adminName) {
+            if (!supabase) return;
+            
+            if (!confirm('정말로 이 기록을 삭제하시겠습니까?\n삭제된 데이터는 복구할 수 없습니다.')) {
+                return;
+            }
+            
+            try {
+                const { error } = await supabase
+                    .from('cancellations')
+                    .delete()
+                    .eq('id', id);
+                
+                if (error) throw error;
+                
+                showToast(`기록이 삭제되었습니다 (삭제자: ${adminName})`, 'success');
+                loadData();
+                
+            } catch (error) {
+                console.error('Delete error:', error);
+                showToast('삭제 실패: ' + error.message, 'error');
             }
         }
 
@@ -1070,13 +1382,16 @@
                             전체 내용 복사
                         </button>
                         ${data.status === 'pending' ? `
-                            <button class="btn btn-secondary" onclick="closeModal(); updateStatus(${data.id}, 'approved')">
+                            <button class="btn btn-secondary" onclick="closeModal(); openAuthModal('approve', ${data.id})">
                                 승인하기
                             </button>
-                            <button class="btn btn-danger" onclick="closeModal(); updateStatus(${data.id}, 'rejected')">
+                            <button class="btn btn-danger" onclick="closeModal(); openAuthModal('reject', ${data.id})">
                                 거절하기
                             </button>
                         ` : ''}
+                        <button class="btn btn-delete" onclick="closeModal(); openAuthModal('delete', ${data.id})">
+                            삭제하기
+                        </button>
                     </div>
                 `;
                 
@@ -1144,52 +1459,7 @@
             copyToClipboard(text);
         }
 
-        // 전화번호 자동 포맷팅
-        document.getElementById('customerPhone').addEventListener('input', function(e) {
-            let value = e.target.value.replace(/[^0-9]/g, ''); // 숫자만 추출
-            let formattedValue = '';
-            
-            if (value.length <= 3) {
-                formattedValue = value;
-            } else if (value.length <= 7) {
-                formattedValue = value.slice(0, 3) + '-' + value.slice(3);
-            } else if (value.length <= 11) {
-                formattedValue = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7);
-            } else {
-                // 11자리 초과 입력 방지
-                value = value.slice(0, 11);
-                formattedValue = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7);
-            }
-            
-            e.target.value = formattedValue;
-            
-            // 미리보기 업데이트
-            updatePreviewFromForm();
-        });
-
-        // 입력 시 실시간 미리보기
-        ['customerName', 'reason', 'defense1', 'defense1Result', 'defense2', 'defense2Result'].forEach(id => {
-            document.getElementById(id).addEventListener('input', updatePreviewFromForm);
-        });
-
-        // 미리보기 업데이트 함수
-        function updatePreviewFromForm() {
-            const data = {
-                customer_phone: document.getElementById('customerPhone').value,
-                customer_name: document.getElementById('customerName').value,
-                reason: document.getElementById('reason').value,
-                defense1: document.getElementById('defense1').value,
-                defense1_result: document.getElementById('defense1Result').value,
-                defense2: document.getElementById('defense2').value,
-                defense2_result: document.getElementById('defense2Result').value
-            };
-            
-            if (data.customer_phone || data.customer_name) {
-                updateCRMPreview(data);
-            }
-        }
-
-        // 엑셀 다운로드
+        // 엑셀 다운로드 (ExcelJS 사용)
         async function exportToExcel() {
             if (!supabase) {
                 showToast('데이터베이스가 연결되지 않았습니다.', 'error');
@@ -1226,41 +1496,110 @@
                     showToast('다운로드할 데이터가 없습니다.', 'error');
                     return;
                 }
-                
-                const excelData = data.map((item, index) => ({
-                    '': index + 1,
-                    '날짜': formatDate(item.date),
-                    '유치자': item.recruiter,
-                    '취소자': item.canceller,
-                    '고객명': item.customer_name,
-                    '고객번호': item.customer_phone,
-                    '분류': item.category || '-',
-                    '취소사유': generateFullText(item),
-                    '상태': item.status === 'pending' ? '대기중' : 
-                           item.status === 'approved' ? '승인됨' : '거절됨',
-                    '처리자': item.approved_by || '-'
-                }));
-                
-                const ws = XLSX.utils.json_to_sheet(excelData);
-                const wb = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(wb, ws, '취소양식');
-                
-                // 컬럼 너비 설정
-                ws['!cols'] = [
-                    { width: 5 },   // 번호
-                    { width: 12 },  // 날짜
-                    { width: 10 },  // 유치자
-                    { width: 10 },  // 취소자
-                    { width: 10 },  // 고객명
-                    { width: 15 },  // 고객번호
-                    { width: 10 },  // 분류
-                    { width: 60 },  // 취소사유
-                    { width: 10 },  // 상태
-                    { width: 10 }   // 처리자
+
+                // ExcelJS 워크북 생성
+                const workbook = new ExcelJS.Workbook();
+                const worksheet = workbook.addWorksheet('SNS팀 (날짜)');
+
+                // 헤더 설정
+                worksheet.columns = [
+                    { header: '', key: 'no', width: 9 },
+                    { header: '날짜', key: 'date', width: 15 },
+                    { header: '유치자', key: 'recruiter', width: 13.625 },
+                    { header: '취소자', key: 'canceller', width: 13.625 },
+                    { header: '고객명', key: 'customerName', width: 13.625 },
+                    { header: '고객번호', key: 'customerPhone', width: 15.75 },
+                    { header: '분류', key: 'category', width: 10.625 },
+                    { header: '취소사유', key: 'reason', width: 63.125 }
                 ];
+
+                // 첫 번째 행 (빈 행) 추가
+                worksheet.insertRow(1, []);
+                
+                // 헤더 행 스타일
+                const headerRow = worksheet.getRow(2);
+                headerRow.height = 24.95;
+                headerRow.eachCell((cell) => {
+                    cell.fill = {
+                        type: 'pattern',
+                        pattern: 'solid',
+                        fgColor: { argb: 'FFE7E6E6' }
+                    };
+                    cell.font = {
+                        bold: true,
+                        size: 11,
+                        name: '맑은 고딕'
+                    };
+                    cell.alignment = {
+                        vertical: 'middle',
+                        horizontal: 'center'
+                    };
+                    cell.border = {
+                        top: { style: 'thin' },
+                        left: { style: 'thin' },
+                        bottom: { style: 'thin' },
+                        right: { style: 'thin' }
+                    };
+                });
+
+                // 데이터 추가
+                data.forEach((item, index) => {
+                    const rowData = {
+                        no: index + 1,
+                        date: formatDate(item.date),
+                        recruiter: item.recruiter,
+                        canceller: item.canceller,
+                        customerName: item.customer_name,
+                        customerPhone: item.customer_phone,
+                        category: item.category || '',
+                        reason: generateFullText(item)
+                    };
+                    
+                    const row = worksheet.addRow(rowData);
+                    row.height = 45;
+                    
+                    // 데이터 행 스타일
+                    row.eachCell((cell) => {
+                        cell.font = {
+                            size: 11,
+                            name: '맑은 고딕'
+                        };
+                        cell.alignment = {
+                            vertical: 'top',
+                            horizontal: 'left',
+                            wrapText: true
+                        };
+                        cell.border = {
+                            top: { style: 'thin' },
+                            left: { style: 'thin' },
+                            bottom: { style: 'thin' },
+                            right: { style: 'thin' }
+                        };
+                    });
+                    
+                    // 번호 열은 중앙 정렬
+                    row.getCell(1).alignment = {
+                        vertical: 'middle',
+                        horizontal: 'center'
+                    };
+                });
+
+                // 첫 번째 행 병합
+                worksheet.mergeCells('A1:H1');
+                worksheet.getRow(1).height = 31.5;
+
+                // 엑셀 파일 생성 및 다운로드
+                const buffer = await workbook.xlsx.writeBuffer();
+                const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
                 
                 const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-                XLSX.writeFile(wb, `취소양식_${today}.xlsx`);
+                a.download = `취소양식_SNS팀_${today}.xlsx`;
+                a.click();
+                
+                window.URL.revokeObjectURL(url);
                 showToast('엑셀 파일이 다운로드되었습니다!', 'success');
                 
             } catch (error) {
@@ -1315,9 +1654,14 @@
 
         // 모달 외부 클릭시 닫기
         window.onclick = function(event) {
-            const modal = document.getElementById('detailModal');
-            if (event.target === modal) {
-                modal.style.display = 'none';
+            const detailModal = document.getElementById('detailModal');
+            const authModal = document.getElementById('authModal');
+            
+            if (event.target === detailModal) {
+                detailModal.style.display = 'none';
+            }
+            if (event.target === authModal) {
+                closeAuthModal();
             }
         }
     </script>
