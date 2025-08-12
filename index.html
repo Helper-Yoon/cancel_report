@@ -588,8 +588,16 @@
         <div class="header">
             <h1>취소양식 관리 시스템</h1>
             <div class="header-right">
-                <div class="admin-info" id="adminInfo" style="display: none;">
+                <div class="admin-info" id="submitterInfo" style="display: flex;">
                     <span>👤</span>
+                    <span id="submitterTeam">-</span>
+                    <span id="submitterName">-</span>
+                    <button class="btn btn-primary" onclick="openSubmitterModal()" style="padding: 5px 10px; font-size: 0.85rem; margin-left: 10px;">
+                        변경
+                    </button>
+                </div>
+                <div class="admin-info" id="adminInfo" style="display: none;">
+                    <span>🔐</span>
                     <span id="adminName">-</span>
                 </div>
                 <div class="connection-status">
@@ -735,21 +743,14 @@
             
             <div class="filter-section">
                 <div class="form-group">
-                    <label for="filterStatus">상태 필터</label>
-                    <select id="filterStatus" onchange="loadData()">
+                    <label for="filterTeam">팀 필터</label>
+                    <select id="filterTeam" onchange="loadData()">
                         <option value="all">전체</option>
-                        <option value="pending">대기중</option>
-                        <option value="approved">승인됨</option>
-                        <option value="rejected">거절됨</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="filterCategory">분류 필터</label>
-                    <select id="filterCategory" onchange="loadData()">
-                        <option value="all">전체</option>
-                        <option value="인터넷">인터넷</option>
-                        <option value="동판">동판</option>
-                        <option value="렌탈">렌탈</option>
+                        <option value="SNS 1팀">SNS 1팀</option>
+                        <option value="SNS 2팀">SNS 2팀</option>
+                        <option value="SNS 3팀">SNS 3팀</option>
+                        <option value="SNS 4팀">SNS 4팀</option>
+                        <option value="의정부 SNS팀">의정부 SNS팀</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -772,6 +773,7 @@
                         <tr>
                             <th>순번</th>
                             <th>날짜</th>
+                            <th>팀</th>
                             <th>유치자</th>
                             <th>취소자</th>
                             <th>고객명</th>
@@ -785,7 +787,7 @@
                     </thead>
                     <tbody id="tableBody">
                         <tr>
-                            <td colspan="11" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                            <td colspan="12" style="text-align: center; padding: 40px; color: var(--text-muted);">
                                 데이터를 불러오는 중...
                             </td>
                         </tr>
@@ -803,6 +805,42 @@
                 <button class="modal-close" onclick="closeModal()">✕</button>
             </div>
             <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <!-- 제출자 설정 모달 -->
+    <div id="submitterModal" class="modal">
+        <div class="modal-content auth-modal">
+            <div class="modal-header">
+                <h3>제출자 설정</h3>
+                <button class="modal-close" onclick="closeSubmitterModal()">✕</button>
+            </div>
+            <form id="submitterForm" class="auth-form">
+                <div class="form-group">
+                    <label for="submitterTeamSelect">팀 선택 <span style="color: var(--danger);">*</span></label>
+                    <select id="submitterTeamSelect" required>
+                        <option value="">팀을 선택하세요</option>
+                        <option value="SNS 1팀">SNS 1팀</option>
+                        <option value="SNS 2팀">SNS 2팀</option>
+                        <option value="SNS 3팀">SNS 3팀</option>
+                        <option value="SNS 4팀">SNS 4팀</option>
+                        <option value="의정부 SNS팀">의정부 SNS팀</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="submitterNameInput">이름 <span style="color: var(--danger);">*</span></label>
+                    <input type="text" id="submitterNameInput" placeholder="이름을 입력하세요" required>
+                </div>
+                <div class="btn-group">
+                    <button type="submit" class="btn btn-primary">
+                        <span>✔️</span>
+                        <span>설정하기</span>
+                    </button>
+                    <button type="button" class="btn btn-danger" onclick="closeSubmitterModal()">
+                        취소
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -841,6 +879,38 @@
         </div>
     </div>
 
+    <!-- 제출 확인 모달 -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📋 CRM 양식 복사</h3>
+                <button class="modal-close" onclick="closeConfirmModal()">✕</button>
+            </div>
+            <div class="form-group">
+                <label style="color: var(--warning); font-size: 0.95rem;">⚠️ CRM에 입력할 양식을 먼저 복사해주세요</label>
+                <div class="crm-output" id="confirmCRMPreview" style="background: var(--bg-dark); padding: 25px; min-height: 250px; font-size: 1.1rem;">
+                    <!-- CRM 미리보기 내용 -->
+                </div>
+            </div>
+            <div class="btn-group" style="justify-content: center;">
+                <button class="btn btn-primary" onclick="copyCRMFromModal()" style="font-size: 1.1rem; padding: 15px 40px;">
+                    <span>📋</span>
+                    <span>CRM 양식 복사하기</span>
+                </button>
+            </div>
+            <div class="btn-group" style="justify-content: center; margin-top: 15px;">
+                <button class="btn btn-secondary" onclick="confirmSubmit()">
+                    <span>✔️</span>
+                    <span>복사 완료, 제출하기</span>
+                </button>
+                <button class="btn btn-danger" onclick="closeConfirmModal()">
+                    <span>✖️</span>
+                    <span>취소</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div id="toast" class="toast"></div>
 
     <script>
@@ -855,13 +925,78 @@
         let allData = [];
         let currentAuthAction = null;
         let currentAuthData = null;
+        let pendingFormData = null; // 제출 대기 중인 폼 데이터
 
         // 초기화
         window.onload = function() {
             initializeSupabase();
             document.getElementById('date').valueAsDate = new Date();
             loadAdminInfo();
+            loadSubmitterInfo();
+            
+            // 취소자 필드에 제출자 이름 자동 설정
+            const savedName = localStorage.getItem('submitterName');
+            if (savedName) {
+                document.getElementById('canceller').value = savedName;
+            }
         };
+
+        // 제출자 정보 로드
+        function loadSubmitterInfo() {
+            const savedTeam = localStorage.getItem('submitterTeam');
+            const savedName = localStorage.getItem('submitterName');
+            
+            if (savedTeam && savedName) {
+                document.getElementById('submitterTeam').textContent = savedTeam;
+                document.getElementById('submitterName').textContent = savedName;
+            } else {
+                // 제출자 정보가 없으면 설정 모달 표시
+                setTimeout(() => {
+                    openSubmitterModal();
+                }, 1000);
+            }
+        }
+
+        // 제출자 모달 열기
+        function openSubmitterModal() {
+            const modal = document.getElementById('submitterModal');
+            const savedTeam = localStorage.getItem('submitterTeam');
+            const savedName = localStorage.getItem('submitterName');
+            
+            if (savedTeam) {
+                document.getElementById('submitterTeamSelect').value = savedTeam;
+            }
+            if (savedName) {
+                document.getElementById('submitterNameInput').value = savedName;
+            }
+            
+            modal.style.display = 'flex';
+        }
+
+        // 제출자 모달 닫기
+        function closeSubmitterModal() {
+            document.getElementById('submitterModal').style.display = 'none';
+        }
+
+        // 제출자 폼 처리
+        document.getElementById('submitterForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const team = document.getElementById('submitterTeamSelect').value;
+            const name = document.getElementById('submitterNameInput').value;
+            
+            if (team && name) {
+                localStorage.setItem('submitterTeam', team);
+                localStorage.setItem('submitterName', name);
+                
+                document.getElementById('submitterTeam').textContent = team;
+                document.getElementById('submitterName').textContent = name;
+                document.getElementById('canceller').value = name; // 취소자 필드에 자동 설정
+                
+                closeSubmitterModal();
+                showToast('제출자 정보가 설정되었습니다.', 'success');
+            }
+        });
 
         // 관리자 정보 로드
         function loadAdminInfo() {
@@ -982,8 +1117,12 @@
         async function handleAuthSuccess(adminName) {
             closeAuthModal();
             
-            if (currentAuthAction === 'approve' || currentAuthAction === 'reject') {
-                await updateStatus(currentAuthData, currentAuthAction === 'approve' ? 'approved' : 'rejected', adminName);
+            if (currentAuthAction === 'approve') {
+                await updateStatus(currentAuthData, 'approved', adminName);
+            } else if (currentAuthAction === 'reject') {
+                await updateStatus(currentAuthData, 'rejected', adminName);
+            } else if (currentAuthAction === 'pending') {
+                await updateStatus(currentAuthData, 'pending', adminName);
             } else if (currentAuthAction === 'delete') {
                 await deleteRecord(currentAuthData, adminName);
             }
@@ -1086,6 +1225,16 @@
                 return;
             }
             
+            // 제출자 정보 확인
+            const submitterTeam = localStorage.getItem('submitterTeam');
+            const submitterName = localStorage.getItem('submitterName');
+            
+            if (!submitterTeam || !submitterName) {
+                showToast('제출자 정보를 먼저 설정해주세요.', 'error');
+                openSubmitterModal();
+                return;
+            }
+            
             // 전화번호 형식 검증 (휴대폰 및 지역번호 모두 지원)
             const phoneNumber = document.getElementById('customerPhone').value;
             const mobileRegex = /^01[0-9]-\d{4}-\d{4}$/; // 휴대폰
@@ -1098,9 +1247,12 @@
                 return;
             }
             
-            const formData = {
+            // 폼 데이터 준비
+            pendingFormData = {
                 date: document.getElementById('date').value,
                 category: document.getElementById('category').value,
+                submitter_team: submitterTeam,
+                submitter_name: submitterName,
                 recruiter: document.getElementById('recruiter').value,
                 canceller: document.getElementById('canceller').value,
                 customer_name: document.getElementById('customerName').value,
@@ -1113,14 +1265,71 @@
                 status: 'pending'
             };
             
+            // 확인 모달 표시
+            showConfirmModal();
+        });
+
+        // 제출 확인 모달 표시
+        function showConfirmModal() {
+            const modal = document.getElementById('confirmModal');
+            const crmPreview = document.getElementById('confirmCRMPreview');
+            
+            // CRM 텍스트 표시
+            const crmText = generateCRMText(pendingFormData);
+            crmPreview.innerHTML = `<pre>${crmText}</pre>`;
+            
+            modal.style.display = 'flex';
+            
+            // 자동으로 CRM 텍스트 선택 (복사하기 쉽게)
+            setTimeout(() => {
+                const preElement = crmPreview.querySelector('pre');
+                if (preElement && window.getSelection) {
+                    const selection = window.getSelection();
+                    const range = document.createRange();
+                    range.selectNodeContents(preElement);
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+                }
+            }, 100);
+        }
+
+        // 모달에서 CRM 복사
+        function copyCRMFromModal() {
+            const crmPreview = document.getElementById('confirmCRMPreview');
+            const text = crmPreview.innerText;
+            copyToClipboard(text);
+            
+            // 복사 후 버튼 텍스트 변경
+            const copyBtn = event.target.closest('.btn');
+            const originalHTML = copyBtn.innerHTML;
+            copyBtn.innerHTML = '<span>✅</span><span>복사 완료!</span>';
+            copyBtn.disabled = true;
+            
+            setTimeout(() => {
+                copyBtn.innerHTML = originalHTML;
+                copyBtn.disabled = false;
+            }, 2000);
+        }
+
+        // 제출 확인 모달 닫기
+        function closeConfirmModal() {
+            document.getElementById('confirmModal').style.display = 'none';
+            pendingFormData = null;
+        }
+
+        // 제출 확인
+        async function confirmSubmit() {
+            if (!pendingFormData) return;
+            
             try {
                 const { data, error } = await supabase
                     .from('cancellations')
-                    .insert([formData])
+                    .insert([pendingFormData])
                     .select();
                 
                 if (error) throw error;
                 
+                closeConfirmModal();
                 showToast('취소 양식이 제출되었습니다!', 'success');
                 resetForm();
                 updateCRMPreview(null);
@@ -1129,7 +1338,7 @@
                 console.error('Submit error:', error);
                 showToast('제출 실패: ' + error.message, 'error');
             }
-        });
+        }
 
         // 데이터 로드
         async function loadData() {
@@ -1141,16 +1350,10 @@
                     .select('*')
                     .order('created_at', { ascending: false });
                 
-                // 상태 필터
-                const statusFilter = document.getElementById('filterStatus').value;
-                if (statusFilter !== 'all') {
-                    query = query.eq('status', statusFilter);
-                }
-                
-                // 분류 필터
-                const categoryFilter = document.getElementById('filterCategory').value;
-                if (categoryFilter !== 'all') {
-                    query = query.eq('category', categoryFilter);
+                // 팀 필터
+                const teamFilter = document.getElementById('filterTeam').value;
+                if (teamFilter !== 'all') {
+                    query = query.eq('submitter_team', teamFilter);
                 }
                 
                 // 날짜 필터
@@ -1199,7 +1402,7 @@
             if (!data || data.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="11" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                        <td colspan="12" style="text-align: center; padding: 40px; color: var(--text-muted);">
                             등록된 취소 양식이 없습니다
                         </td>
                     </tr>
@@ -1213,6 +1416,7 @@
                     <tr>
                         <td>${index + 1}</td>
                         <td>${formatDate(item.date)}</td>
+                        <td>${item.submitter_team || '-'}</td>
                         <td>${item.recruiter}</td>
                         <td>${item.canceller}</td>
                         <td>${item.customer_name}</td>
@@ -1239,7 +1443,7 @@
                                         거절
                                     </button>
                                 ` : `
-                                    <button class="btn btn-warning" onclick="openAuthModal('approve', ${item.id})">
+                                    <button class="btn btn-warning" onclick="openAuthModal('pending', ${item.id})">
                                         재검토
                                     </button>
                                 `}
@@ -1271,7 +1475,9 @@
                 
                 if (error) throw error;
                 
-                showToast(`상태가 변경되었습니다: ${newStatus}`, 'success');
+                const statusText = newStatus === 'approved' ? '승인됨' : 
+                                  newStatus === 'rejected' ? '거절됨' : '대기중';
+                showToast(`상태가 ${statusText}으로 변경되었습니다 (처리자: ${adminName})`, 'success');
                 loadData();
                 
             } catch (error) {
@@ -1338,6 +1544,8 @@
                         <label style="color: var(--primary-blue);">기본 정보</label>
                         <div style="background: var(--bg-hover); padding: 15px; border-radius: 8px;">
                             <p><strong>날짜:</strong> ${formatDate(data.date)}</p>
+                            <p><strong>팀:</strong> ${data.submitter_team || '-'}</p>
+                            <p><strong>제출자:</strong> ${data.submitter_name || '-'}</p>
                             <p><strong>분류:</strong> ${data.category || '-'}</p>
                             <p><strong>유치자:</strong> ${data.recruiter}</p>
                             <p><strong>취소자:</strong> ${data.canceller}</p>
@@ -1388,7 +1596,11 @@
                             <button class="btn btn-danger" onclick="closeModal(); openAuthModal('reject', ${data.id})">
                                 거절하기
                             </button>
-                        ` : ''}
+                        ` : `
+                            <button class="btn btn-warning" onclick="closeModal(); openAuthModal('pending', ${data.id})">
+                                재검토하기
+                            </button>
+                        `}
                         <button class="btn btn-delete" onclick="closeModal(); openAuthModal('delete', ${data.id})">
                             삭제하기
                         </button>
@@ -1473,14 +1685,9 @@
                     .select('*')
                     .order('date', { ascending: false });
                 
-                const statusFilter = document.getElementById('filterStatus').value;
-                if (statusFilter !== 'all') {
-                    query = query.eq('status', statusFilter);
-                }
-                
-                const categoryFilter = document.getElementById('filterCategory').value;
-                if (categoryFilter !== 'all') {
-                    query = query.eq('category', categoryFilter);
+                const teamFilter = document.getElementById('filterTeam').value;
+                if (teamFilter !== 'all') {
+                    query = query.eq('submitter_team', teamFilter);
                 }
                 
                 const dateFilter = document.getElementById('filterDate').value;
@@ -1596,7 +1803,8 @@
                 a.href = url;
                 
                 const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-                a.download = `취소양식_SNS팀_${today}.xlsx`;
+                const teamName = teamFilter !== 'all' ? `_${teamFilter.replace(/\s/g, '')}` : '';
+                a.download = `취소양식_SNS팀${teamName}_${today}.xlsx`;
                 a.click();
                 
                 window.URL.revokeObjectURL(url);
@@ -1621,6 +1829,13 @@
         function resetForm() {
             document.getElementById('cancellationForm').reset();
             document.getElementById('date').valueAsDate = new Date();
+            
+            // 취소자 필드에 제출자 이름 자동 설정
+            const savedName = localStorage.getItem('submitterName');
+            if (savedName) {
+                document.getElementById('canceller').value = savedName;
+            }
+            
             updateCRMPreview(null);
         }
 
@@ -1656,12 +1871,20 @@
         window.onclick = function(event) {
             const detailModal = document.getElementById('detailModal');
             const authModal = document.getElementById('authModal');
+            const confirmModal = document.getElementById('confirmModal');
+            const submitterModal = document.getElementById('submitterModal');
             
             if (event.target === detailModal) {
                 detailModal.style.display = 'none';
             }
             if (event.target === authModal) {
                 closeAuthModal();
+            }
+            if (event.target === confirmModal) {
+                closeConfirmModal();
+            }
+            if (event.target === submitterModal) {
+                closeSubmitterModal();
             }
         }
     </script>
