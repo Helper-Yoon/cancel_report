@@ -1144,24 +1144,50 @@
             copyToClipboard(text);
         }
 
-        // 입력 시 실시간 미리보기
-        ['customerPhone', 'customerName', 'reason', 'defense1', 'defense1Result', 'defense2', 'defense2Result'].forEach(id => {
-            document.getElementById(id).addEventListener('input', () => {
-                const data = {
-                    customer_phone: document.getElementById('customerPhone').value,
-                    customer_name: document.getElementById('customerName').value,
-                    reason: document.getElementById('reason').value,
-                    defense1: document.getElementById('defense1').value,
-                    defense1_result: document.getElementById('defense1Result').value,
-                    defense2: document.getElementById('defense2').value,
-                    defense2_result: document.getElementById('defense2Result').value
-                };
-                
-                if (data.customer_phone || data.customer_name) {
-                    updateCRMPreview(data);
-                }
-            });
+        // 전화번호 자동 포맷팅
+        document.getElementById('customerPhone').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/[^0-9]/g, ''); // 숫자만 추출
+            let formattedValue = '';
+            
+            if (value.length <= 3) {
+                formattedValue = value;
+            } else if (value.length <= 7) {
+                formattedValue = value.slice(0, 3) + '-' + value.slice(3);
+            } else if (value.length <= 11) {
+                formattedValue = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7);
+            } else {
+                // 11자리 초과 입력 방지
+                value = value.slice(0, 11);
+                formattedValue = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7);
+            }
+            
+            e.target.value = formattedValue;
+            
+            // 미리보기 업데이트
+            updatePreviewFromForm();
         });
+
+        // 입력 시 실시간 미리보기
+        ['customerName', 'reason', 'defense1', 'defense1Result', 'defense2', 'defense2Result'].forEach(id => {
+            document.getElementById(id).addEventListener('input', updatePreviewFromForm);
+        });
+
+        // 미리보기 업데이트 함수
+        function updatePreviewFromForm() {
+            const data = {
+                customer_phone: document.getElementById('customerPhone').value,
+                customer_name: document.getElementById('customerName').value,
+                reason: document.getElementById('reason').value,
+                defense1: document.getElementById('defense1').value,
+                defense1_result: document.getElementById('defense1Result').value,
+                defense2: document.getElementById('defense2').value,
+                defense2_result: document.getElementById('defense2Result').value
+            };
+            
+            if (data.customer_phone || data.customer_name) {
+                updateCRMPreview(data);
+            }
+        }
 
         // 엑셀 다운로드
         async function exportToExcel() {
