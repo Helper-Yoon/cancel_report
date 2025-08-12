@@ -88,6 +88,12 @@
             color: var(--primary-blue);
             font-weight: 600;
         }
+        
+        .admin-info .btn {
+            padding: 3px 8px !important;
+            font-size: 0.8rem !important;
+            margin-left: 8px;
+        }
 
         .connection-status {
             display: flex;
@@ -598,6 +604,9 @@
                 <div class="admin-info" id="adminInfo" style="display: none;">
                     <span>🔐</span>
                     <span id="adminName">-</span>
+                    <button class="btn btn-danger" onclick="logoutAdmin()" style="padding: 3px 8px; font-size: 0.8rem; margin-left: 8px;">
+                        로그아웃
+                    </button>
                 </div>
                 <div class="connection-status">
                     <span class="status-dot connecting" id="statusDot"></span>
@@ -1163,6 +1172,11 @@
             return text;
         };
         
+        // 엑셀용 간단한 텍스트 생성 (취소사유만)
+        window.generateExcelText = function(data) {
+            return data.reason; // 취소사유만 간단하게
+        };
+        
         window.formatDate = function(dateStr) {
             const date = new Date(dateStr);
             const year = date.getFullYear().toString().slice(-2);
@@ -1587,34 +1601,38 @@
 
                 const wb = XLSX.utils.book_new();
                 
+                // 원본 엑셀처럼 첫 행은 비움
                 const wsData = [
-                    ['', '날짜', '유치자', '취소자', '고객명', '고객번호', '분류', '취소사유']
+                    [], // 첫 번째 행 비움
+                    ['', '날짜', '유치자', '취소자', '고객명', '고객번호', '분류', '취소사유'] // 헤더
                 ];
                 
+                // 데이터 행 추가 - 취소사유는 간단하게
                 data.forEach((item, index) => {
                     wsData.push([
-                        index + 1,
-                        formatDate(item.date),
-                        item.recruiter,
-                        item.canceller,
-                        item.customer_name,
-                        item.customer_phone,
-                        item.category || '',
-                        generateFullText(item)
+                        index + 1,                    // 순번
+                        formatDate(item.date),         // 날짜
+                        item.recruiter,                // 유치자
+                        item.canceller,                // 취소자
+                        item.customer_name,            // 고객명
+                        item.customer_phone,           // 고객번호
+                        item.category || '',           // 분류
+                        item.reason                    // 취소사유만 간단하게
                     ]);
                 });
                 
                 const ws = XLSX.utils.aoa_to_sheet(wsData);
                 
+                // 열 너비 설정 (원본과 유사하게)
                 ws['!cols'] = [
-                    { wch: 5 },
-                    { wch: 12 },
-                    { wch: 10 },
-                    { wch: 10 },
-                    { wch: 10 },
-                    { wch: 15 },
-                    { wch: 8 },
-                    { wch: 50 }
+                    { wch: 6 },   // 순번
+                    { wch: 12 },  // 날짜
+                    { wch: 12 },  // 유치자
+                    { wch: 12 },  // 취소자
+                    { wch: 12 },  // 고객명
+                    { wch: 15 },  // 고객번호
+                    { wch: 10 },  // 분류
+                    { wch: 60 }   // 취소사유
                 ];
                 
                 XLSX.utils.book_append_sheet(wb, ws, 'SNS팀 (날짜)');
@@ -1639,6 +1657,17 @@
             document.execCommand('copy');
             document.body.removeChild(textarea);
             showToast('클립보드에 복사되었습니다!', 'success');
+        };
+        
+        // 관리자 로그아웃 함수
+        window.logoutAdmin = function() {
+            if (confirm('관리자 권한을 로그아웃하시겠습니까?')) {
+                localStorage.removeItem('adminName');
+                localStorage.removeItem('adminPassword');
+                document.getElementById('adminInfo').style.display = 'none';
+                document.getElementById('adminName').textContent = '-';
+                showToast('관리자 로그아웃되었습니다.', 'info');
+            }
         };
         
         window.showToast = function(message, type = 'success') {
