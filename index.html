@@ -926,9 +926,21 @@
         let currentAuthData = null;
         let pendingFormData = null; // 제출 대기 중인 폼 데이터
         
-        // 상태 업데이트 및 삭제 함수를 먼저 정의
+        // 토스트 메시지 먼저 정의
+        window.showToast = function(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type}`;
+            toast.style.display = 'block';
+            
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3000);
+        };
+        
+        // 상태 업데이트 함수
         window.updateStatus = async function(id, newStatus, adminName) {
-            console.log('updateStatus called:', id, newStatus, adminName);
+            console.log('updateStatus finally called!', id, newStatus, adminName);
             if (!supabase) {
                 console.error('Supabase not initialized');
                 window.showToast('데이터베이스가 연결되지 않았습니다.', 'error');
@@ -936,23 +948,31 @@
             }
             
             try {
+                console.log('Sending update to Supabase...');
                 const updateData = {
                     status: newStatus,
                     approved_by: adminName,
                     approved_at: new Date().toISOString()
                 };
                 
-                const { error } = await supabase
+                const { data, error } = await supabase
                     .from('cancellations')
                     .update(updateData)
-                    .eq('id', id);
+                    .eq('id', id)
+                    .select();
+                
+                console.log('Supabase response:', data, error);
                 
                 if (error) throw error;
                 
                 const statusText = newStatus === 'approved' ? '승인됨' : 
                                   newStatus === 'rejected' ? '거절됨' : '대기중';
                 window.showToast(`상태가 ${statusText}으로 변경되었습니다 (처리자: ${adminName})`, 'success');
-                window.loadData();
+                
+                // loadData 호출
+                if (window.loadData) {
+                    window.loadData();
+                }
                 
             } catch (error) {
                 console.error('Update error:', error);
@@ -960,8 +980,9 @@
             }
         };
         
+        // 삭제 함수
         window.deleteRecord = async function(id, adminName) {
-            console.log('deleteRecord called:', id, adminName);
+            console.log('deleteRecord finally called!', id, adminName);
             if (!supabase) {
                 console.error('Supabase not initialized');
                 window.showToast('데이터베이스가 연결되지 않았습니다.', 'error');
@@ -969,19 +990,28 @@
             }
             
             if (!confirm('정말로 이 기록을 삭제하시겠습니까?\n삭제된 데이터는 복구할 수 없습니다.')) {
+                console.log('User cancelled deletion');
                 return;
             }
             
             try {
-                const { error } = await supabase
+                console.log('Sending delete to Supabase...');
+                const { data, error } = await supabase
                     .from('cancellations')
                     .delete()
-                    .eq('id', id);
+                    .eq('id', id)
+                    .select();
+                
+                console.log('Supabase delete response:', data, error);
                 
                 if (error) throw error;
                 
                 window.showToast(`기록이 삭제되었습니다 (삭제자: ${adminName})`, 'success');
-                window.loadData();
+                
+                // loadData 호출
+                if (window.loadData) {
+                    window.loadData();
+                }
                 
             } catch (error) {
                 console.error('Delete error:', error);
@@ -989,115 +1019,40 @@
             }
         };
         
-        // viewDetail 함수
-        window.viewDetail = async function(id) {
-            console.log('viewDetail called with id:', id);
-            if (!supabase) {
-                console.error('Supabase not initialized');
-                showToast('데이터베이스가 연결되지 않았습니다.', 'error');
-                return;
+        // handleAuthSuccess 함수
+        window.handleAuthSuccess = function(adminName) {
+            console.log('handleAuthSuccess called:', adminName, currentAuthAction, currentAuthData);
+            
+            // 모달 닫기
+            const authModal = document.getElementById('authModal');
+            if (authModal) {
+                authModal.style.display = 'none';
+                document.getElementById('authForm').reset();
             }
             
-            try {
-                const { data, error } = await supabase
-                    .from('cancellations')
-                    .select('*')
-                    .eq('id', id)
-                    .single();
-                
-                if (error) throw error;
-                
-                const modal = document.getElementById('detailModal');
-                const modalBody = document.getElementById('modalBody');
-                
-                const crmText = generateCRMText(data);
-                const fullText = generateFullText(data);
-                
-                modalBody.innerHTML = `
-                    <div class="info-box">
-                        <p><strong>ID:</strong> ${data.id}</p>
-                        <p><strong>제출 시간:</strong> ${new Date(data.created_at).toLocaleString()}</p>
-                        <p><strong>상태:</strong> ${data.status === 'pending' ? '대기중' : 
-                                                     data.status === 'approved' ? '승인됨' : '거절됨'}</p>
-                        ${data.approved_by ? `<p><strong>처리자:</strong> ${data.approved_by}</p>` : ''}
-                        ${data.approved_at ? `<p><strong>처리 시간:</strong> ${new Date(data.approved_at).toLocaleString()}</p>` : ''}
-                    </div>
-                    
-                    <div class="form-group">
-                        <label style="color: var(--primary-blue);">기본 정보</label>
-                        <div style="background: var(--bg-hover); padding: 15px; border-radius: 8px;">
-                            <p><strong>날짜:</strong> ${formatDate(data.date)}</p>
-                            <p><strong>팀:</strong> ${data.submitter_team || '-'}</p>
-                            <p><strong>제출자:</strong> ${data.submitter_name || '-'}</p>
-                            <p><strong>분류:</strong> ${data.category || '-'}</p>
-                            <p><strong>유치자:</strong> ${data.recruiter}</p>
-                            <p><strong>취소자:</strong> ${data.canceller}</p>
-                            <p><strong>고객명:</strong> ${data.customer_name}</p>
-                            <p><strong>고객번호:</strong> ${data.customer_phone}</p>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label style="color: var(--primary-blue);">취소 상세 정보</label>
-                        <div style="background: var(--bg-hover); padding: 15px; border-radius: 8px;">
-                            <p><strong>취소사유:</strong></p>
-                            <p style="margin-left: 20px;">${data.reason}</p>
-                            <p><strong>1차 반론:</strong> ${data.defense1}</p>
-                            <p><strong>1차 결과:</strong> ${data.defense1_result}</p>
-                            ${data.defense2 ? `
-                                <p><strong>2차 반론:</strong> ${data.defense2}</p>
-                                <p><strong>2차 결과:</strong> ${data.defense2_result || '없음'}</p>
-                            ` : ''}
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label style="color: var(--primary-blue);">CRM 입력 양식</label>
-                        <div class="crm-output">
-                            <pre>${crmText}</pre>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label style="color: var(--primary-blue);">엑셀 출력 양식</label>
-                        <div class="crm-output">
-                            <pre>${fullText}</pre>
-                        </div>
-                    </div>
-                    
-                    <div class="btn-group">
-                        <button class="btn btn-primary" onclick="copyToClipboard(\`${crmText.replace(/`/g, '\\`')}\`)">
-                            CRM 양식 복사
-                        </button>
-                        <button class="btn btn-secondary" onclick="copyToClipboard(\`${fullText.replace(/`/g, '\\`')}\`)">
-                            전체 내용 복사
-                        </button>
-                        ${data.status === 'pending' ? `
-                            <button class="btn btn-secondary" onclick="closeModal(); openAuthModal('approve', ${data.id})">
-                                승인하기
-                            </button>
-                            <button class="btn btn-danger" onclick="closeModal(); openAuthModal('reject', ${data.id})">
-                                거절하기
-                            </button>
-                        ` : `
-                            <button class="btn btn-warning" onclick="closeModal(); openAuthModal('pending', ${data.id})">
-                                재검토하기
-                            </button>
-                        `}
-                        <button class="btn btn-delete" onclick="closeModal(); openAuthModal('delete', ${data.id})">
-                            삭제하기
-                        </button>
-                    </div>
-                `;
-                
-                modal.style.display = 'flex';
-                
-            } catch (error) {
-                console.error('Detail error:', error);
-                showToast('상세 정보 로드 실패: ' + error.message, 'error');
+            console.log('About to call action:', currentAuthAction);
+            
+            // 액션 실행
+            if (currentAuthAction === 'approve') {
+                console.log('Calling updateStatus for approve...');
+                window.updateStatus(currentAuthData, 'approved', adminName);
+            } else if (currentAuthAction === 'reject') {
+                console.log('Calling updateStatus for reject...');
+                window.updateStatus(currentAuthData, 'rejected', adminName);
+            } else if (currentAuthAction === 'pending') {
+                console.log('Calling updateStatus for pending...');
+                window.updateStatus(currentAuthData, 'pending', adminName);
+            } else if (currentAuthAction === 'delete') {
+                console.log('Calling deleteRecord...');
+                window.deleteRecord(currentAuthData, adminName);
             }
+            
+            // 변수 초기화
+            currentAuthAction = null;
+            currentAuthData = null;
         };
         
+        // openAuthModal 함수
         window.openAuthModal = function(action, data) {
             console.log('openAuthModal called:', action, data);
             currentAuthAction = action;
@@ -1108,28 +1063,17 @@
             
             if (savedAdmin && savedPassword === ADMIN_PASSWORD) {
                 console.log('Auto auth with saved credentials');
+                // setTimeout 사용하여 비동기 처리
                 setTimeout(() => {
-                    handleAuthSuccess(savedAdmin);
+                    window.handleAuthSuccess(savedAdmin);
                 }, 100);
             } else {
                 console.log('Showing auth modal');
                 document.getElementById('authModal').style.display = 'flex';
-                document.getElementById('authName').focus();
-            }
-        };
-        
-        window.handleAuthSuccess = function(adminName) {
-            console.log('handleAuthSuccess called:', adminName, currentAuthAction, currentAuthData);
-            closeAuthModal();
-            
-            if (currentAuthAction === 'approve') {
-                window.updateStatus(currentAuthData, 'approved', adminName);
-            } else if (currentAuthAction === 'reject') {
-                window.updateStatus(currentAuthData, 'rejected', adminName);
-            } else if (currentAuthAction === 'pending') {
-                window.updateStatus(currentAuthData, 'pending', adminName);
-            } else if (currentAuthAction === 'delete') {
-                window.deleteRecord(currentAuthData, adminName);
+                const authNameInput = document.getElementById('authName');
+                if (authNameInput) {
+                    authNameInput.focus();
+                }
             }
         };
         
