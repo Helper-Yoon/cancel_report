@@ -7,7 +7,6 @@
     <meta name="description" content="취소양식 관리 시스템 - 실시간 데이터 동기화">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -1074,7 +1073,9 @@
             
             if (savedAdmin && savedPassword === ADMIN_PASSWORD) {
                 // 저장된 정보가 있으면 자동 인증
-                handleAuthSuccess(savedAdmin);
+                setTimeout(() => {
+                    handleAuthSuccess(savedAdmin);
+                }, 100);
             } else {
                 document.getElementById('authModal').style.display = 'flex';
                 document.getElementById('authName').focus();
@@ -1090,7 +1091,7 @@
         }
 
         // 인증 폼 처리
-        document.getElementById('authForm').addEventListener('submit', async function(e) {
+        document.getElementById('authForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
             const name = document.getElementById('authName').value;
@@ -1110,25 +1111,22 @@
                 document.getElementById('adminName').textContent = name;
             }
             
-            await handleAuthSuccess(name);
+            handleAuthSuccess(name);
         });
 
         // 인증 성공 처리
-        async function handleAuthSuccess(adminName) {
+        function handleAuthSuccess(adminName) {
             closeAuthModal();
             
             if (currentAuthAction === 'approve') {
-                await updateStatus(currentAuthData, 'approved', adminName);
+                updateStatus(currentAuthData, 'approved', adminName);
             } else if (currentAuthAction === 'reject') {
-                await updateStatus(currentAuthData, 'rejected', adminName);
+                updateStatus(currentAuthData, 'rejected', adminName);
             } else if (currentAuthAction === 'pending') {
-                await updateStatus(currentAuthData, 'pending', adminName);
+                updateStatus(currentAuthData, 'pending', adminName);
             } else if (currentAuthAction === 'delete') {
-                await deleteRecord(currentAuthData, adminName);
+                deleteRecord(currentAuthData, adminName);
             }
-            
-            currentAuthAction = null;
-            currentAuthData = null;
         }
 
         // 전화번호 자동 포맷팅
@@ -1707,110 +1705,48 @@
                     return;
                 }
 
-                // ExcelJS 워크북 생성
-                const workbook = new ExcelJS.Workbook();
-                const worksheet = workbook.addWorksheet('SNS팀 (날짜)');
-
-                // 헤더 설정 - 요청한 순서대로
-                worksheet.columns = [
-                    { header: '', key: 'no', width: 9 },
-                    { header: '날짜', key: 'date', width: 15 },
-                    { header: '유치자', key: 'recruiter', width: 13.625 },
-                    { header: '취소자', key: 'canceller', width: 13.625 },
-                    { header: '고객명', key: 'customerName', width: 13.625 },
-                    { header: '고객번호', key: 'customerPhone', width: 15.75 },
-                    { header: '분류', key: 'category', width: 10.625 },
-                    { header: '취소사유', key: 'reason', width: 63.125 }
+                // XLSX 사용
+                const wb = XLSX.utils.book_new();
+                
+                // 데이터 준비 - 요청한 순서대로
+                const wsData = [
+                    ['', '날짜', '유치자', '취소자', '고객명', '고객번호', '분류', '취소사유']
                 ];
-
-                // 첫 번째 행 (빈 행) 추가
-                worksheet.insertRow(1, []);
                 
-                // 헤더 행 스타일
-                const headerRow = worksheet.getRow(2);
-                headerRow.height = 24.95;
-                headerRow.eachCell((cell) => {
-                    cell.fill = {
-                        type: 'pattern',
-                        pattern: 'solid',
-                        fgColor: { argb: 'FFE7E6E6' }
-                    };
-                    cell.font = {
-                        bold: true,
-                        size: 11,
-                        name: '맑은 고딕'
-                    };
-                    cell.alignment = {
-                        vertical: 'middle',
-                        horizontal: 'center'
-                    };
-                    cell.border = {
-                        top: { style: 'thin' },
-                        left: { style: 'thin' },
-                        bottom: { style: 'thin' },
-                        right: { style: 'thin' }
-                    };
-                });
-
-                // 데이터 추가
                 data.forEach((item, index) => {
-                    const rowData = {
-                        no: index + 1,
-                        date: formatDate(item.date),
-                        recruiter: item.recruiter,
-                        canceller: item.canceller,
-                        customerName: item.customer_name,
-                        customerPhone: item.customer_phone,
-                        category: item.category || '',
-                        reason: generateFullText(item)
-                    };
-                    
-                    const row = worksheet.addRow(rowData);
-                    row.height = 45;
-                    
-                    // 데이터 행 스타일
-                    row.eachCell((cell) => {
-                        cell.font = {
-                            size: 11,
-                            name: '맑은 고딕'
-                        };
-                        cell.alignment = {
-                            vertical: 'top',
-                            horizontal: 'left',
-                            wrapText: true
-                        };
-                        cell.border = {
-                            top: { style: 'thin' },
-                            left: { style: 'thin' },
-                            bottom: { style: 'thin' },
-                            right: { style: 'thin' }
-                        };
-                    });
-                    
-                    // 번호 열은 중앙 정렬
-                    row.getCell(1).alignment = {
-                        vertical: 'middle',
-                        horizontal: 'center'
-                    };
+                    wsData.push([
+                        index + 1,
+                        formatDate(item.date),
+                        item.recruiter,
+                        item.canceller,
+                        item.customer_name,
+                        item.customer_phone,
+                        item.category || '',
+                        generateFullText(item)
+                    ]);
                 });
-
-                // 첫 번째 행 병합
-                worksheet.mergeCells('A1:H1');
-                worksheet.getRow(1).height = 31.5;
-
-                // 엑셀 파일 생성 및 다운로드
-                const buffer = await workbook.xlsx.writeBuffer();
-                const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
                 
+                const ws = XLSX.utils.aoa_to_sheet(wsData);
+                
+                // 열 너비 설정
+                ws['!cols'] = [
+                    { wch: 5 },   // 순번
+                    { wch: 12 },  // 날짜
+                    { wch: 10 },  // 유치자
+                    { wch: 10 },  // 취소자
+                    { wch: 10 },  // 고객명
+                    { wch: 15 },  // 고객번호
+                    { wch: 8 },   // 분류
+                    { wch: 50 }   // 취소사유
+                ];
+                
+                XLSX.utils.book_append_sheet(wb, ws, 'SNS팀 (날짜)');
+                
+                // 파일 다운로드
                 const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
                 const teamName = teamFilter !== 'all' ? `_${teamFilter.replace(/\s/g, '')}` : '';
-                a.download = `취소양식_SNS팀${teamName}_${today}.xlsx`;
-                a.click();
+                XLSX.writeFile(wb, `취소양식_SNS팀${teamName}_${today}.xlsx`);
                 
-                window.URL.revokeObjectURL(url);
                 showToast('엑셀 파일이 다운로드되었습니다!', 'success');
                 
             } catch (error) {
