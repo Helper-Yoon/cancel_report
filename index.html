@@ -938,7 +938,65 @@
             if (savedName) {
                 document.getElementById('canceller').value = savedName;
             }
+            
+            // 전역 이벤트 리스너 등록 (한 번만)
+            setupGlobalEventListeners();
         };
+        
+        // 전역 이벤트 리스너 설정
+        function setupGlobalEventListeners() {
+            // 테이블 이벤트 위임
+            const tableBody = document.getElementById('tableBody');
+            tableBody.addEventListener('click', handleTableClick);
+            
+            // 모달 이벤트 위임
+            const modalBody = document.getElementById('modalBody');
+            modalBody.addEventListener('click', handleModalClick);
+        }
+        
+        // 테이블 클릭 처리
+        function handleTableClick(e) {
+            const button = e.target.closest('button[data-action]');
+            if (!button) return;
+            
+            const action = button.getAttribute('data-action');
+            const id = parseInt(button.getAttribute('data-id'));
+            
+            if (action === 'view') {
+                viewDetail(id);
+            } else if (action === 'approve' || action === 'reject' || action === 'pending' || action === 'delete') {
+                openAuthModal(action, id);
+            }
+        }
+        
+        // 모달 클릭 처리
+        function handleModalClick(e) {
+            const button = e.target.closest('button[data-action]');
+            if (!button) return;
+            
+            const action = button.getAttribute('data-action');
+            
+            if (action === 'copy-crm' || action === 'copy-full') {
+                const text = button.getAttribute('data-text');
+                copyToClipboard(text);
+            } else if (action === 'modal-approve') {
+                const id = parseInt(button.getAttribute('data-id'));
+                closeModal();
+                openAuthModal('approve', id);
+            } else if (action === 'modal-reject') {
+                const id = parseInt(button.getAttribute('data-id'));
+                closeModal();
+                openAuthModal('reject', id);
+            } else if (action === 'modal-pending') {
+                const id = parseInt(button.getAttribute('data-id'));
+                closeModal();
+                openAuthModal('pending', id);
+            } else if (action === 'modal-delete') {
+                const id = parseInt(button.getAttribute('data-id'));
+                closeModal();
+                openAuthModal('delete', id);
+            }
+        }
 
         // 제출자 정보 로드
         function loadSubmitterInfo() {
@@ -1414,7 +1472,7 @@
             tbody.innerHTML = data.map((item, index) => {
                 const crmText = generateCRMText(item);
                 return `
-                    <tr>
+                    <tr data-id="${item.id}">
                         <td>${item.submitter_team || '-'}</td>
                         <td>${index + 1}</td>
                         <td>${formatDate(item.date)}</td>
@@ -1433,22 +1491,22 @@
                         <td>${item.approved_by || '-'}</td>
                         <td>
                             <div class="action-buttons">
-                                <button class="btn btn-primary" onclick="viewDetail(${item.id})">
+                                <button class="btn btn-primary" data-action="view" data-id="${item.id}">
                                     상세
                                 </button>
                                 ${item.status === 'pending' ? `
-                                    <button class="btn btn-secondary" onclick="openAuthModal('approve', ${item.id})">
+                                    <button class="btn btn-secondary" data-action="approve" data-id="${item.id}">
                                         승인
                                     </button>
-                                    <button class="btn btn-danger" onclick="openAuthModal('reject', ${item.id})">
+                                    <button class="btn btn-danger" data-action="reject" data-id="${item.id}">
                                         거절
                                     </button>
                                 ` : `
-                                    <button class="btn btn-warning" onclick="openAuthModal('pending', ${item.id})">
+                                    <button class="btn btn-warning" data-action="pending" data-id="${item.id}">
                                         재검토
                                     </button>
                                 `}
-                                <button class="btn btn-delete" onclick="openAuthModal('delete', ${item.id})" title="삭제">
+                                <button class="btn btn-delete" data-action="delete" data-id="${item.id}" title="삭제">
                                     🗑️
                                 </button>
                             </div>
@@ -1584,25 +1642,25 @@
                     </div>
                     
                     <div class="btn-group">
-                        <button class="btn btn-primary" onclick="copyToClipboard(\`${crmText.replace(/`/g, '\\`')}\`)">
+                        <button class="btn btn-primary" data-action="copy-crm" data-text="${crmText.replace(/"/g, '&quot;')}">
                             CRM 양식 복사
                         </button>
-                        <button class="btn btn-secondary" onclick="copyToClipboard(\`${fullText.replace(/`/g, '\\`')}\`)">
+                        <button class="btn btn-secondary" data-action="copy-full" data-text="${fullText.replace(/"/g, '&quot;')}">
                             전체 내용 복사
                         </button>
                         ${data.status === 'pending' ? `
-                            <button class="btn btn-secondary" onclick="closeModal(); openAuthModal('approve', ${data.id})">
+                            <button class="btn btn-secondary" data-action="modal-approve" data-id="${data.id}">
                                 승인하기
                             </button>
-                            <button class="btn btn-danger" onclick="closeModal(); openAuthModal('reject', ${data.id})">
+                            <button class="btn btn-danger" data-action="modal-reject" data-id="${data.id}">
                                 거절하기
                             </button>
                         ` : `
-                            <button class="btn btn-warning" onclick="closeModal(); openAuthModal('pending', ${data.id})">
+                            <button class="btn btn-warning" data-action="modal-pending" data-id="${data.id}">
                                 재검토하기
                             </button>
                         `}
-                        <button class="btn btn-delete" onclick="closeModal(); openAuthModal('delete', ${data.id})">
+                        <button class="btn btn-delete" data-action="modal-delete" data-id="${data.id}">
                             삭제하기
                         </button>
                     </div>
