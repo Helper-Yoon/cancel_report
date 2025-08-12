@@ -771,9 +771,9 @@
                 <table id="dataTable">
                     <thead>
                         <tr>
+                            <th>팀</th>
                             <th>순번</th>
                             <th>날짜</th>
-                            <th>팀</th>
                             <th>유치자</th>
                             <th>취소자</th>
                             <th>고객명</th>
@@ -1090,7 +1090,7 @@
         }
 
         // 인증 폼 처리
-        document.getElementById('authForm').addEventListener('submit', function(e) {
+        document.getElementById('authForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const name = document.getElementById('authName').value;
@@ -1110,7 +1110,7 @@
                 document.getElementById('adminName').textContent = name;
             }
             
-            handleAuthSuccess(name);
+            await handleAuthSuccess(name);
         });
 
         // 인증 성공 처리
@@ -1126,6 +1126,9 @@
             } else if (currentAuthAction === 'delete') {
                 await deleteRecord(currentAuthData, adminName);
             }
+            
+            currentAuthAction = null;
+            currentAuthData = null;
         }
 
         // 전화번호 자동 포맷팅
@@ -1414,9 +1417,9 @@
                 const crmText = generateCRMText(item);
                 return `
                     <tr>
+                        <td>${item.submitter_team || '-'}</td>
                         <td>${index + 1}</td>
                         <td>${formatDate(item.date)}</td>
-                        <td>${item.submitter_team || '-'}</td>
                         <td>${item.recruiter}</td>
                         <td>${item.canceller}</td>
                         <td>${item.customer_name}</td>
@@ -1708,7 +1711,7 @@
                 const workbook = new ExcelJS.Workbook();
                 const worksheet = workbook.addWorksheet('SNS팀 (날짜)');
 
-                // 헤더 설정
+                // 헤더 설정 - 요청한 순서대로
                 worksheet.columns = [
                     { header: '', key: 'no', width: 9 },
                     { header: '날짜', key: 'date', width: 15 },
