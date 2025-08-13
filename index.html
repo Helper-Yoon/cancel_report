@@ -1614,11 +1614,18 @@
 
                 // 데이터 추가
                 data.forEach((item, index) => {
-                    // 취소사유 텍스트 구성
-                    let cancelReason = `가족회선 ${item.customer_phone}\nㅁ취소사유: ${item.reason}`;
+                    // 취소사유 텍스트 구성 - 필요한 정보만
+                    let cancelReason = `${item.customer_name} ${item.customer_phone}
+ㅁ취소사유: ${item.reason}`;
                     
                     if (item.defense1) {
-                        cancelReason += `\n★ 본인 거짓반론으로 논국도 진행을 수 없는 상황이라고 하여 해당 사유로 승인처리 함`;
+                        cancelReason += `
+1차반론: ${item.defense1} / 결과: ${item.defense1_result || '없음'}`;
+                    }
+                    
+                    if (item.defense2) {
+                        cancelReason += `
+2차반론: ${item.defense2} / 결과: ${item.defense2_result || '없음'}`;
                     }
                     
                     const rowData = [
