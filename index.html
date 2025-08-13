@@ -7,6 +7,7 @@
     <meta name="description" content="취소양식 관리 시스템 - 실시간 데이터 동기화">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -36,10 +37,11 @@
             min-height: 100vh;
             padding: 20px;
             color: var(--text-primary);
+            font-size: 15px; /* 기본 폰트 크기 증가 */
         }
 
         .container {
-            max-width: 1400px;
+            max-width: 1500px; /* 프로그램 크기 증가 */
             margin: 0 auto;
         }
 
@@ -57,7 +59,7 @@
 
         .header h1 {
             color: var(--text-primary);
-            font-size: 2rem;
+            font-size: 2.1rem;
             display: flex;
             align-items: center;
             gap: 10px;
@@ -65,7 +67,7 @@
 
         .header h1::before {
             content: "📋";
-            font-size: 1.8rem;
+            font-size: 1.9rem;
         }
 
         .header-right {
@@ -78,10 +80,10 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            padding: 8px 15px;
+            padding: 10px 18px;
             background: var(--bg-hover);
             border-radius: 20px;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
         }
 
         .admin-info span {
@@ -90,8 +92,8 @@
         }
         
         .admin-info .btn {
-            padding: 3px 8px !important;
-            font-size: 0.8rem !important;
+            padding: 4px 10px !important;
+            font-size: 0.85rem !important;
             margin-left: 8px;
         }
 
@@ -99,9 +101,10 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            padding: 10px 20px;
+            padding: 12px 22px;
             background: var(--bg-hover);
             border-radius: 25px;
+            font-size: 0.95rem;
         }
 
         .status-dot {
@@ -160,7 +163,7 @@
 
         .section-title {
             color: var(--primary-blue);
-            font-size: 1.3rem;
+            font-size: 1.4rem;
             margin-bottom: 25px;
             padding-bottom: 10px;
             border-bottom: 2px solid var(--primary-blue-dark);
@@ -190,7 +193,7 @@
             color: var(--text-secondary);
             font-weight: 600;
             margin-bottom: 8px;
-            font-size: 0.95rem;
+            font-size: 1rem;
         }
 
         input[type="text"],
@@ -203,7 +206,7 @@
             padding: 12px;
             border: 1px solid var(--border-color);
             border-radius: 8px;
-            font-size: 1rem;
+            font-size: 1.05rem;
             transition: all 0.3s ease;
             background: var(--bg-hover);
             color: var(--text-primary);
@@ -233,10 +236,10 @@
         }
 
         .btn {
-            padding: 12px 30px;
+            padding: 13px 32px;
             border: none;
             border-radius: 8px;
-            font-size: 1rem;
+            font-size: 1.05rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -342,14 +345,14 @@
         }
 
         .stat-number {
-            font-size: 1.8rem;
+            font-size: 1.9rem;
             font-weight: bold;
             color: var(--primary-blue);
         }
 
         .stat-label {
             color: var(--text-muted);
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             margin-top: 5px;
         }
 
@@ -364,7 +367,7 @@
             padding: 15px 10px;
             text-align: left;
             font-weight: 600;
-            font-size: 0.95rem;
+            font-size: 1rem;
             white-space: nowrap;
         }
 
@@ -372,6 +375,7 @@
             padding: 15px 10px;
             border-bottom: 1px solid var(--border-color);
             color: var(--text-secondary);
+            font-size: 0.95rem;
         }
 
         tr:hover {
@@ -380,9 +384,9 @@
 
         .status-badge {
             display: inline-block;
-            padding: 5px 12px;
+            padding: 6px 14px;
             border-radius: 20px;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             font-weight: 600;
         }
 
@@ -436,8 +440,8 @@
         }
 
         .action-buttons .btn {
-            padding: 6px 12px;
-            font-size: 0.85rem;
+            padding: 7px 14px;
+            font-size: 0.9rem;
         }
 
         .modal {
@@ -553,6 +557,16 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            display: inline-block;
+        }
+        
+        .message-truncate {
+            max-width: 400px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: inline-block;
+            vertical-align: middle;
         }
 
         input[type="date"]::-webkit-calendar-picker-indicator {
@@ -578,8 +592,8 @@
             background: transparent;
             border: 1px solid var(--danger);
             color: var(--danger);
-            padding: 6px 12px;
-            font-size: 0.85rem;
+            padding: 7px 14px;
+            font-size: 0.9rem;
         }
 
         .btn-delete:hover {
@@ -733,7 +747,7 @@
                 </div>
                 <div class="stat-card">
                     <div class="stat-number" id="statPending">0</div>
-                    <div class="stat-label">대기중</div>
+                    <div class="stat-label">확인필요</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-number" id="statApproved">0</div>
@@ -975,8 +989,8 @@
                 if (error) throw error;
                 
                 const statusText = newStatus === 'approved' ? '승인됨' : 
-                                  newStatus === 'rejected' ? '거절됨' : '대기중';
-                window.showToast(`상태가 ${statusText}으로 변경되었습니다 (처리자: ${adminName})`, 'success');
+                                  newStatus === 'rejected' ? '거절됨' : '확인필요';
+                window.showToast(`상태가 ${statusText}로 변경되었습니다 (처리자: ${adminName})`, 'success');
                 
                 // loadData 호출
                 if (window.loadData) {
@@ -1232,6 +1246,24 @@
             
             tbody.innerHTML = data.map((item, index) => {
                 const crmText = generateCRMText(item);
+                // 상태 매핑 개선
+                let statusDisplay = item.status;
+                let statusClass = 'pending';
+                
+                if (item.status === 'pending') {
+                    statusDisplay = '확인필요';
+                    statusClass = 'pending';
+                } else if (item.status === 'approved') {
+                    statusDisplay = '승인됨';
+                    statusClass = 'approved';
+                } else if (item.status === 'rejected') {
+                    statusDisplay = '거절됨';
+                    statusClass = 'rejected';
+                } else if (!item.status || item.status === 'none') {
+                    statusDisplay = '미배정';
+                    statusClass = 'pending';
+                }
+                
                 return `
                     <tr data-id="${item.id}">
                         <td>${item.submitter_team || '-'}</td>
@@ -1242,11 +1274,10 @@
                         <td>${item.customer_name}</td>
                         <td>${item.customer_phone}</td>
                         <td>${item.category || '-'}</td>
-                        <td class="truncate" title="${crmText.replace(/"/g, '&quot;')}">${crmText.replace(/\n/g, ' ')}</td>
+                        <td><span class="message-truncate" title="${crmText.replace(/"/g, '&quot;')}">${crmText.replace(/\n/g, ' ')}</span></td>
                         <td>
-                            <span class="status-badge status-${item.status}">
-                                ${item.status === 'pending' ? '대기중' : 
-                                  item.status === 'approved' ? '승인됨' : '거절됨'}
+                            <span class="status-badge status-${statusClass}">
+                                ${statusDisplay}
                             </span>
                         </td>
                         <td>${item.approved_by || '-'}</td>
@@ -1255,7 +1286,7 @@
                                 <button class="btn btn-primary" onclick="viewDetail(${item.id})">
                                     상세
                                 </button>
-                                ${item.status === 'pending' ? `
+                                ${item.status === 'pending' || !item.status ? `
                                     <button class="btn btn-secondary" onclick="openAuthModal('approve', ${item.id})">
                                         승인
                                     </button>
@@ -1613,17 +1644,58 @@
                     return;
                 }
 
-                const wb = XLSX.utils.book_new();
+                // ExcelJS 워크북 생성
+                const workbook = new ExcelJS.Workbook();
+                const worksheet = workbook.addWorksheet('SNS팀 (날짜)');
+
+                // 첫 번째 행 (병합된 제목 행)
+                worksheet.mergeCells('A1:H1');
+                const titleCell = worksheet.getCell('A1');
+                titleCell.value = '';  // 빈 값 또는 원하는 제목
+                titleCell.font = { size: 14, bold: true };
+                titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
+                worksheet.getRow(1).height = 31.5;
+
+                // 헤더 설정
+                const headers = ['', '날짜', '유치자', '취소자', '고객명', '고객번호', '분류', '취소사유'];
+                const headerRow = worksheet.getRow(2);
+                headerRow.values = headers;
+                headerRow.height = 24.95;
                 
-                // 원본 엑셀처럼 첫 행은 비움
-                const wsData = [
-                    [], // 첫 번째 행 비움
-                    ['', '날짜', '유치자', '취소자', '고객명', '고객번호', '분류', '취소사유'] // 헤더
-                ];
-                
-                // 데이터 행 추가 - 취소사유는 간단하게
+                // 헤더 스타일 적용
+                headerRow.eachCell((cell, colNumber) => {
+                    cell.fill = {
+                        type: 'pattern',
+                        pattern: 'solid',
+                        fgColor: { argb: 'FFE7E6E6' }  // 연한 회색 배경
+                    };
+                    cell.font = {
+                        bold: true,
+                        size: 11,
+                        name: '맑은 고딕'
+                    };
+                    cell.alignment = {
+                        vertical: 'middle',
+                        horizontal: 'center'
+                    };
+                    cell.border = {
+                        top: { style: 'thin', color: { argb: 'FF000000' } },
+                        left: { style: 'thin', color: { argb: 'FF000000' } },
+                        bottom: { style: 'thin', color: { argb: 'FF000000' } },
+                        right: { style: 'thin', color: { argb: 'FF000000' } }
+                    };
+                });
+
+                // 데이터 추가
                 data.forEach((item, index) => {
-                    wsData.push([
+                    // 취소사유 텍스트 구성 (원본 형식)
+                    let cancelReason = `가족회선 ${item.customer_phone}\nㅁ취소사유: ${item.reason}`;
+                    
+                    if (item.defense1) {
+                        cancelReason += `\n★ 본인 거짓반론으로 논국도 진행을 수 없는 상황이라고 하여 해당 사유로 승인처리 함`;
+                    }
+                    
+                    const rowData = [
                         index + 1,                    // 순번
                         formatDate(item.date),         // 날짜
                         item.recruiter,                // 유치자
@@ -1631,30 +1703,93 @@
                         item.customer_name,            // 고객명
                         item.customer_phone,           // 고객번호
                         item.category || '',           // 분류
-                        item.reason                    // 취소사유만 간단하게
-                    ]);
+                        cancelReason                   // 취소사유
+                    ];
+                    
+                    const row = worksheet.addRow(rowData);
+                    row.height = 45;  // 데이터 행 높이
+                    
+                    // 데이터 행 스타일 적용
+                    row.eachCell((cell, colNumber) => {
+                        // 기본 스타일
+                        cell.font = {
+                            size: 11,
+                            name: '맑은 고딕'
+                        };
+                        
+                        // 정렬 설정
+                        if (colNumber === 1) {  // 순번 열은 중앙 정렬
+                            cell.alignment = {
+                                vertical: 'middle',
+                                horizontal: 'center'
+                            };
+                        } else if (colNumber === 8) {  // 취소사유 열은 줄바꿈 허용
+                            cell.alignment = {
+                                vertical: 'top',
+                                horizontal: 'left',
+                                wrapText: true
+                            };
+                        } else {  // 나머지 열
+                            cell.alignment = {
+                                vertical: 'middle',
+                                horizontal: 'left'
+                            };
+                        }
+                        
+                        // 테두리 설정
+                        cell.border = {
+                            top: { style: 'thin', color: { argb: 'FF000000' } },
+                            left: { style: 'thin', color: { argb: 'FF000000' } },
+                            bottom: { style: 'thin', color: { argb: 'FF000000' } },
+                            right: { style: 'thin', color: { argb: 'FF000000' } }
+                        };
+                    });
                 });
-                
-                const ws = XLSX.utils.aoa_to_sheet(wsData);
-                
-                // 열 너비 설정 (원본과 유사하게)
-                ws['!cols'] = [
-                    { wch: 6 },   // 순번
-                    { wch: 12 },  // 날짜
-                    { wch: 12 },  // 유치자
-                    { wch: 12 },  // 취소자
-                    { wch: 12 },  // 고객명
-                    { wch: 15 },  // 고객번호
-                    { wch: 10 },  // 분류
-                    { wch: 60 }   // 취소사유
+
+                // 열 너비 설정 (원본과 동일하게)
+                worksheet.columns = [
+                    { width: 9 },      // A열 - 순번
+                    { width: 15 },     // B열 - 날짜
+                    { width: 13.625 }, // C열 - 유치자
+                    { width: 13.625 }, // D열 - 취소자
+                    { width: 13.625 }, // E열 - 고객명
+                    { width: 15.75 },  // F열 - 고객번호
+                    { width: 10.625 }, // G열 - 분류
+                    { width: 63.125 }  // H열 - 취소사유
                 ];
-                
-                XLSX.utils.book_append_sheet(wb, ws, 'SNS팀 (날짜)');
+
+                // 인쇄 설정 (선택사항)
+                worksheet.pageSetup = {
+                    paperSize: 9,  // A4
+                    orientation: 'landscape',  // 가로 방향
+                    fitToPage: true,
+                    fitToWidth: 1,
+                    fitToHeight: 0,
+                    margins: {
+                        left: 0.7,
+                        right: 0.7,
+                        top: 0.75,
+                        bottom: 0.75,
+                        header: 0.3,
+                        footer: 0.3
+                    }
+                };
+
+                // 엑셀 파일 생성 및 다운로드
+                const buffer = await workbook.xlsx.writeBuffer();
+                const blob = new Blob([buffer], { 
+                    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+                });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
                 
                 const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
                 const teamName = teamFilter !== 'all' ? `_${teamFilter.replace(/\s/g, '')}` : '';
-                XLSX.writeFile(wb, `취소양식_SNS팀${teamName}_${today}.xlsx`);
+                a.download = `취소양식_SNS팀${teamName}_${today}.xlsx`;
+                a.click();
                 
+                window.URL.revokeObjectURL(url);
                 showToast('엑셀 파일이 다운로드되었습니다!', 'success');
                 
             } catch (error) {
@@ -2449,12 +2584,21 @@
                 const crmText = generateCRMText(data);
                 const fullText = generateFullText(data);
                 
+                // 상태 표시 매핑
+                let statusDisplay = '미배정';
+                if (data.status === 'pending') {
+                    statusDisplay = '확인필요';
+                } else if (data.status === 'approved') {
+                    statusDisplay = '승인됨';
+                } else if (data.status === 'rejected') {
+                    statusDisplay = '거절됨';
+                }
+                
                 modalBody.innerHTML = `
                     <div class="info-box">
                         <p><strong>ID:</strong> ${data.id}</p>
                         <p><strong>제출 시간:</strong> ${new Date(data.created_at).toLocaleString()}</p>
-                        <p><strong>상태:</strong> ${data.status === 'pending' ? '대기중' : 
-                                                     data.status === 'approved' ? '승인됨' : '거절됨'}</p>
+                        <p><strong>상태:</strong> ${statusDisplay}</p>
                         ${data.approved_by ? `<p><strong>처리자:</strong> ${data.approved_by}</p>` : ''}
                         ${data.approved_at ? `<p><strong>처리 시간:</strong> ${new Date(data.approved_at).toLocaleString()}</p>` : ''}
                     </div>
