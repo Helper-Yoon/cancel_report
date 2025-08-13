@@ -37,11 +37,11 @@
             min-height: 100vh;
             padding: 20px;
             color: var(--text-primary);
-            font-size: 15px; /* 기본 폰트 크기 증가 */
+            font-size: 15px;
         }
 
         .container {
-            max-width: 1500px; /* 프로그램 크기 증가 */
+            max-width: 1500px;
             margin: 0 auto;
         }
 
@@ -936,20 +936,20 @@
     <div id="toast" class="toast"></div>
 
     <script>
-        // Supabase 설정 (내장)
+        // Supabase 설정
         const SUPABASE_URL = 'https://fsviqmumvhrtbztdgjsu.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzdmlxbXVtdmhydGJ6dGRnanN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ5NjI2NTYsImV4cCI6MjA3MDUzODY1Nn0.CXjay7-p0Psu3dYRToI77dBAt0zoHiht468dJKP-Jkk';
         
-        const ADMIN_PASSWORD = '3504'; // 관리자 비밀번호
+        const ADMIN_PASSWORD = '3504';
         
         let supabase = null;
         let realtimeChannel = null;
         let allData = [];
         let currentAuthAction = null;
         let currentAuthData = null;
-        let pendingFormData = null; // 제출 대기 중인 폼 데이터
+        let pendingFormData = null;
         
-        // 토스트 메시지 먼저 정의
+        // 토스트 메시지
         window.showToast = function(message, type = 'success') {
             const toast = document.getElementById('toast');
             toast.textContent = message;
@@ -961,149 +961,9 @@
             }, 3000);
         };
         
-        // 상태 업데이트 함수
+        // 상태 업데이트
         window.updateStatus = async function(id, newStatus, adminName) {
-            console.log('updateStatus finally called!', id, newStatus, adminName);
             if (!supabase) {
-                console.error('Supabase not initialized');
-                window.showToast('데이터베이스가 연결되지 않았습니다.', 'error');
-                return;
-            }
-            
-            try {
-                console.log('Sending update to Supabase...');
-                const updateData = {
-                    status: newStatus,
-                    approved_by: adminName,
-                    approved_at: new Date().toISOString()
-                };
-                
-                const { data, error } = await supabase
-                    .from('cancellations')
-                    .update(updateData)
-                    .eq('id', id)
-                    .select();
-                
-                console.log('Supabase response:', data, error);
-                
-                if (error) throw error;
-                
-                const statusText = newStatus === 'approved' ? '승인됨' : 
-                                  newStatus === 'rejected' ? '거절됨' : '확인필요';
-                window.showToast(`상태가 ${statusText}로 변경되었습니다 (처리자: ${adminName})`, 'success');
-                
-                // loadData 호출
-                if (window.loadData) {
-                    window.loadData();
-                }
-                
-            } catch (error) {
-                console.error('Update error:', error);
-                window.showToast('상태 변경 실패: ' + error.message, 'error');
-            }
-        };
-        
-        // 삭제 함수
-        window.deleteRecord = async function(id, adminName) {
-            console.log('deleteRecord finally called!', id, adminName);
-            if (!supabase) {
-                console.error('Supabase not initialized');
-                window.showToast('데이터베이스가 연결되지 않았습니다.', 'error');
-                return;
-            }
-            
-            if (!confirm('정말로 이 기록을 삭제하시겠습니까?\n삭제된 데이터는 복구할 수 없습니다.')) {
-                console.log('User cancelled deletion');
-                return;
-            }
-            
-            try {
-                console.log('Sending delete to Supabase...');
-                const { data, error } = await supabase
-                    .from('cancellations')
-                    .delete()
-                    .eq('id', id)
-                    .select();
-                
-                console.log('Supabase delete response:', data, error);
-                
-                if (error) throw error;
-                
-                window.showToast(`기록이 삭제되었습니다 (삭제자: ${adminName})`, 'success');
-                
-                // loadData 호출
-                if (window.loadData) {
-                    window.loadData();
-                }
-                
-            } catch (error) {
-                console.error('Delete error:', error);
-                window.showToast('삭제 실패: ' + error.message, 'error');
-            }
-        };
-        
-        // handleAuthSuccess 함수
-        window.handleAuthSuccess = function(adminName) {
-            console.log('handleAuthSuccess called:', adminName, currentAuthAction, currentAuthData);
-            
-            // 모달 닫기
-            const authModal = document.getElementById('authModal');
-            if (authModal) {
-                authModal.style.display = 'none';
-                document.getElementById('authForm').reset();
-            }
-            
-            console.log('About to call action:', currentAuthAction);
-            
-            // 액션 실행
-            if (currentAuthAction === 'approve') {
-                console.log('Calling updateStatus for approve...');
-                window.updateStatus(currentAuthData, 'approved', adminName);
-            } else if (currentAuthAction === 'reject') {
-                console.log('Calling updateStatus for reject...');
-                window.updateStatus(currentAuthData, 'rejected', adminName);
-            } else if (currentAuthAction === 'pending') {
-                console.log('Calling updateStatus for pending...');
-                window.updateStatus(currentAuthData, 'pending', adminName);
-            } else if (currentAuthAction === 'delete') {
-                console.log('Calling deleteRecord...');
-                window.deleteRecord(currentAuthData, adminName);
-            }
-            
-            // 변수 초기화
-            currentAuthAction = null;
-            currentAuthData = null;
-        };
-        
-        // openAuthModal 함수
-        window.openAuthModal = function(action, data) {
-            console.log('openAuthModal called:', action, data);
-            currentAuthAction = action;
-            currentAuthData = data;
-            
-            const savedAdmin = localStorage.getItem('adminName');
-            const savedPassword = localStorage.getItem('adminPassword');
-            
-            if (savedAdmin && savedPassword === ADMIN_PASSWORD) {
-                console.log('Auto auth with saved credentials');
-                // setTimeout 사용하여 비동기 처리
-                setTimeout(() => {
-                    window.handleAuthSuccess(savedAdmin);
-                }, 100);
-            } else {
-                console.log('Showing auth modal');
-                document.getElementById('authModal').style.display = 'flex';
-                const authNameInput = document.getElementById('authName');
-                if (authNameInput) {
-                    authNameInput.focus();
-                }
-            }
-        };
-        
-        window.updateStatus = async function(id, newStatus, adminName) {
-            console.log('updateStatus called:', id, newStatus, adminName);
-            if (!supabase) {
-                console.error('Supabase not initialized');
                 showToast('데이터베이스가 연결되지 않았습니다.', 'error');
                 return;
             }
@@ -1123,21 +983,20 @@
                 if (error) throw error;
                 
                 const statusText = newStatus === 'approved' ? '승인됨' : 
-                                  newStatus === 'rejected' ? '거절됨' : '대기중';
-                window.showToast(`상태가 ${statusText}으로 변경되었습니다 (처리자: ${adminName})`, 'success');
-                window.loadData();
+                                  newStatus === 'rejected' ? '거절됨' : '확인필요';
+                showToast(`상태가 ${statusText}로 변경되었습니다 (처리자: ${adminName})`, 'success');
+                loadData();
                 
             } catch (error) {
                 console.error('Update error:', error);
-                window.showToast('상태 변경 실패: ' + error.message, 'error');
+                showToast('상태 변경 실패: ' + error.message, 'error');
             }
         };
         
+        // 삭제
         window.deleteRecord = async function(id, adminName) {
-            console.log('deleteRecord called:', id, adminName);
             if (!supabase) {
-                console.error('Supabase not initialized');
-                window.showToast('데이터베이스가 연결되지 않았습니다.', 'error');
+                showToast('데이터베이스가 연결되지 않았습니다.', 'error');
                 return;
             }
             
@@ -1153,15 +1012,51 @@
                 
                 if (error) throw error;
                 
-                window.showToast(`기록이 삭제되었습니다 (삭제자: ${adminName})`, 'success');
-                window.loadData();
+                showToast(`기록이 삭제되었습니다 (삭제자: ${adminName})`, 'success');
+                loadData();
                 
             } catch (error) {
                 console.error('Delete error:', error);
-                window.showToast('삭제 실패: ' + error.message, 'error');
+                showToast('삭제 실패: ' + error.message, 'error');
             }
         };
-
+        
+        // 인증 성공 처리
+        window.handleAuthSuccess = function(adminName) {
+            closeAuthModal();
+            
+            if (currentAuthAction === 'approve') {
+                updateStatus(currentAuthData, 'approved', adminName);
+            } else if (currentAuthAction === 'reject') {
+                updateStatus(currentAuthData, 'rejected', adminName);
+            } else if (currentAuthAction === 'pending') {
+                updateStatus(currentAuthData, 'pending', adminName);
+            } else if (currentAuthAction === 'delete') {
+                deleteRecord(currentAuthData, adminName);
+            }
+            
+            currentAuthAction = null;
+            currentAuthData = null;
+        };
+        
+        // 인증 모달 열기
+        window.openAuthModal = function(action, data) {
+            currentAuthAction = action;
+            currentAuthData = data;
+            
+            const savedAdmin = localStorage.getItem('adminName');
+            const savedPassword = localStorage.getItem('adminPassword');
+            
+            if (savedAdmin && savedPassword === ADMIN_PASSWORD) {
+                setTimeout(() => {
+                    handleAuthSuccess(savedAdmin);
+                }, 100);
+            } else {
+                document.getElementById('authModal').style.display = 'flex';
+                document.getElementById('authName').focus();
+            }
+        };
+        
         // 도우미 함수들
         window.generateCRMText = function(data) {
             let text = `${data.customer_phone} / ${data.customer_name}
@@ -1198,11 +1093,6 @@
             }
             
             return text;
-        };
-        
-        // 엑셀용 간단한 텍스트 생성 (취소사유만)
-        window.generateExcelText = function(data) {
-            return data.reason; // 취소사유만 간단하게
         };
         
         window.formatDate = function(dateStr) {
@@ -1246,7 +1136,6 @@
             
             tbody.innerHTML = data.map((item, index) => {
                 const crmText = generateCRMText(item);
-                // 상태 매핑 개선
                 let statusDisplay = item.status;
                 let statusClass = 'pending';
                 
@@ -1259,9 +1148,6 @@
                 } else if (item.status === 'rejected') {
                     statusDisplay = '거절됨';
                     statusClass = 'rejected';
-                } else if (!item.status || item.status === 'none') {
-                    statusDisplay = '미배정';
-                    statusClass = 'pending';
                 }
                 
                 return `
@@ -1286,7 +1172,7 @@
                                 <button class="btn btn-primary" onclick="viewDetail(${item.id})">
                                     상세
                                 </button>
-                                ${item.status === 'pending' || !item.status ? `
+                                ${item.status === 'pending' ? `
                                     <button class="btn btn-secondary" onclick="openAuthModal('approve', ${item.id})">
                                         승인
                                     </button>
@@ -1483,6 +1369,8 @@
                 window.updateCRMPreview(data);
             }
         }
+        
+        // 전역 함수들
         window.closeModal = function() {
             document.getElementById('detailModal').style.display = 'none';
         };
@@ -1651,7 +1539,7 @@
                 // 첫 번째 행 (병합된 제목 행)
                 worksheet.mergeCells('A1:H1');
                 const titleCell = worksheet.getCell('A1');
-                titleCell.value = '';  // 빈 값 또는 원하는 제목
+                titleCell.value = '';
                 titleCell.font = { size: 14, bold: true };
                 titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
                 worksheet.getRow(1).height = 31.5;
@@ -1664,11 +1552,6 @@
                 
                 // 헤더 스타일 적용
                 headerRow.eachCell((cell, colNumber) => {
-                    cell.fill = {
-                        type: 'pattern',
-                        pattern: 'solid',
-                        fgColor: { argb: 'FFE7E6E6' }  // 연한 회색 배경
-                    };
                     cell.font = {
                         bold: true,
                         size: 11,
@@ -1688,7 +1571,7 @@
 
                 // 데이터 추가
                 data.forEach((item, index) => {
-                    // 취소사유 텍스트 구성 (원본 형식)
+                    // 취소사유 텍스트 구성
                     let cancelReason = `가족회선 ${item.customer_phone}\nㅁ취소사유: ${item.reason}`;
                     
                     if (item.defense1) {
@@ -1696,47 +1579,32 @@
                     }
                     
                     const rowData = [
-                        index + 1,                    // 순번
-                        formatDate(item.date),         // 날짜
-                        item.recruiter,                // 유치자
-                        item.canceller,                // 취소자
-                        item.customer_name,            // 고객명
-                        item.customer_phone,           // 고객번호
-                        item.category || '',           // 분류
-                        cancelReason                   // 취소사유
+                        index + 1,
+                        formatDate(item.date),
+                        item.recruiter,
+                        item.canceller,
+                        item.customer_name,
+                        item.customer_phone,
+                        item.category || '',
+                        cancelReason
                     ];
                     
                     const row = worksheet.addRow(rowData);
-                    row.height = 45;  // 데이터 행 높이
+                    row.height = 45;
                     
                     // 데이터 행 스타일 적용
                     row.eachCell((cell, colNumber) => {
-                        // 기본 스타일
                         cell.font = {
                             size: 11,
                             name: '맑은 고딕'
                         };
                         
-                        // 정렬 설정
-                        if (colNumber === 1) {  // 순번 열은 중앙 정렬
-                            cell.alignment = {
-                                vertical: 'middle',
-                                horizontal: 'center'
-                            };
-                        } else if (colNumber === 8) {  // 취소사유 열은 줄바꿈 허용
-                            cell.alignment = {
-                                vertical: 'top',
-                                horizontal: 'left',
-                                wrapText: true
-                            };
-                        } else {  // 나머지 열
-                            cell.alignment = {
-                                vertical: 'middle',
-                                horizontal: 'left'
-                            };
-                        }
+                        cell.alignment = {
+                            vertical: 'middle',
+                            horizontal: 'center',
+                            wrapText: colNumber === 8
+                        };
                         
-                        // 테두리 설정
                         cell.border = {
                             top: { style: 'thin', color: { argb: 'FF000000' } },
                             left: { style: 'thin', color: { argb: 'FF000000' } },
@@ -1746,22 +1614,22 @@
                     });
                 });
 
-                // 열 너비 설정 (원본과 동일하게)
+                // 열 너비 설정
                 worksheet.columns = [
-                    { width: 9 },      // A열 - 순번
-                    { width: 15 },     // B열 - 날짜
-                    { width: 13.625 }, // C열 - 유치자
-                    { width: 13.625 }, // D열 - 취소자
-                    { width: 13.625 }, // E열 - 고객명
-                    { width: 15.75 },  // F열 - 고객번호
-                    { width: 10.625 }, // G열 - 분류
-                    { width: 63.125 }  // H열 - 취소사유
+                    { width: 9 },
+                    { width: 15 },
+                    { width: 13.625 },
+                    { width: 13.625 },
+                    { width: 13.625 },
+                    { width: 15.75 },
+                    { width: 10.625 },
+                    { width: 63.125 }
                 ];
 
-                // 인쇄 설정 (선택사항)
+                // 인쇄 설정
                 worksheet.pageSetup = {
-                    paperSize: 9,  // A4
-                    orientation: 'landscape',  // 가로 방향
+                    paperSize: 9,
+                    orientation: 'landscape',
                     fitToPage: true,
                     fitToWidth: 1,
                     fitToHeight: 0,
@@ -1798,6 +1666,81 @@
             }
         };
         
+        window.viewDetail = async function(id) {
+            if (!supabase) return;
+            
+            try {
+                const { data, error } = await supabase
+                    .from('cancellations')
+                    .select('*')
+                    .eq('id', id)
+                    .single();
+                
+                if (error) throw error;
+                
+                const modal = document.getElementById('detailModal');
+                const modalBody = document.getElementById('modalBody');
+                
+                const crmText = generateCRMText(data);
+                const fullText = generateFullText(data);
+                
+                let statusDisplay = '확인필요';
+                if (data.status === 'approved') statusDisplay = '승인됨';
+                else if (data.status === 'rejected') statusDisplay = '거절됨';
+                
+                modalBody.innerHTML = `
+                    <div class="info-box">
+                        <p><strong>상태:</strong> ${statusDisplay}</p>
+                        ${data.approved_by ? `<p><strong>처리자:</strong> ${data.approved_by}</p>` : ''}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>기본 정보</label>
+                        <div style="background: var(--bg-hover); padding: 15px; border-radius: 8px;">
+                            <p><strong>날짜:</strong> ${formatDate(data.date)}</p>
+                            <p><strong>팀:</strong> ${data.submitter_team}</p>
+                            <p><strong>유치자:</strong> ${data.recruiter}</p>
+                            <p><strong>취소자:</strong> ${data.canceller}</p>
+                            <p><strong>고객명:</strong> ${data.customer_name}</p>
+                            <p><strong>고객번호:</strong> ${data.customer_phone}</p>
+                            <p><strong>분류:</strong> ${data.category || '-'}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>CRM 입력 양식</label>
+                        <div class="crm-output">
+                            <pre>${crmText}</pre>
+                        </div>
+                    </div>
+                    
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="copyToClipboard(\`${crmText.replace(/`/g, '\\`')}\`)">
+                            CRM 양식 복사
+                        </button>
+                        ${data.status === 'pending' ? `
+                            <button class="btn btn-secondary" onclick="closeModal(); openAuthModal('approve', ${data.id})">
+                                승인하기
+                            </button>
+                            <button class="btn btn-danger" onclick="closeModal(); openAuthModal('reject', ${data.id})">
+                                거절하기
+                            </button>
+                        ` : `
+                            <button class="btn btn-warning" onclick="closeModal(); openAuthModal('pending', ${data.id})">
+                                재검토하기
+                            </button>
+                        `}
+                    </div>
+                `;
+                
+                modal.style.display = 'flex';
+                
+            } catch (error) {
+                console.error('Detail error:', error);
+                showToast('상세 정보 로드 실패: ' + error.message, 'error');
+            }
+        };
+        
         window.copyToClipboard = function(text) {
             const textarea = document.createElement('textarea');
             textarea.value = text;
@@ -1808,7 +1751,6 @@
             showToast('클립보드에 복사되었습니다!', 'success');
         };
         
-        // 관리자 로그아웃 함수
         window.logoutAdmin = function() {
             if (confirm('관리자 권한을 로그아웃하시겠습니까?')) {
                 localStorage.removeItem('adminName');
@@ -1819,20 +1761,8 @@
             }
         };
         
-        window.showToast = function(message, type = 'success') {
-            const toast = document.getElementById('toast');
-            toast.textContent = message;
-            toast.className = `toast ${type}`;
-            toast.style.display = 'block';
-            
-            setTimeout(() => {
-                toast.style.display = 'none';
-            }, 3000);
-        };
-        
         // 초기화
         window.onload = function() {
-            console.log('Window loaded, initializing...');
             initializeSupabase();
             document.getElementById('date').valueAsDate = new Date();
             loadAdminInfo();
@@ -1849,7 +1779,6 @@
                 updatePreviewFromForm();
             });
             
-            // 전화번호 붙여넣기 이벤트
             document.getElementById('customerPhone').addEventListener('paste', function(e) {
                 e.preventDefault();
                 const pastedText = (e.clipboardData || window.clipboardData).getData('text');
@@ -1976,936 +1905,6 @@
                 }
             };
         };
-
-        // 제출자 정보 로드
-        function loadSubmitterInfo() {
-            const savedTeam = localStorage.getItem('submitterTeam');
-            const savedName = localStorage.getItem('submitterName');
-            
-            if (savedTeam && savedName) {
-                document.getElementById('submitterTeam').textContent = savedTeam;
-                document.getElementById('submitterName').textContent = savedName;
-            } else {
-                // 제출자 정보가 없으면 설정 모달 표시
-                setTimeout(() => {
-                    openSubmitterModal();
-                }, 1000);
-            }
-        }
-
-        // 제출자 모달 열기
-        function openSubmitterModal() {
-            const modal = document.getElementById('submitterModal');
-            const savedTeam = localStorage.getItem('submitterTeam');
-            const savedName = localStorage.getItem('submitterName');
-            
-            if (savedTeam) {
-                document.getElementById('submitterTeamSelect').value = savedTeam;
-            }
-            if (savedName) {
-                document.getElementById('submitterNameInput').value = savedName;
-            }
-            
-            modal.style.display = 'flex';
-        }
-
-        // 제출자 모달 닫기
-        function closeSubmitterModal() {
-            document.getElementById('submitterModal').style.display = 'none';
-        }
-
-        // 제출자 폼 처리
-        document.getElementById('submitterForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const team = document.getElementById('submitterTeamSelect').value;
-            const name = document.getElementById('submitterNameInput').value;
-            
-            if (team && name) {
-                localStorage.setItem('submitterTeam', team);
-                localStorage.setItem('submitterName', name);
-                
-                document.getElementById('submitterTeam').textContent = team;
-                document.getElementById('submitterName').textContent = name;
-                document.getElementById('canceller').value = name; // 취소자 필드에 자동 설정
-                
-                closeSubmitterModal();
-                showToast('제출자 정보가 설정되었습니다.', 'success');
-            }
-        });
-
-        // 관리자 정보 로드
-        function loadAdminInfo() {
-            const savedAdmin = localStorage.getItem('adminName');
-            const savedPassword = localStorage.getItem('adminPassword');
-            
-            if (savedAdmin && savedPassword === ADMIN_PASSWORD) {
-                document.getElementById('adminInfo').style.display = 'flex';
-                document.getElementById('adminName').textContent = savedAdmin;
-            }
-        }
-
-        // Supabase 연결
-        async function initializeSupabase() {
-            try {
-                document.getElementById('statusDot').className = 'status-dot connecting';
-                document.getElementById('statusText').textContent = '연결 중...';
-                
-                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-                
-                // 연결 테스트
-                const { data, error } = await supabase
-                    .from('cancellations')
-                    .select('count')
-                    .limit(1);
-                
-                if (error) throw error;
-                
-                // UI 업데이트
-                document.getElementById('statusDot').className = 'status-dot connected';
-                document.getElementById('statusText').textContent = '연결됨';
-                
-                showToast('데이터베이스 연결 성공!', 'success');
-                
-                // 실시간 구독 설정
-                setupRealtimeSubscription();
-                
-                // 데이터 로드
-                loadData();
-                
-            } catch (error) {
-                console.error('Connection error:', error);
-                document.getElementById('statusDot').className = 'status-dot disconnected';
-                document.getElementById('statusText').textContent = '연결 실패';
-                showToast('연결 실패: ' + error.message, 'error');
-            }
-        }
-
-        // 실시간 구독 설정
-        function setupRealtimeSubscription() {
-            if (realtimeChannel) {
-                supabase.removeChannel(realtimeChannel);
-            }
-            
-            realtimeChannel = supabase
-                .channel('cancellations-changes')
-                .on('postgres_changes', 
-                    { event: '*', schema: 'public', table: 'cancellations' },
-                    (payload) => {
-                        console.log('Change received!', payload);
-                        loadData();
-                        showToast('데이터가 업데이트되었습니다.', 'info');
-                    }
-                )
-                .subscribe();
-        }
-
-        // 관리자 인증 모달 열기
-        function openAuthModal(action, data) {
-            console.log('openAuthModal called:', action, data);
-            currentAuthAction = action;
-            currentAuthData = data;
-            
-            const savedAdmin = localStorage.getItem('adminName');
-            const savedPassword = localStorage.getItem('adminPassword');
-            
-            if (savedAdmin && savedPassword === ADMIN_PASSWORD) {
-                // 저장된 정보가 있으면 자동 인증
-                console.log('Auto auth with saved credentials');
-                setTimeout(() => {
-                    handleAuthSuccess(savedAdmin);
-                }, 100);
-            } else {
-                console.log('Showing auth modal');
-                document.getElementById('authModal').style.display = 'flex';
-                document.getElementById('authName').focus();
-            }
-        }
-
-        // 관리자 인증 모달 닫기
-        function closeAuthModal() {
-            document.getElementById('authModal').style.display = 'none';
-            document.getElementById('authForm').reset();
-            currentAuthAction = null;
-            currentAuthData = null;
-        }
-
-        // 인증 폼 처리
-        document.getElementById('authForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const name = document.getElementById('authName').value;
-            const password = document.getElementById('authPassword').value;
-            const saveAuth = document.getElementById('saveAuth').checked;
-            
-            if (password !== ADMIN_PASSWORD) {
-                showToast('비밀번호가 올바르지 않습니다.', 'error');
-                document.getElementById('authPassword').focus();
-                return;
-            }
-            
-            if (saveAuth) {
-                localStorage.setItem('adminName', name);
-                localStorage.setItem('adminPassword', password);
-                document.getElementById('adminInfo').style.display = 'flex';
-                document.getElementById('adminName').textContent = name;
-            }
-            
-            handleAuthSuccess(name);
-        });
-
-        // 인증 성공 처리
-        function handleAuthSuccess(adminName) {
-            console.log('handleAuthSuccess called:', adminName, currentAuthAction, currentAuthData);
-            closeAuthModal();
-            
-            if (currentAuthAction === 'approve') {
-                updateStatus(currentAuthData, 'approved', adminName);
-            } else if (currentAuthAction === 'reject') {
-                updateStatus(currentAuthData, 'rejected', adminName);
-            } else if (currentAuthAction === 'pending') {
-                updateStatus(currentAuthData, 'pending', adminName);
-            } else if (currentAuthAction === 'delete') {
-                deleteRecord(currentAuthData, adminName);
-            }
-        }
-
-        // 전화번호 자동 포맷팅
-        function formatPhoneNumber(value) {
-            value = value.replace(/[^0-9]/g, ''); // 숫자만 추출
-            let formattedValue = '';
-            
-            // 서울 지역번호 (02)
-            if (value.startsWith('02')) {
-                if (value.length <= 2) {
-                    formattedValue = value;
-                } else if (value.length <= 5) {
-                    formattedValue = value.slice(0, 2) + '-' + value.slice(2);
-                } else if (value.length <= 9) {
-                    formattedValue = value.slice(0, 2) + '-' + value.slice(2, 5) + '-' + value.slice(5);
-                } else if (value.length <= 10) {
-                    formattedValue = value.slice(0, 2) + '-' + value.slice(2, 6) + '-' + value.slice(6);
-                } else {
-                    value = value.slice(0, 10);
-                    formattedValue = value.slice(0, 2) + '-' + value.slice(2, 6) + '-' + value.slice(6);
-                }
-            }
-            // 지역번호 (031, 032, ... 064)
-            else if (value.startsWith('0') && !value.startsWith('01')) {
-                if (value.length <= 3) {
-                    formattedValue = value;
-                } else if (value.length <= 6) {
-                    formattedValue = value.slice(0, 3) + '-' + value.slice(3);
-                } else if (value.length <= 10) {
-                    formattedValue = value.slice(0, 3) + '-' + value.slice(3, 6) + '-' + value.slice(6);
-                } else if (value.length <= 11) {
-                    formattedValue = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7);
-                } else {
-                    value = value.slice(0, 11);
-                    formattedValue = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7);
-                }
-            }
-            // 휴대폰 번호 (010, 011, 016, 017, 018, 019)
-            else {
-                if (value.length <= 3) {
-                    formattedValue = value;
-                } else if (value.length <= 7) {
-                    formattedValue = value.slice(0, 3) + '-' + value.slice(3);
-                } else if (value.length <= 11) {
-                    formattedValue = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7);
-                } else {
-                    value = value.slice(0, 11);
-                    formattedValue = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7);
-                }
-            }
-            
-            return formattedValue;
-        }
-
-        // 전화번호 입력 이벤트
-        document.getElementById('customerPhone').addEventListener('input', function(e) {
-            e.target.value = formatPhoneNumber(e.target.value);
-            updatePreviewFromForm();
-        });
-
-        // 전화번호 붙여넣기 이벤트
-        document.getElementById('customerPhone').addEventListener('paste', function(e) {
-            e.preventDefault();
-            const pastedText = (e.clipboardData || window.clipboardData).getData('text');
-            e.target.value = formatPhoneNumber(pastedText);
-            updatePreviewFromForm();
-        });
-
-        // 입력 시 실시간 미리보기
-        ['customerName', 'reason', 'defense1', 'defense1Result', 'defense2', 'defense2Result'].forEach(id => {
-            document.getElementById(id).addEventListener('input', updatePreviewFromForm);
-        });
-
-        // 미리보기 업데이트 함수
-        function updatePreviewFromForm() {
-            const data = {
-                customer_phone: document.getElementById('customerPhone').value,
-                customer_name: document.getElementById('customerName').value,
-                reason: document.getElementById('reason').value,
-                defense1: document.getElementById('defense1').value,
-                defense1_result: document.getElementById('defense1Result').value,
-                defense2: document.getElementById('defense2').value,
-                defense2_result: document.getElementById('defense2Result').value
-            };
-            
-            if (data.customer_phone || data.customer_name) {
-                updateCRMPreview(data);
-            }
-        }
-
-        // 폼 제출 처리
-        document.getElementById('cancellationForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            if (!supabase) {
-                showToast('데이터베이스가 연결되지 않았습니다.', 'error');
-                return;
-            }
-            
-            // 제출자 정보 확인
-            const submitterTeam = localStorage.getItem('submitterTeam');
-            const submitterName = localStorage.getItem('submitterName');
-            
-            if (!submitterTeam || !submitterName) {
-                showToast('제출자 정보를 먼저 설정해주세요.', 'error');
-                openSubmitterModal();
-                return;
-            }
-            
-            // 전화번호 형식 검증 (휴대폰 및 지역번호 모두 지원)
-            const phoneNumber = document.getElementById('customerPhone').value;
-            const mobileRegex = /^01[0-9]-\d{4}-\d{4}$/; // 휴대폰
-            const seoulRegex = /^02-\d{3,4}-\d{4}$/; // 서울
-            const localRegex = /^0[3-6][0-9]-\d{3,4}-\d{4}$/; // 지역번호
-            
-            if (!mobileRegex.test(phoneNumber) && !seoulRegex.test(phoneNumber) && !localRegex.test(phoneNumber)) {
-                showToast('올바른 전화번호 형식이 아닙니다.', 'error');
-                document.getElementById('customerPhone').focus();
-                return;
-            }
-            
-            // 폼 데이터 준비
-            pendingFormData = {
-                date: document.getElementById('date').value,
-                category: document.getElementById('category').value,
-                submitter_team: submitterTeam,
-                submitter_name: submitterName,
-                recruiter: document.getElementById('recruiter').value,
-                canceller: document.getElementById('canceller').value,
-                customer_name: document.getElementById('customerName').value,
-                customer_phone: phoneNumber,
-                reason: document.getElementById('reason').value,
-                defense1: document.getElementById('defense1').value,
-                defense1_result: document.getElementById('defense1Result').value,
-                defense2: document.getElementById('defense2').value || null,
-                defense2_result: document.getElementById('defense2Result').value || null,
-                status: 'pending'
-            };
-            
-            // 확인 모달 표시
-            showConfirmModal();
-        });
-
-        // 제출 확인 모달 표시
-        function showConfirmModal() {
-            const modal = document.getElementById('confirmModal');
-            const crmPreview = document.getElementById('confirmCRMPreview');
-            
-            // CRM 텍스트 표시
-            const crmText = generateCRMText(pendingFormData);
-            crmPreview.innerHTML = `<pre>${crmText}</pre>`;
-            
-            modal.style.display = 'flex';
-            
-            // 자동으로 CRM 텍스트 선택 (복사하기 쉽게)
-            setTimeout(() => {
-                const preElement = crmPreview.querySelector('pre');
-                if (preElement && window.getSelection) {
-                    const selection = window.getSelection();
-                    const range = document.createRange();
-                    range.selectNodeContents(preElement);
-                    selection.removeAllRanges();
-                    selection.addRange(range);
-                }
-            }, 100);
-        }
-
-        // 모달에서 CRM 복사
-        function copyCRMFromModal() {
-            const crmPreview = document.getElementById('confirmCRMPreview');
-            const text = crmPreview.innerText;
-            copyToClipboard(text);
-            
-            // 복사 후 버튼 텍스트 변경
-            const copyBtn = event.target.closest('.btn');
-            const originalHTML = copyBtn.innerHTML;
-            copyBtn.innerHTML = '<span>✅</span><span>복사 완료!</span>';
-            copyBtn.disabled = true;
-            
-            setTimeout(() => {
-                copyBtn.innerHTML = originalHTML;
-                copyBtn.disabled = false;
-            }, 2000);
-        }
-
-        // 제출 확인 모달 닫기
-        function closeConfirmModal() {
-            document.getElementById('confirmModal').style.display = 'none';
-            pendingFormData = null;
-        }
-
-        // 제출 확인
-        async function confirmSubmit() {
-            if (!pendingFormData) return;
-            
-            try {
-                const { data, error } = await supabase
-                    .from('cancellations')
-                    .insert([pendingFormData])
-                    .select();
-                
-                if (error) throw error;
-                
-                closeConfirmModal();
-                showToast('취소 양식이 제출되었습니다!', 'success');
-                resetForm();
-                updateCRMPreview(null);
-                
-            } catch (error) {
-                console.error('Submit error:', error);
-                showToast('제출 실패: ' + error.message, 'error');
-            }
-        }
-
-        // 데이터 로드
-        async function loadData() {
-            if (!supabase) return;
-            
-            try {
-                let query = supabase
-                    .from('cancellations')
-                    .select('*')
-                    .order('created_at', { ascending: false });
-                
-                // 팀 필터
-                const teamFilter = document.getElementById('filterTeam').value;
-                if (teamFilter !== 'all') {
-                    query = query.eq('submitter_team', teamFilter);
-                }
-                
-                // 날짜 필터
-                const dateFilter = document.getElementById('filterDate').value;
-                if (dateFilter) {
-                    query = query.eq('date', dateFilter);
-                }
-                
-                const { data, error } = await query;
-                
-                if (error) throw error;
-                
-                allData = data || [];
-                updateTable(data);
-                updateStatistics(data);
-                
-            } catch (error) {
-                console.error('Load error:', error);
-                showToast('데이터 로드 실패: ' + error.message, 'error');
-            }
-        }
-
-        // 통계 업데이트
-        function updateStatistics(data) {
-            const today = new Date().toDateString();
-            
-            const stats = {
-                total: data.length,
-                pending: data.filter(item => item.status === 'pending').length,
-                approved: data.filter(item => item.status === 'approved').length,
-                rejected: data.filter(item => item.status === 'rejected').length,
-                today: data.filter(item => new Date(item.created_at).toDateString() === today).length
-            };
-            
-            document.getElementById('statTotal').textContent = stats.total;
-            document.getElementById('statPending').textContent = stats.pending;
-            document.getElementById('statApproved').textContent = stats.approved;
-            document.getElementById('statRejected').textContent = stats.rejected;
-            document.getElementById('statToday').textContent = stats.today;
-        }
-
-        // 테이블 업데이트
-        function updateTable(data) {
-            const tbody = document.getElementById('tableBody');
-            
-            if (!data || data.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="12" style="text-align: center; padding: 40px; color: var(--text-muted);">
-                            등록된 취소 양식이 없습니다
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-            
-            tbody.innerHTML = data.map((item, index) => {
-                const crmText = generateCRMText(item);
-                return `
-                    <tr data-id="${item.id}">
-                        <td>${item.submitter_team || '-'}</td>
-                        <td>${index + 1}</td>
-                        <td>${formatDate(item.date)}</td>
-                        <td>${item.recruiter}</td>
-                        <td>${item.canceller}</td>
-                        <td>${item.customer_name}</td>
-                        <td>${item.customer_phone}</td>
-                        <td>${item.category || '-'}</td>
-                        <td class="truncate" title="${crmText.replace(/"/g, '&quot;')}">${crmText.replace(/\n/g, ' ')}</td>
-                        <td>
-                            <span class="status-badge status-${item.status}">
-                                ${item.status === 'pending' ? '대기중' : 
-                                  item.status === 'approved' ? '승인됨' : '거절됨'}
-                            </span>
-                        </td>
-                        <td>${item.approved_by || '-'}</td>
-                        <td>
-                            <div class="action-buttons">
-                                <button class="btn btn-primary" data-action="view" data-id="${item.id}">
-                                    상세
-                                </button>
-                                ${item.status === 'pending' ? `
-                                    <button class="btn btn-secondary" data-action="approve" data-id="${item.id}">
-                                        승인
-                                    </button>
-                                    <button class="btn btn-danger" data-action="reject" data-id="${item.id}">
-                                        거절
-                                    </button>
-                                ` : `
-                                    <button class="btn btn-warning" data-action="pending" data-id="${item.id}">
-                                        재검토
-                                    </button>
-                                `}
-                                <button class="btn btn-delete" data-action="delete" data-id="${item.id}" title="삭제">
-                                    🗑️
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        // 상태 업데이트
-        async function updateStatus(id, newStatus, adminName) {
-            console.log('updateStatus called:', id, newStatus, adminName);
-            if (!supabase) {
-                console.error('Supabase not initialized');
-                return;
-            }
-            
-            try {
-                const updateData = {
-                    status: newStatus,
-                    approved_by: adminName,
-                    approved_at: new Date().toISOString()
-                };
-                
-                const { error } = await supabase
-                    .from('cancellations')
-                    .update(updateData)
-                    .eq('id', id);
-                
-                if (error) throw error;
-                
-                const statusText = newStatus === 'approved' ? '승인됨' : 
-                                  newStatus === 'rejected' ? '거절됨' : '대기중';
-                showToast(`상태가 ${statusText}으로 변경되었습니다 (처리자: ${adminName})`, 'success');
-                loadData();
-                
-            } catch (error) {
-                console.error('Update error:', error);
-                showToast('상태 변경 실패: ' + error.message, 'error');
-            }
-        }
-
-        // 레코드 삭제
-        async function deleteRecord(id, adminName) {
-            console.log('deleteRecord called:', id, adminName);
-            if (!supabase) {
-                console.error('Supabase not initialized');
-                return;
-            }
-            
-            if (!confirm('정말로 이 기록을 삭제하시겠습니까?\n삭제된 데이터는 복구할 수 없습니다.')) {
-                return;
-            }
-            
-            try {
-                const { error } = await supabase
-                    .from('cancellations')
-                    .delete()
-                    .eq('id', id);
-                
-                if (error) throw error;
-                
-                showToast(`기록이 삭제되었습니다 (삭제자: ${adminName})`, 'success');
-                loadData();
-                
-            } catch (error) {
-                console.error('Delete error:', error);
-                showToast('삭제 실패: ' + error.message, 'error');
-            }
-        }
-
-        // 상세 보기
-        async function viewDetail(id) {
-            console.log('viewDetail called with id:', id);
-            if (!supabase) {
-                console.error('Supabase not initialized');
-                return;
-            }
-            
-            try {
-                const { data, error } = await supabase
-                    .from('cancellations')
-                    .select('*')
-                    .eq('id', id)
-                    .single();
-                
-                if (error) throw error;
-                
-                const modal = document.getElementById('detailModal');
-                const modalBody = document.getElementById('modalBody');
-                
-                const crmText = generateCRMText(data);
-                const fullText = generateFullText(data);
-                
-                // 상태 표시 매핑
-                let statusDisplay = '미배정';
-                if (data.status === 'pending') {
-                    statusDisplay = '확인필요';
-                } else if (data.status === 'approved') {
-                    statusDisplay = '승인됨';
-                } else if (data.status === 'rejected') {
-                    statusDisplay = '거절됨';
-                }
-                
-                modalBody.innerHTML = `
-                    <div class="info-box">
-                        <p><strong>ID:</strong> ${data.id}</p>
-                        <p><strong>제출 시간:</strong> ${new Date(data.created_at).toLocaleString()}</p>
-                        <p><strong>상태:</strong> ${statusDisplay}</p>
-                        ${data.approved_by ? `<p><strong>처리자:</strong> ${data.approved_by}</p>` : ''}
-                        ${data.approved_at ? `<p><strong>처리 시간:</strong> ${new Date(data.approved_at).toLocaleString()}</p>` : ''}
-                    </div>
-                    
-                    <div class="form-group">
-                        <label style="color: var(--primary-blue);">기본 정보</label>
-                        <div style="background: var(--bg-hover); padding: 15px; border-radius: 8px;">
-                            <p><strong>날짜:</strong> ${formatDate(data.date)}</p>
-                            <p><strong>팀:</strong> ${data.submitter_team || '-'}</p>
-                            <p><strong>제출자:</strong> ${data.submitter_name || '-'}</p>
-                            <p><strong>분류:</strong> ${data.category || '-'}</p>
-                            <p><strong>유치자:</strong> ${data.recruiter}</p>
-                            <p><strong>취소자:</strong> ${data.canceller}</p>
-                            <p><strong>고객명:</strong> ${data.customer_name}</p>
-                            <p><strong>고객번호:</strong> ${data.customer_phone}</p>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label style="color: var(--primary-blue);">취소 상세 정보</label>
-                        <div style="background: var(--bg-hover); padding: 15px; border-radius: 8px;">
-                            <p><strong>취소사유:</strong></p>
-                            <p style="margin-left: 20px;">${data.reason}</p>
-                            ${data.defense1 ? `
-                                <p><strong>1차 반론:</strong> ${data.defense1}</p>
-                                <p><strong>1차 결과:</strong> ${data.defense1_result || '없음'}</p>
-                            ` : ''}
-                            ${data.defense2 ? `
-                                <p><strong>2차 반론:</strong> ${data.defense2}</p>
-                                <p><strong>2차 결과:</strong> ${data.defense2_result || '없음'}</p>
-                            ` : ''}
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label style="color: var(--primary-blue);">CRM 입력 양식</label>
-                        <div class="crm-output">
-                            <pre>${crmText}</pre>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label style="color: var(--primary-blue);">엑셀 출력 양식</label>
-                        <div class="crm-output">
-                            <pre>${fullText}</pre>
-                        </div>
-                    </div>
-                    
-                    <div class="btn-group">
-                        <button class="btn btn-primary" onclick="copyToClipboard(\`${crmText.replace(/`/g, '\\`')}\`)">
-                            CRM 양식 복사
-                        </button>
-                        <button class="btn btn-secondary" onclick="copyToClipboard(\`${fullText.replace(/`/g, '\\`')}\`)">
-                            전체 내용 복사
-                        </button>
-                        ${data.status === 'pending' ? `
-                            <button class="btn btn-secondary" onclick="closeModal(); openAuthModal('approve', ${data.id})">
-                                승인하기
-                            </button>
-                            <button class="btn btn-danger" onclick="closeModal(); openAuthModal('reject', ${data.id})">
-                                거절하기
-                            </button>
-                        ` : `
-                            <button class="btn btn-warning" onclick="closeModal(); openAuthModal('pending', ${data.id})">
-                                재검토하기
-                            </button>
-                        `}
-                        <button class="btn btn-delete" onclick="closeModal(); openAuthModal('delete', ${data.id})">
-                            삭제하기
-                        </button>
-                    </div>
-                `;
-                
-                modal.style.display = 'flex';
-                
-            } catch (error) {
-                console.error('Detail error:', error);
-                showToast('상세 정보 로드 실패: ' + error.message, 'error');
-            }
-        }
-
-        // CRM 텍스트 생성
-        function generateCRMText(data) {
-            return `${data.customer_phone} / ${data.customer_name}
-
-※ 고객취소 양식
-
-ㅇ 사유 : ${data.reason}
-ㅇ 1차반론 / 수긍여부 : ${data.defense1} / ${data.defense1_result}
-ㅇ 2차반론 / 수긍여부 : ${data.defense2 || '없음'} / ${data.defense2_result || '해당없음'}`;
-        }
-
-        // 전체 텍스트 생성 (엑셀용)
-        function generateFullText(data) {
-            let text = `${data.customer_name} ${data.customer_phone}
-ㅁ취소사유: ${data.reason}
-1차반론: ${data.defense1} / 결과: ${data.defense1_result}`;
-            
-            if (data.defense2) {
-                text += `
-2차반론: ${data.defense2} / 결과: ${data.defense2_result || '해당없음'}`;
-            }
-            
-            return text;
-        }
-
-        // CRM 미리보기 업데이트
-        function updateCRMPreview(data) {
-            const preview = document.getElementById('crmPreview');
-            
-            if (!data) {
-                preview.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-icon">📭</div>
-                        <p>양식을 입력하면 CRM 형식이 여기에 표시됩니다</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            const crmText = generateCRMText(data);
-            preview.innerHTML = `<pre>${crmText}</pre>`;
-        }
-
-        // CRM 미리보기 복사
-        function copyCRMPreview() {
-            const preview = document.getElementById('crmPreview');
-            const text = preview.innerText;
-            
-            if (text.includes('양식을 입력하면')) {
-                showToast('복사할 내용이 없습니다.', 'error');
-                return;
-            }
-            
-            copyToClipboard(text);
-        }
-
-        // 엑셀 다운로드 (ExcelJS 사용)
-        async function exportToExcel() {
-            if (!supabase) {
-                showToast('데이터베이스가 연결되지 않았습니다.', 'error');
-                return;
-            }
-            
-            try {
-                // 필터 적용된 데이터 가져오기
-                let query = supabase
-                    .from('cancellations')
-                    .select('*')
-                    .order('date', { ascending: false });
-                
-                const teamFilter = document.getElementById('filterTeam').value;
-                if (teamFilter !== 'all') {
-                    query = query.eq('submitter_team', teamFilter);
-                }
-                
-                const dateFilter = document.getElementById('filterDate').value;
-                if (dateFilter) {
-                    query = query.eq('date', dateFilter);
-                }
-                
-                const { data, error } = await query;
-                
-                if (error) throw error;
-                
-                if (!data || data.length === 0) {
-                    showToast('다운로드할 데이터가 없습니다.', 'error');
-                    return;
-                }
-
-                // XLSX 사용
-                const wb = XLSX.utils.book_new();
-                
-                // 데이터 준비 - 요청한 순서대로
-                const wsData = [
-                    ['', '날짜', '유치자', '취소자', '고객명', '고객번호', '분류', '취소사유']
-                ];
-                
-                data.forEach((item, index) => {
-                    wsData.push([
-                        index + 1,
-                        formatDate(item.date),
-                        item.recruiter,
-                        item.canceller,
-                        item.customer_name,
-                        item.customer_phone,
-                        item.category || '',
-                        generateFullText(item)
-                    ]);
-                });
-                
-                const ws = XLSX.utils.aoa_to_sheet(wsData);
-                
-                // 열 너비 설정
-                ws['!cols'] = [
-                    { wch: 5 },   // 순번
-                    { wch: 12 },  // 날짜
-                    { wch: 10 },  // 유치자
-                    { wch: 10 },  // 취소자
-                    { wch: 10 },  // 고객명
-                    { wch: 15 },  // 고객번호
-                    { wch: 8 },   // 분류
-                    { wch: 50 }   // 취소사유
-                ];
-                
-                XLSX.utils.book_append_sheet(wb, ws, 'SNS팀 (날짜)');
-                
-                // 파일 다운로드
-                const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-                const teamName = teamFilter !== 'all' ? `_${teamFilter.replace(/\s/g, '')}` : '';
-                XLSX.writeFile(wb, `취소양식_SNS팀${teamName}_${today}.xlsx`);
-                
-                showToast('엑셀 파일이 다운로드되었습니다!', 'success');
-                
-            } catch (error) {
-                console.error('Export error:', error);
-                showToast('엑셀 다운로드 실패: ' + error.message, 'error');
-            }
-        }
-
-        // 날짜 포맷
-        function formatDate(dateStr) {
-            const date = new Date(dateStr);
-            const year = date.getFullYear().toString().slice(-2);
-            const month = (date.getMonth() + 1).toString().padStart(2, '0');
-            const day = date.getDate().toString().padStart(2, '0');
-            return `${year}.${month}.${day}.`;
-        }
-
-        // 폼 초기화
-        function resetForm() {
-            document.getElementById('cancellationForm').reset();
-            document.getElementById('date').valueAsDate = new Date();
-            
-            // 취소자 필드에 제출자 이름 자동 설정
-            const savedName = localStorage.getItem('submitterName');
-            if (savedName) {
-                document.getElementById('canceller').value = savedName;
-            }
-            
-            updateCRMPreview(null);
-        }
-
-        // 모달 닫기
-        function closeModal() {
-            document.getElementById('detailModal').style.display = 'none';
-        }
-
-        // 클립보드 복사
-        function copyToClipboard(text) {
-            const textarea = document.createElement('textarea');
-            textarea.value = text;
-            document.body.appendChild(textarea);
-            textarea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textarea);
-            showToast('클립보드에 복사되었습니다!', 'success');
-        }
-
-        // 토스트 메시지
-        function showToast(message, type = 'success') {
-            const toast = document.getElementById('toast');
-            toast.textContent = message;
-            toast.className = `toast ${type}`;
-            toast.style.display = 'block';
-            
-            setTimeout(() => {
-                toast.style.display = 'none';
-            }, 3000);
-        }
-
-        // 전역 함수로 등록
-        window.viewDetail = viewDetail;
-        window.openAuthModal = openAuthModal;
-        window.closeModal = closeModal;
-        window.closeAuthModal = closeAuthModal;
-        window.closeSubmitterModal = closeSubmitterModal;
-        window.closeConfirmModal = closeConfirmModal;
-        window.openSubmitterModal = openSubmitterModal;
-        window.resetForm = resetForm;
-        window.copyCRMPreview = copyCRMPreview;
-        window.copyCRMFromModal = copyCRMFromModal;
-        window.confirmSubmit = confirmSubmit;
-        window.loadData = loadData;
-        window.exportToExcel = exportToExcel;
-        window.copyToClipboard = copyToClipboard;
-        
-        // 모달 외부 클릭시 닫기
-        window.onclick = function(event) {
-            const detailModal = document.getElementById('detailModal');
-            const authModal = document.getElementById('authModal');
-            const confirmModal = document.getElementById('confirmModal');
-            const submitterModal = document.getElementById('submitterModal');
-            
-            if (event.target === detailModal) {
-                detailModal.style.display = 'none';
-            }
-            if (event.target === authModal) {
-                closeAuthModal();
-            }
-            if (event.target === confirmModal) {
-                closeConfirmModal();
-            }
-            if (event.target === submitterModal) {
-                closeSubmitterModal();
-            }
-        }
     </script>
 </body>
 </html>
