@@ -239,8 +239,7 @@
             font-size: 1rem;
         }
         
-        .name-input-group input,
-        .name-input-group select {
+        .name-input-group input {
             width: 100%;
             padding: 12px;
             border: 1px solid var(--border-color);
@@ -250,8 +249,7 @@
             color: var(--text-primary);
         }
         
-        .name-input-group input:focus,
-        .name-input-group select:focus {
+        .name-input-group input:focus {
             outline: none;
             border-color: var(--primary-blue);
             box-shadow: 0 0 0 3px rgba(0, 128, 255, 0.2);
@@ -900,7 +898,7 @@
                         <span id="teamIcon">✨</span>
                         <span id="currentTeam">팀 미선택</span>
                     </div>
-                    <button class="btn-switch-team" onclick="openNameSetupModal()">팀 변경</button>
+                    <button class="btn-switch-team" onclick="showTeamSelection()">팀 변경</button>
                 </div>
                 <div class="user-info" id="userInfo">
                     <span>👤</span>
@@ -1242,6 +1240,11 @@
             // UI 업데이트
             document.getElementById('currentTeam').textContent = teamName;
             document.getElementById('teamIcon').textContent = teamIcons[teamName] || '✨';
+            document.getElementById('selectedTeamDisplay').textContent = teamName;
+            document.getElementById('selectedTeamIcon').textContent = teamIcons[teamName] || '✨';
+            
+            // 팀 선택 화면 숨기기
+            document.getElementById('teamSelection').style.display = 'none';
             
             // 이름이 있으면 메인 화면으로, 없으면 이름 설정 모달
             if (currentUserName) {
@@ -1272,68 +1275,43 @@
         }
         
         // 이름 설정 모달 열기
-        function openNameSetupModal(defaultTeam = null) {
+        function openNameSetupModal(teamName) {
             const modal = document.getElementById('nameSetupModal');
             modal.style.display = 'flex';
             
-            // 팀 선택 드롭다운 설정
-            const teamSelect = document.getElementById('modalTeamSelect');
-            if (defaultTeam) {
-                teamSelect.value = defaultTeam;
-            } else if (currentTeam) {
-                teamSelect.value = currentTeam;
-            }
+            // 선택된 팀 표시
+            const team = teamName || currentTeam;
+            document.getElementById('selectedTeamDisplay').textContent = team;
+            document.getElementById('selectedTeamIcon').textContent = teamIcons[team] || '✨';
             
-            // 현재 이름 표시
-            document.getElementById('userNameInput').value = currentUserName;
+            // 해당 팀의 저장된 이름이 있으면 표시
+            const savedName = localStorage.getItem(`userName_${team}`) || '';
+            document.getElementById('userNameInput').value = savedName;
             document.getElementById('userNameInput').focus();
-        }
-        
-        // 이름 설정 모달 닫기
-        function closeNameSetupModal() {
-            document.getElementById('nameSetupModal').style.display = 'none';
-            
-            // 팀과 이름이 모두 설정되어 있으면 메인 화면으로
-            if (currentTeam && currentUserName) {
-                showMainContainer();
-            } else {
-                // 아니면 팀 선택 화면으로
-                showTeamSelection();
-            }
         }
         
         // 사용자 이름 저장
         function saveUserName() {
-            const teamSelect = document.getElementById('modalTeamSelect');
             const nameInput = document.getElementById('userNameInput');
-            const selectedTeam = teamSelect.value;
             const name = nameInput.value.trim();
-            
-            if (!selectedTeam) {
-                showToast('팀을 선택해주세요', 'error');
-                return;
-            }
             
             if (!name) {
                 showToast('이름을 입력해주세요', 'error');
                 return;
             }
             
-            // 팀 변경
-            currentTeam = selectedTeam;
-            localStorage.setItem('selectedTeam', selectedTeam);
-            
             // 이름 저장
             currentUserName = name;
-            localStorage.setItem(`userName_${selectedTeam}`, name);
+            localStorage.setItem(`userName_${currentTeam}`, name);
             
             // UI 업데이트
-            document.getElementById('currentTeam').textContent = selectedTeam;
-            document.getElementById('teamIcon').textContent = teamIcons[selectedTeam] || '✨';
             document.getElementById('userName').textContent = name;
             document.getElementById('canceller').value = name;
             
-            showToast(`${selectedTeam} 사용자 이름이 "${name}"(으)로 설정되었습니다`, 'success');
+            // 모달 닫기
+            document.getElementById('nameSetupModal').style.display = 'none';
+            
+            showToast(`${currentTeam} - ${name}님 환영합니다!`, 'success');
             showMainContainer();
         }
         
@@ -2108,10 +2086,10 @@
         
         // 초기화
         window.onload = function() {
-            // 저장된 팀 확인
+            // 저장된 팀과 이름 확인
             const savedTeam = localStorage.getItem('selectedTeam');
+            
             if (savedTeam) {
-                // 저장된 팀이 있으면 해당 팀으로 설정
                 currentTeam = savedTeam;
                 currentUserName = localStorage.getItem(`userName_${savedTeam}`) || '';
                 
@@ -2121,14 +2099,16 @@
                     document.getElementById('teamIcon').textContent = teamIcons[savedTeam] || '✨';
                     document.getElementById('userName').textContent = currentUserName;
                     document.getElementById('canceller').value = currentUserName;
-                    showMainContainer();
+                    document.querySelector('.container').style.display = 'block';
+                    initializeSupabase();
+                    loadAdminInfo();
                 } else {
-                    // 이름이 없으면 이름 설정 모달
-                    openNameSetupModal(savedTeam);
+                    // 팀은 있지만 이름이 없으면 팀 선택 화면부터
+                    showTeamSelection();
                 }
             } else {
-                // 처음 사용하는 경우 이름 설정 모달 표시
-                openNameSetupModal();
+                // 처음 사용하는 경우 팀 선택 화면
+                showTeamSelection();
             }
             
             document.getElementById('date').valueAsDate = new Date();
@@ -2225,15 +2205,6 @@
             document.getElementById('userNameInput').addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
                     saveUserName();
-                }
-            });
-            
-            // 팀 선택 변경 시 해당 팀의 저장된 이름 로드
-            document.getElementById('modalTeamSelect').addEventListener('change', function(e) {
-                const selectedTeam = e.target.value;
-                if (selectedTeam) {
-                    const savedName = localStorage.getItem(`userName_${selectedTeam}`) || '';
-                    document.getElementById('userNameInput').value = savedName;
                 }
             });
             
