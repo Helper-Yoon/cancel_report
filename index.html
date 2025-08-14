@@ -40,9 +40,228 @@
             font-size: 15px;
         }
 
+        /* 팀 선택 화면 스타일 */
+        @keyframes fadeIn {
+            from { 
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .team-selection {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at center, #1a1a1a 0%, #000000 100%);
+            animation: fadeIn 0.5s ease;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 9999;
+        }
+        
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            max-width: 900px;
+            width: 100%;
+            padding: 2rem;
+        }
+        
+        .team-card {
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-hover) 100%);
+            border: 2px solid var(--border-color);
+            border-radius: 1rem;
+            padding: 2.5rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .team-card::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-blue-dark), var(--primary-blue));
+            border-radius: 1rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: -1;
+        }
+        
+        .team-card:hover {
+            transform: translateY(-8px) scale(1.05);
+            border-color: var(--primary-blue);
+            box-shadow: 0 15px 40px rgba(0, 128, 255, 0.3);
+        }
+        
+        .team-card:hover .team-icon {
+            transform: scale(1.1);
+            filter: drop-shadow(0 0 20px rgba(0, 128, 255, 0.5));
+        }
+        
+        .team-card:hover::before {
+            opacity: 1;
+        }
+        
+        .team-icon {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.1));
+            transition: all 0.3s;
+        }
+        
+        .team-name {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: var(--text-primary);
+            text-shadow: 0 0 10px rgba(0, 128, 255, 0.2);
+        }
+
+        .team-selection-title {
+            text-align: center;
+            margin-bottom: 3rem;
+            font-size: 2rem;
+            background: linear-gradient(135deg, #ffffff 0%, var(--primary-blue) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: none;
+        }
+
+        /* 팀 배지 스타일 */
+        .team-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-dark) 100%);
+            border-radius: 2rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(0, 128, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .team-badge::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            animation: shine 3s infinite;
+        }
+        
+        @keyframes shine {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+        
+        .team-switcher {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-switch-team {
+            padding: 0.5rem 1rem;
+            background: var(--bg-hover);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-switch-team:hover {
+            background: var(--bg-card);
+            border-color: var(--primary-blue);
+            color: var(--primary-blue);
+            box-shadow: 0 0 10px rgba(0, 128, 255, 0.2);
+        }
+
+        /* 이름 설정 모달 */
+        .name-setup-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+        
+        .name-setup-content {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            border: 2px solid var(--primary-blue);
+            box-shadow: 0 20px 40px rgba(0, 128, 255, 0.3);
+        }
+        
+        .name-setup-title {
+            color: var(--primary-blue);
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .name-input-group {
+            margin-bottom: 20px;
+        }
+        
+        .name-input-group label {
+            display: block;
+            color: var(--text-secondary);
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+        
+        .name-input-group input,
+        .name-input-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1.05rem;
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+        
+        .name-input-group input:focus,
+        .name-input-group select:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(0, 128, 255, 0.2);
+            background: var(--bg-dark);
+        }
+
         .container {
             max-width: 1500px;
             margin: 0 auto;
+            display: none;
         }
 
         .header {
@@ -74,6 +293,27 @@
             display: flex;
             gap: 20px;
             align-items: center;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 18px;
+            background: var(--bg-hover);
+            border-radius: 20px;
+            font-size: 0.95rem;
+        }
+
+        .user-info span {
+            color: var(--primary-blue);
+            font-weight: 600;
+        }
+        
+        .user-info .btn {
+            padding: 4px 10px !important;
+            font-size: 0.85rem !important;
+            margin-left: 8px;
         }
 
         .admin-info {
@@ -603,15 +843,69 @@
     </style>
 </head>
 <body>
+    <!-- 팀 선택 화면 -->
+    <div id="teamSelection" class="team-selection" style="display: none;">
+        <div>
+            <h1 class="team-selection-title">✨ 소속 팀을 선택하세요 ✨</h1>
+            <div class="team-grid">
+                <div class="team-card" onclick="selectTeam('SNS 1팀')" style="animation: fadeIn 0.5s ease 0.1s both;">
+                    <div class="team-icon">🚀</div>
+                    <div class="team-name">SNS 1팀</div>
+                </div>
+                <div class="team-card" onclick="selectTeam('SNS 2팀')" style="animation: fadeIn 0.5s ease 0.2s both;">
+                    <div class="team-icon">⭐</div>
+                    <div class="team-name">SNS 2팀</div>
+                </div>
+                <div class="team-card" onclick="selectTeam('SNS 3팀')" style="animation: fadeIn 0.5s ease 0.3s both;">
+                    <div class="team-icon">💎</div>
+                    <div class="team-name">SNS 3팀</div>
+                </div>
+                <div class="team-card" onclick="selectTeam('SNS 4팀')" style="animation: fadeIn 0.5s ease 0.4s both;">
+                    <div class="team-icon">🔥</div>
+                    <div class="team-name">SNS 4팀</div>
+                </div>
+                <div class="team-card" onclick="selectTeam('의정부 SNS팀')" style="animation: fadeIn 0.5s ease 0.5s both;">
+                    <div class="team-icon">🏆</div>
+                    <div class="team-name">의정부 SNS팀</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 이름 설정 모달 -->
+    <div id="nameSetupModal" class="name-setup-modal">
+        <div class="name-setup-content">
+            <h3 class="name-setup-title">
+                <span id="selectedTeamDisplay">팀</span> 정보 설정
+            </h3>
+            <div class="name-input-group">
+                <label for="userNameInput">이름 <span style="color: var(--danger);">*</span></label>
+                <input type="text" id="userNameInput" placeholder="이름을 입력하세요" required>
+            </div>
+            <div class="btn-group" style="justify-content: center;">
+                <button type="button" class="btn btn-primary" onclick="saveUserName()">
+                    <span>✔️</span>
+                    <span>설정하기</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div class="container">
         <div class="header">
             <h1>취소양식 관리 시스템</h1>
             <div class="header-right">
-                <div class="admin-info" id="submitterInfo" style="display: flex;">
+                <div class="team-switcher">
+                    <div class="team-badge">
+                        <span id="teamIcon">✨</span>
+                        <span id="currentTeam">팀 미선택</span>
+                    </div>
+                    <button class="btn-switch-team" onclick="openNameSetupModal()">팀 변경</button>
+                </div>
+                <div class="user-info" id="userInfo">
                     <span>👤</span>
-                    <span id="submitterTeam">-</span>
-                    <span id="submitterName">-</span>
-                    <button class="btn btn-primary" onclick="openSubmitterModal()" style="padding: 5px 10px; font-size: 0.85rem; margin-left: 10px;">
+                    <span id="userName">-</span>
+                    <button class="btn btn-primary" onclick="openNameSetupModal()" style="padding: 5px 10px; font-size: 0.85rem; margin-left: 10px;">
                         변경
                     </button>
                 </div>
@@ -765,17 +1059,6 @@
             
             <div class="filter-section">
                 <div class="form-group">
-                    <label for="filterTeam">팀 필터</label>
-                    <select id="filterTeam" onchange="loadData()">
-                        <option value="all">전체</option>
-                        <option value="SNS 1팀">SNS 1팀</option>
-                        <option value="SNS 2팀">SNS 2팀</option>
-                        <option value="SNS 3팀">SNS 3팀</option>
-                        <option value="SNS 4팀">SNS 4팀</option>
-                        <option value="의정부 SNS팀">의정부 SNS팀</option>
-                    </select>
-                </div>
-                <div class="form-group">
                     <label for="filterDate">날짜 필터</label>
                     <input type="date" id="filterDate" onchange="loadData()">
                 </div>
@@ -827,42 +1110,6 @@
                 <button class="modal-close" onclick="closeModal()">✕</button>
             </div>
             <div id="modalBody"></div>
-        </div>
-    </div>
-
-    <!-- 제출자 설정 모달 -->
-    <div id="submitterModal" class="modal">
-        <div class="modal-content auth-modal">
-            <div class="modal-header">
-                <h3>제출자 설정</h3>
-                <button class="modal-close" onclick="closeSubmitterModal()">✕</button>
-            </div>
-            <form id="submitterForm" class="auth-form">
-                <div class="form-group">
-                    <label for="submitterTeamSelect">팀 선택 <span style="color: var(--danger);">*</span></label>
-                    <select id="submitterTeamSelect" required>
-                        <option value="">팀을 선택하세요</option>
-                        <option value="SNS 1팀">SNS 1팀</option>
-                        <option value="SNS 2팀">SNS 2팀</option>
-                        <option value="SNS 3팀">SNS 3팀</option>
-                        <option value="SNS 4팀">SNS 4팀</option>
-                        <option value="의정부 SNS팀">의정부 SNS팀</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="submitterNameInput">이름 <span style="color: var(--danger);">*</span></label>
-                    <input type="text" id="submitterNameInput" placeholder="이름을 입력하세요" required>
-                </div>
-                <div class="btn-group">
-                    <button type="submit" class="btn btn-primary">
-                        <span>✔️</span>
-                        <span>설정하기</span>
-                    </button>
-                    <button type="button" class="btn btn-danger" onclick="closeSubmitterModal()">
-                        취소
-                    </button>
-                </div>
-            </form>
         </div>
     </div>
 
@@ -942,14 +1189,25 @@
         
         const ADMIN_PASSWORD = '3504';
         
+        // 팀별 아이콘
+        const teamIcons = {
+            'SNS 1팀': '🚀',
+            'SNS 2팀': '⭐',
+            'SNS 3팀': '💎',
+            'SNS 4팀': '🔥',
+            '의정부 SNS팀': '🏆'
+        };
+        
         let supabase = null;
         let realtimeChannel = null;
         let allData = [];
         let currentAuthAction = null;
         let currentAuthData = null;
         let pendingFormData = null;
+        let currentTeam = '';
+        let currentUserName = '';
         
-        // 토스트 메시지 먼저 정의
+        // 토스트 메시지
         window.showToast = function(message, type = 'success') {
             const toast = document.getElementById('toast');
             toast.textContent = message;
@@ -961,17 +1219,132 @@
             }, 3000);
         };
         
+        // 팀 선택 화면 표시
+        function showTeamSelection() {
+            document.getElementById('teamSelection').style.display = 'flex';
+            document.querySelector('.container').style.display = 'none';
+            
+            // 리얼타임 구독 해제
+            if (realtimeChannel) {
+                supabase.removeChannel(realtimeChannel);
+                realtimeChannel = null;
+            }
+        }
+        
+        // 팀 선택
+        function selectTeam(teamName) {
+            currentTeam = teamName;
+            localStorage.setItem('selectedTeam', teamName);
+            
+            // 팀별로 다른 사용자 이름 로드
+            currentUserName = localStorage.getItem(`userName_${teamName}`) || '';
+            
+            // UI 업데이트
+            document.getElementById('currentTeam').textContent = teamName;
+            document.getElementById('teamIcon').textContent = teamIcons[teamName] || '✨';
+            
+            // 이름이 있으면 메인 화면으로, 없으면 이름 설정 모달
+            if (currentUserName) {
+                document.getElementById('userName').textContent = currentUserName;
+                document.getElementById('canceller').value = currentUserName;
+                showMainContainer();
+            } else {
+                openNameSetupModal(teamName);
+            }
+        }
+        
+        // 메인 화면 표시
+        function showMainContainer() {
+            document.getElementById('teamSelection').style.display = 'none';
+            document.getElementById('nameSetupModal').style.display = 'none';
+            document.querySelector('.container').style.display = 'block';
+            
+            // Supabase 초기화 및 데이터 로드
+            if (!supabase) {
+                initializeSupabase();
+            } else {
+                setupRealtimeSubscription();
+                window.loadData();
+            }
+            
+            // 관리자 정보 로드
+            loadAdminInfo();
+        }
+        
+        // 이름 설정 모달 열기
+        function openNameSetupModal(defaultTeam = null) {
+            const modal = document.getElementById('nameSetupModal');
+            modal.style.display = 'flex';
+            
+            // 팀 선택 드롭다운 설정
+            const teamSelect = document.getElementById('modalTeamSelect');
+            if (defaultTeam) {
+                teamSelect.value = defaultTeam;
+            } else if (currentTeam) {
+                teamSelect.value = currentTeam;
+            }
+            
+            // 현재 이름 표시
+            document.getElementById('userNameInput').value = currentUserName;
+            document.getElementById('userNameInput').focus();
+        }
+        
+        // 이름 설정 모달 닫기
+        function closeNameSetupModal() {
+            document.getElementById('nameSetupModal').style.display = 'none';
+            
+            // 팀과 이름이 모두 설정되어 있으면 메인 화면으로
+            if (currentTeam && currentUserName) {
+                showMainContainer();
+            } else {
+                // 아니면 팀 선택 화면으로
+                showTeamSelection();
+            }
+        }
+        
+        // 사용자 이름 저장
+        function saveUserName() {
+            const teamSelect = document.getElementById('modalTeamSelect');
+            const nameInput = document.getElementById('userNameInput');
+            const selectedTeam = teamSelect.value;
+            const name = nameInput.value.trim();
+            
+            if (!selectedTeam) {
+                showToast('팀을 선택해주세요', 'error');
+                return;
+            }
+            
+            if (!name) {
+                showToast('이름을 입력해주세요', 'error');
+                return;
+            }
+            
+            // 팀 변경
+            currentTeam = selectedTeam;
+            localStorage.setItem('selectedTeam', selectedTeam);
+            
+            // 이름 저장
+            currentUserName = name;
+            localStorage.setItem(`userName_${selectedTeam}`, name);
+            
+            // UI 업데이트
+            document.getElementById('currentTeam').textContent = selectedTeam;
+            document.getElementById('teamIcon').textContent = teamIcons[selectedTeam] || '✨';
+            document.getElementById('userName').textContent = name;
+            document.getElementById('canceller').value = name;
+            
+            showToast(`${selectedTeam} 사용자 이름이 "${name}"(으)로 설정되었습니다`, 'success');
+            showMainContainer();
+        }
+        
         // 상태 업데이트 함수
         window.updateStatus = async function(id, newStatus, adminName) {
-            console.log('updateStatus finally called!', id, newStatus, adminName);
             if (!supabase) {
-                console.error('Supabase not initialized');
                 window.showToast('데이터베이스가 연결되지 않았습니다.', 'error');
                 return;
             }
             
             try {
-                console.log('Sending update to Supabase...');
                 const updateData = {
                     status: newStatus,
                     approved_by: adminName,
@@ -984,100 +1357,76 @@
                     .eq('id', id)
                     .select();
                 
-                console.log('Supabase response:', data, error);
-                
                 if (error) throw error;
                 
                 const statusText = newStatus === 'approved' ? '승인됨' : 
                                   newStatus === 'rejected' ? '거절됨' : '확인필요';
                 window.showToast(`상태가 ${statusText}로 변경되었습니다 (처리자: ${adminName})`, 'success');
                 
-                // loadData 호출
                 if (window.loadData) {
                     window.loadData();
                 }
                 
             } catch (error) {
-                console.error('Update error:', error);
                 window.showToast('상태 변경 실패: ' + error.message, 'error');
             }
         };
         
         // 삭제 함수
         window.deleteRecord = async function(id, adminName) {
-            console.log('deleteRecord finally called!', id, adminName);
             if (!supabase) {
-                console.error('Supabase not initialized');
                 window.showToast('데이터베이스가 연결되지 않았습니다.', 'error');
                 return;
             }
             
             if (!confirm('정말로 이 기록을 삭제하시겠습니까?\n삭제된 데이터는 복구할 수 없습니다.')) {
-                console.log('User cancelled deletion');
                 return;
             }
             
             try {
-                console.log('Sending delete to Supabase...');
                 const { data, error } = await supabase
                     .from('cancellations')
                     .delete()
                     .eq('id', id)
                     .select();
                 
-                console.log('Supabase delete response:', data, error);
-                
                 if (error) throw error;
                 
                 window.showToast(`기록이 삭제되었습니다 (삭제자: ${adminName})`, 'success');
                 
-                // loadData 호출
                 if (window.loadData) {
                     window.loadData();
                 }
                 
             } catch (error) {
-                console.error('Delete error:', error);
                 window.showToast('삭제 실패: ' + error.message, 'error');
             }
         };
         
         // handleAuthSuccess 함수
         window.handleAuthSuccess = function(adminName) {
-            console.log('handleAuthSuccess called:', adminName, currentAuthAction, currentAuthData);
-            
-            // 모달 닫기
             const authModal = document.getElementById('authModal');
             if (authModal) {
                 authModal.style.display = 'none';
                 document.getElementById('authForm').reset();
             }
             
-            console.log('About to call action:', currentAuthAction);
-            
-            // 액션 실행
             if (currentAuthAction === 'approve') {
-                console.log('Calling updateStatus for approve...');
                 window.updateStatus(currentAuthData, 'approved', adminName);
             } else if (currentAuthAction === 'reject') {
-                console.log('Calling updateStatus for reject...');
                 window.updateStatus(currentAuthData, 'rejected', adminName);
             } else if (currentAuthAction === 'pending') {
-                console.log('Calling updateStatus for pending...');
                 window.updateStatus(currentAuthData, 'pending', adminName);
             } else if (currentAuthAction === 'delete') {
-                console.log('Calling deleteRecord...');
                 window.deleteRecord(currentAuthData, adminName);
             }
             
-            // 변수 초기화
             currentAuthAction = null;
             currentAuthData = null;
         };
         
         // openAuthModal 함수
         window.openAuthModal = function(action, data) {
-            console.log('openAuthModal called:', action, data);
             currentAuthAction = action;
             currentAuthData = data;
             
@@ -1085,13 +1434,10 @@
             const savedPassword = localStorage.getItem('adminPassword');
             
             if (savedAdmin && savedPassword === ADMIN_PASSWORD) {
-                console.log('Auto auth with saved credentials');
-                // setTimeout 사용하여 비동기 처리
                 setTimeout(() => {
                     window.handleAuthSuccess(savedAdmin);
                 }, 100);
             } else {
-                console.log('Showing auth modal');
                 document.getElementById('authModal').style.display = 'flex';
                 const authNameInput = document.getElementById('authName');
                 if (authNameInput) {
@@ -1266,20 +1612,6 @@
             }
         }
         
-        function loadSubmitterInfo() {
-            const savedTeam = localStorage.getItem('submitterTeam');
-            const savedName = localStorage.getItem('submitterName');
-            
-            if (savedTeam && savedName) {
-                document.getElementById('submitterTeam').textContent = savedTeam;
-                document.getElementById('submitterName').textContent = savedName;
-            } else {
-                setTimeout(() => {
-                    window.openSubmitterModal();
-                }, 1000);
-            }
-        }
-        
         async function initializeSupabase() {
             try {
                 document.getElementById('statusDot').className = 'status-dot connecting';
@@ -1425,37 +1757,17 @@
             currentAuthData = null;
         };
         
-        window.closeSubmitterModal = function() {
-            document.getElementById('submitterModal').style.display = 'none';
-        };
-        
         window.closeConfirmModal = function() {
             document.getElementById('confirmModal').style.display = 'none';
             pendingFormData = null;
-        };
-        
-        window.openSubmitterModal = function() {
-            const modal = document.getElementById('submitterModal');
-            const savedTeam = localStorage.getItem('submitterTeam');
-            const savedName = localStorage.getItem('submitterName');
-            
-            if (savedTeam) {
-                document.getElementById('submitterTeamSelect').value = savedTeam;
-            }
-            if (savedName) {
-                document.getElementById('submitterNameInput').value = savedName;
-            }
-            
-            modal.style.display = 'flex';
         };
         
         window.resetForm = function() {
             document.getElementById('cancellationForm').reset();
             document.getElementById('date').valueAsDate = new Date();
             
-            const savedName = localStorage.getItem('submitterName');
-            if (savedName) {
-                document.getElementById('canceller').value = savedName;
+            if (currentUserName) {
+                document.getElementById('canceller').value = currentUserName;
             }
             
             updateCRMPreview(null);
@@ -1520,9 +1832,9 @@
                     .select('*')
                     .order('created_at', { ascending: false });
                 
-                const teamFilter = document.getElementById('filterTeam').value;
-                if (teamFilter !== 'all') {
-                    query = query.eq('submitter_team', teamFilter);
+                // 팀 필터 적용
+                if (currentTeam) {
+                    query = query.eq('submitter_team', currentTeam);
                 }
                 
                 const dateFilter = document.getElementById('filterDate').value;
@@ -1556,9 +1868,9 @@
                     .select('*')
                     .order('date', { ascending: false });
                 
-                const teamFilter = document.getElementById('filterTeam').value;
-                if (teamFilter !== 'all') {
-                    query = query.eq('submitter_team', teamFilter);
+                // 팀 필터 적용
+                if (currentTeam) {
+                    query = query.eq('submitter_team', currentTeam);
                 }
                 
                 const dateFilter = document.getElementById('filterDate').value;
@@ -1614,7 +1926,7 @@
 
                 // 데이터 추가
                 data.forEach((item, index) => {
-                    // 취소사유 텍스트 구성 - 필요한 정보만
+                    // 취소사유 텍스트 구성
                     let cancelReason = `${item.customer_name} ${item.customer_phone}
 ㅁ취소사유: ${item.reason}`;
                     
@@ -1676,23 +1988,6 @@
                     { width: 63.125 }
                 ];
 
-                // 인쇄 설정
-                worksheet.pageSetup = {
-                    paperSize: 9,
-                    orientation: 'landscape',
-                    fitToPage: true,
-                    fitToWidth: 1,
-                    fitToHeight: 0,
-                    margins: {
-                        left: 0.7,
-                        right: 0.7,
-                        top: 0.75,
-                        bottom: 0.75,
-                        header: 0.3,
-                        footer: 0.3
-                    }
-                };
-
                 // 엑셀 파일 생성 및 다운로드
                 const buffer = await workbook.xlsx.writeBuffer();
                 const blob = new Blob([buffer], { 
@@ -1703,8 +1998,8 @@
                 a.href = url;
                 
                 const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-                const teamName = teamFilter !== 'all' ? `_${teamFilter.replace(/\s/g, '')}` : '';
-                a.download = `취소양식_SNS팀${teamName}_${today}.xlsx`;
+                const teamName = currentTeam ? `_${currentTeam.replace(/\s/g, '')}` : '';
+                a.download = `취소양식_${currentTeam}${teamName}_${today}.xlsx`;
                 a.click();
                 
                 window.URL.revokeObjectURL(url);
@@ -1813,15 +2108,30 @@
         
         // 초기화
         window.onload = function() {
-            initializeSupabase();
-            document.getElementById('date').valueAsDate = new Date();
-            loadAdminInfo();
-            loadSubmitterInfo();
-            
-            const savedName = localStorage.getItem('submitterName');
-            if (savedName) {
-                document.getElementById('canceller').value = savedName;
+            // 저장된 팀 확인
+            const savedTeam = localStorage.getItem('selectedTeam');
+            if (savedTeam) {
+                // 저장된 팀이 있으면 해당 팀으로 설정
+                currentTeam = savedTeam;
+                currentUserName = localStorage.getItem(`userName_${savedTeam}`) || '';
+                
+                if (currentUserName) {
+                    // 팀과 이름이 모두 있으면 바로 메인 화면
+                    document.getElementById('currentTeam').textContent = savedTeam;
+                    document.getElementById('teamIcon').textContent = teamIcons[savedTeam] || '✨';
+                    document.getElementById('userName').textContent = currentUserName;
+                    document.getElementById('canceller').value = currentUserName;
+                    showMainContainer();
+                } else {
+                    // 이름이 없으면 이름 설정 모달
+                    openNameSetupModal(savedTeam);
+                }
+            } else {
+                // 처음 사용하는 경우 이름 설정 모달 표시
+                openNameSetupModal();
             }
+            
+            document.getElementById('date').valueAsDate = new Date();
             
             // 전화번호 입력 이벤트
             document.getElementById('customerPhone').addEventListener('input', function(e) {
@@ -1850,12 +2160,9 @@
                     return;
                 }
                 
-                const submitterTeam = localStorage.getItem('submitterTeam');
-                const submitterName = localStorage.getItem('submitterName');
-                
-                if (!submitterTeam || !submitterName) {
-                    showToast('제출자 정보를 먼저 설정해주세요.', 'error');
-                    openSubmitterModal();
+                if (!currentTeam || !currentUserName) {
+                    showToast('팀과 이름을 먼저 설정해주세요.', 'error');
+                    showTeamSelection();
                     return;
                 }
                 
@@ -1873,8 +2180,8 @@
                 pendingFormData = {
                     date: document.getElementById('date').value,
                     category: document.getElementById('category').value,
-                    submitter_team: submitterTeam,
-                    submitter_name: submitterName,
+                    submitter_team: currentTeam,
+                    submitter_name: currentUserName,
                     recruiter: document.getElementById('recruiter').value,
                     canceller: document.getElementById('canceller').value,
                     customer_name: document.getElementById('customerName').value,
@@ -1888,26 +2195,6 @@
                 };
                 
                 showConfirmModal();
-            });
-            
-            // 제출자 폼 처리
-            document.getElementById('submitterForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                const team = document.getElementById('submitterTeamSelect').value;
-                const name = document.getElementById('submitterNameInput').value;
-                
-                if (team && name) {
-                    localStorage.setItem('submitterTeam', team);
-                    localStorage.setItem('submitterName', name);
-                    
-                    document.getElementById('submitterTeam').textContent = team;
-                    document.getElementById('submitterName').textContent = name;
-                    document.getElementById('canceller').value = name;
-                    
-                    closeSubmitterModal();
-                    showToast('제출자 정보가 설정되었습니다.', 'success');
-                }
             });
             
             // 인증 폼 처리
@@ -1934,12 +2221,27 @@
                 handleAuthSuccess(name);
             });
             
+            // 이름 입력 엔터 처리
+            document.getElementById('userNameInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    saveUserName();
+                }
+            });
+            
+            // 팀 선택 변경 시 해당 팀의 저장된 이름 로드
+            document.getElementById('modalTeamSelect').addEventListener('change', function(e) {
+                const selectedTeam = e.target.value;
+                if (selectedTeam) {
+                    const savedName = localStorage.getItem(`userName_${selectedTeam}`) || '';
+                    document.getElementById('userNameInput').value = savedName;
+                }
+            });
+            
             // 모달 외부 클릭시 닫기
             window.onclick = function(event) {
                 const detailModal = document.getElementById('detailModal');
                 const authModal = document.getElementById('authModal');
                 const confirmModal = document.getElementById('confirmModal');
-                const submitterModal = document.getElementById('submitterModal');
                 
                 if (event.target === detailModal) {
                     detailModal.style.display = 'none';
@@ -1949,9 +2251,6 @@
                 }
                 if (event.target === confirmModal) {
                     closeConfirmModal();
-                }
-                if (event.target === submitterModal) {
-                    closeSubmitterModal();
                 }
             };
         };
