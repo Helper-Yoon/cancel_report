@@ -196,66 +196,6 @@
             box-shadow: 0 0 10px rgba(0, 128, 255, 0.2);
         }
 
-        /* 이름 설정 모달 */
-        .name-setup-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-        }
-        
-        .name-setup-content {
-            background: var(--bg-card);
-            border-radius: 12px;
-            padding: 30px;
-            max-width: 400px;
-            width: 90%;
-            border: 2px solid var(--primary-blue);
-            box-shadow: 0 20px 40px rgba(0, 128, 255, 0.3);
-        }
-        
-        .name-setup-title {
-            color: var(--primary-blue);
-            font-size: 1.4rem;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-        
-        .name-input-group {
-            margin-bottom: 20px;
-        }
-        
-        .name-input-group label {
-            display: block;
-            color: var(--text-secondary);
-            font-weight: 600;
-            margin-bottom: 8px;
-            font-size: 1rem;
-        }
-        
-        .name-input-group input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            font-size: 1.05rem;
-            background: var(--bg-hover);
-            color: var(--text-primary);
-        }
-        
-        .name-input-group input:focus {
-            outline: none;
-            border-color: var(--primary-blue);
-            box-shadow: 0 0 0 3px rgba(0, 128, 255, 0.2);
-            background: var(--bg-dark);
-        }
-
         .container {
             max-width: 1500px;
             margin: 0 auto;
@@ -843,26 +783,46 @@
 <body>
     <!-- 팀 선택 화면 -->
     <div id="teamSelection" class="team-selection" style="display: none;">
-        <div>
-            <h1 class="team-selection-title">✨ 소속 팀을 선택하세요 ✨</h1>
+        <div style="width: 100%; max-width: 900px; padding: 2rem;">
+            <h1 class="team-selection-title">✨ 사용자 정보를 입력하세요 ✨</h1>
+            
+            <!-- 이름 입력 섹션 -->
+            <div style="background: var(--bg-card); border-radius: 1rem; padding: 2rem; margin-bottom: 2rem; border: 2px solid var(--border-color);">
+                <label style="display: block; color: var(--text-secondary); font-weight: 600; margin-bottom: 0.5rem; font-size: 1.1rem;">
+                    이름 <span style="color: var(--danger);">*</span>
+                </label>
+                <input type="text" id="teamSelectionNameInput" placeholder="이름을 입력하세요" 
+                    style="width: 100%; padding: 1rem; border: 1px solid var(--border-color); border-radius: 0.5rem; 
+                    font-size: 1.1rem; background: var(--bg-hover); color: var(--text-primary); transition: all 0.3s ease;"
+                    onfocus="this.style.borderColor='var(--primary-blue)'; this.style.boxShadow='0 0 0 3px rgba(0, 128, 255, 0.2)'; this.style.background='var(--bg-dark)';"
+                    onblur="this.style.borderColor='var(--border-color)'; this.style.boxShadow='none'; this.style.background='var(--bg-hover)';">
+            </div>
+            
+            <!-- 팀 선택 섹션 -->
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; color: var(--text-secondary); font-weight: 600; margin-bottom: 1rem; font-size: 1.1rem; text-align: center;">
+                    소속 팀을 선택하세요 <span style="color: var(--danger);">*</span>
+                </label>
+            </div>
+            
             <div class="team-grid">
-                <div class="team-card" onclick="selectTeam('SNS 1팀')" style="animation: fadeIn 0.5s ease 0.1s both;">
+                <div class="team-card" onclick="selectTeamWithName('SNS 1팀')" style="animation: fadeIn 0.5s ease 0.1s both;">
                     <div class="team-icon">🚀</div>
                     <div class="team-name">SNS 1팀</div>
                 </div>
-                <div class="team-card" onclick="selectTeam('SNS 2팀')" style="animation: fadeIn 0.5s ease 0.2s both;">
+                <div class="team-card" onclick="selectTeamWithName('SNS 2팀')" style="animation: fadeIn 0.5s ease 0.2s both;">
                     <div class="team-icon">⭐</div>
                     <div class="team-name">SNS 2팀</div>
                 </div>
-                <div class="team-card" onclick="selectTeam('SNS 3팀')" style="animation: fadeIn 0.5s ease 0.3s both;">
+                <div class="team-card" onclick="selectTeamWithName('SNS 3팀')" style="animation: fadeIn 0.5s ease 0.3s both;">
                     <div class="team-icon">💎</div>
                     <div class="team-name">SNS 3팀</div>
                 </div>
-                <div class="team-card" onclick="selectTeam('SNS 4팀')" style="animation: fadeIn 0.5s ease 0.4s both;">
+                <div class="team-card" onclick="selectTeamWithName('SNS 4팀')" style="animation: fadeIn 0.5s ease 0.4s both;">
                     <div class="team-icon">🔥</div>
                     <div class="team-name">SNS 4팀</div>
                 </div>
-                <div class="team-card" onclick="selectTeam('의정부 SNS팀')" style="animation: fadeIn 0.5s ease 0.5s both;">
+                <div class="team-card" onclick="selectTeamWithName('의정부 SNS팀')" style="animation: fadeIn 0.5s ease 0.5s both;">
                     <div class="team-icon">🏆</div>
                     <div class="team-name">의정부 SNS팀</div>
                 </div>
@@ -903,7 +863,7 @@
                 <div class="user-info" id="userInfo">
                     <span>👤</span>
                     <span id="userName">-</span>
-                    <button class="btn btn-primary" onclick="openNameSetupModal()" style="padding: 5px 10px; font-size: 0.85rem; margin-left: 10px;">
+                    <button class="btn btn-primary" onclick="changeUserName()" style="padding: 5px 10px; font-size: 0.85rem; margin-left: 10px;">
                         변경
                     </button>
                 </div>
@@ -1218,9 +1178,18 @@
         };
         
         // 팀 선택 화면 표시
-        function showTeamSelection() {
+        window.showTeamSelection = function() {
             document.getElementById('teamSelection').style.display = 'flex';
             document.querySelector('.container').style.display = 'none';
+            
+            // 저장된 이름이 있으면 표시
+            const savedName = localStorage.getItem('lastUserName') || '';
+            document.getElementById('teamSelectionNameInput').value = savedName;
+            
+            // 이름 입력 필드에 포커스
+            setTimeout(() => {
+                document.getElementById('teamSelectionNameInput').focus();
+            }, 100);
             
             // 리얼타임 구독 해제
             if (realtimeChannel) {
@@ -1229,8 +1198,38 @@
             }
         }
         
-        // 팀 선택
-        function selectTeam(teamName) {
+        // 이름과 함께 팀 선택
+        window.selectTeamWithName = function(teamName) {
+            const nameInput = document.getElementById('teamSelectionNameInput');
+            const name = nameInput.value.trim();
+            
+            if (!name) {
+                window.showToast('이름을 먼저 입력해주세요', 'error');
+                nameInput.focus();
+                return;
+            }
+            
+            // 팀과 이름 저장
+            currentTeam = teamName;
+            currentUserName = name;
+            localStorage.setItem('selectedTeam', teamName);
+            localStorage.setItem(`userName_${teamName}`, name);
+            localStorage.setItem('lastUserName', name); // 마지막 사용 이름 저장
+            
+            // UI 업데이트
+            document.getElementById('currentTeam').textContent = teamName;
+            document.getElementById('teamIcon').textContent = teamIcons[teamName] || '✨';
+            document.getElementById('userName').textContent = name;
+            document.getElementById('canceller').value = name;
+            
+            // 팀 선택 화면 숨기고 메인 화면 표시
+            document.getElementById('teamSelection').style.display = 'none';
+            window.showToast(`${teamName} - ${name}님 환영합니다!`, 'success');
+            window.showMainContainer();
+        }
+        
+        // 팀 선택 (기존 함수 - 팀 변경 시 사용)
+        window.selectTeam = function(teamName) {
             currentTeam = teamName;
             localStorage.setItem('selectedTeam', teamName);
             
@@ -1240,26 +1239,21 @@
             // UI 업데이트
             document.getElementById('currentTeam').textContent = teamName;
             document.getElementById('teamIcon').textContent = teamIcons[teamName] || '✨';
-            document.getElementById('selectedTeamDisplay').textContent = teamName;
-            document.getElementById('selectedTeamIcon').textContent = teamIcons[teamName] || '✨';
             
-            // 팀 선택 화면 숨기기
-            document.getElementById('teamSelection').style.display = 'none';
-            
-            // 이름이 있으면 메인 화면으로, 없으면 이름 설정 모달
             if (currentUserName) {
                 document.getElementById('userName').textContent = currentUserName;
                 document.getElementById('canceller').value = currentUserName;
-                showMainContainer();
+                document.getElementById('teamSelection').style.display = 'none';
+                window.showMainContainer();
             } else {
-                openNameSetupModal(teamName);
+                // 이름이 없으면 팀 선택 화면에 머물기
+                window.showToast('이름을 입력해주세요', 'error');
             }
         }
         
         // 메인 화면 표시
-        function showMainContainer() {
+        window.showMainContainer = function() {
             document.getElementById('teamSelection').style.display = 'none';
-            document.getElementById('nameSetupModal').style.display = 'none';
             document.querySelector('.container').style.display = 'block';
             
             // Supabase 초기화 및 데이터 로드
@@ -1274,45 +1268,20 @@
             loadAdminInfo();
         }
         
-        // 이름 설정 모달 열기
-        function openNameSetupModal(teamName) {
-            const modal = document.getElementById('nameSetupModal');
-            modal.style.display = 'flex';
+        // 이름 변경
+        window.changeUserName = function() {
+            const newName = prompt('새로운 이름을 입력하세요:', currentUserName);
             
-            // 선택된 팀 표시
-            const team = teamName || currentTeam;
-            document.getElementById('selectedTeamDisplay').textContent = team;
-            document.getElementById('selectedTeamIcon').textContent = teamIcons[team] || '✨';
-            
-            // 해당 팀의 저장된 이름이 있으면 표시
-            const savedName = localStorage.getItem(`userName_${team}`) || '';
-            document.getElementById('userNameInput').value = savedName;
-            document.getElementById('userNameInput').focus();
-        }
-        
-        // 사용자 이름 저장
-        function saveUserName() {
-            const nameInput = document.getElementById('userNameInput');
-            const name = nameInput.value.trim();
-            
-            if (!name) {
-                showToast('이름을 입력해주세요', 'error');
-                return;
+            if (newName && newName.trim()) {
+                currentUserName = newName.trim();
+                localStorage.setItem(`userName_${currentTeam}`, currentUserName);
+                localStorage.setItem('lastUserName', currentUserName);
+                
+                document.getElementById('userName').textContent = currentUserName;
+                document.getElementById('canceller').value = currentUserName;
+                
+                window.showToast('이름이 변경되었습니다!', 'success');
             }
-            
-            // 이름 저장
-            currentUserName = name;
-            localStorage.setItem(`userName_${currentTeam}`, name);
-            
-            // UI 업데이트
-            document.getElementById('userName').textContent = name;
-            document.getElementById('canceller').value = name;
-            
-            // 모달 닫기
-            document.getElementById('nameSetupModal').style.display = 'none';
-            
-            showToast(`${currentTeam} - ${name}님 환영합니다!`, 'success');
-            showMainContainer();
         }
         
         // 상태 업데이트 함수
@@ -1748,7 +1717,7 @@
                 document.getElementById('canceller').value = currentUserName;
             }
             
-            updateCRMPreview(null);
+            window.updateCRMPreview(null);
         };
         
         window.copyCRMPreview = function() {
@@ -1756,17 +1725,17 @@
             const text = preview.innerText;
             
             if (text.includes('양식을 입력하면')) {
-                showToast('복사할 내용이 없습니다.', 'error');
+                window.showToast('복사할 내용이 없습니다.', 'error');
                 return;
             }
             
-            copyToClipboard(text);
+            window.copyToClipboard(text);
         };
         
         window.copyCRMFromModal = function() {
             const crmPreview = document.getElementById('confirmCRMPreview');
             const text = crmPreview.innerText;
-            copyToClipboard(text);
+            window.copyToClipboard(text);
             
             const copyBtn = event.target.closest('.btn');
             const originalHTML = copyBtn.innerHTML;
@@ -1790,14 +1759,14 @@
                 
                 if (error) throw error;
                 
-                closeConfirmModal();
-                showToast('취소 양식이 제출되었습니다!', 'success');
-                resetForm();
-                updateCRMPreview(null);
+                window.closeConfirmModal();
+                window.showToast('취소 양식이 제출되었습니다!', 'success');
+                window.resetForm();
+                window.updateCRMPreview(null);
                 
             } catch (error) {
                 console.error('Submit error:', error);
-                showToast('제출 실패: ' + error.message, 'error');
+                window.showToast('제출 실패: ' + error.message, 'error');
             }
         };
         
@@ -1836,7 +1805,7 @@
         
         window.exportToExcel = async function() {
             if (!supabase) {
-                showToast('데이터베이스가 연결되지 않았습니다.', 'error');
+                window.showToast('데이터베이스가 연결되지 않았습니다.', 'error');
                 return;
             }
             
@@ -1861,7 +1830,7 @@
                 if (error) throw error;
                 
                 if (!data || data.length === 0) {
-                    showToast('다운로드할 데이터가 없습니다.', 'error');
+                    window.showToast('다운로드할 데이터가 없습니다.', 'error');
                     return;
                 }
 
@@ -1981,11 +1950,11 @@
                 a.click();
                 
                 window.URL.revokeObjectURL(url);
-                showToast('엑셀 파일이 다운로드되었습니다!', 'success');
+                window.showToast('엑셀 파일이 다운로드되었습니다!', 'success');
                 
             } catch (error) {
                 console.error('Export error:', error);
-                showToast('엑셀 다운로드 실패: ' + error.message, 'error');
+                window.showToast('엑셀 다운로드 실패: ' + error.message, 'error');
             }
         };
         
@@ -2038,7 +2007,7 @@
                     </div>
                     
                     <div class="btn-group">
-                        <button class="btn btn-primary" onclick="copyToClipboard(\`${crmText.replace(/`/g, '\\`')}\`)">
+                        <button class="btn btn-primary" onclick="window.copyToClipboard(\`${crmText.replace(/`/g, '\\`')}\`)">
                             CRM 양식 복사
                         </button>
                         ${data.status === 'pending' ? `
@@ -2060,7 +2029,7 @@
                 
             } catch (error) {
                 console.error('Detail error:', error);
-                showToast('상세 정보 로드 실패: ' + error.message, 'error');
+                window.showToast('상세 정보 로드 실패: ' + error.message, 'error');
             }
         };
         
@@ -2071,7 +2040,7 @@
             textarea.select();
             document.execCommand('copy');
             document.body.removeChild(textarea);
-            showToast('클립보드에 복사되었습니다!', 'success');
+            window.showToast('클립보드에 복사되었습니다!', 'success');
         };
         
         window.logoutAdmin = function() {
@@ -2080,7 +2049,7 @@
                 localStorage.removeItem('adminPassword');
                 document.getElementById('adminInfo').style.display = 'none';
                 document.getElementById('adminName').textContent = '-';
-                showToast('관리자 로그아웃되었습니다.', 'info');
+                window.showToast('관리자 로그아웃되었습니다.', 'info');
             }
         };
         
@@ -2104,11 +2073,11 @@
                     loadAdminInfo();
                 } else {
                     // 팀은 있지만 이름이 없으면 팀 선택 화면부터
-                    showTeamSelection();
+                    window.showTeamSelection();
                 }
             } else {
                 // 처음 사용하는 경우 팀 선택 화면
-                showTeamSelection();
+                window.showTeamSelection();
             }
             
             document.getElementById('date').valueAsDate = new Date();
@@ -2136,13 +2105,13 @@
                 e.preventDefault();
                 
                 if (!supabase) {
-                    showToast('데이터베이스가 연결되지 않았습니다.', 'error');
+                    window.showToast('데이터베이스가 연결되지 않았습니다.', 'error');
                     return;
                 }
                 
                 if (!currentTeam || !currentUserName) {
-                    showToast('팀과 이름을 먼저 설정해주세요.', 'error');
-                    showTeamSelection();
+                    window.showToast('팀과 이름을 먼저 설정해주세요.', 'error');
+                    window.showTeamSelection();
                     return;
                 }
                 
@@ -2152,7 +2121,7 @@
                 const localRegex = /^0[3-6][0-9]-\d{3,4}-\d{4}$/;
                 
                 if (!mobileRegex.test(phoneNumber) && !seoulRegex.test(phoneNumber) && !localRegex.test(phoneNumber)) {
-                    showToast('올바른 전화번호 형식이 아닙니다.', 'error');
+                    window.showToast('올바른 전화번호 형식이 아닙니다.', 'error');
                     document.getElementById('customerPhone').focus();
                     return;
                 }
@@ -2186,7 +2155,7 @@
                 const saveAuth = document.getElementById('saveAuth').checked;
                 
                 if (password !== ADMIN_PASSWORD) {
-                    showToast('비밀번호가 올바르지 않습니다.', 'error');
+                    window.showToast('비밀번호가 올바르지 않습니다.', 'error');
                     document.getElementById('authPassword').focus();
                     return;
                 }
@@ -2198,13 +2167,13 @@
                     document.getElementById('adminName').textContent = name;
                 }
                 
-                handleAuthSuccess(name);
+                window.handleAuthSuccess(name);
             });
             
             // 이름 입력 엔터 처리
             document.getElementById('userNameInput').addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
-                    saveUserName();
+                    window.saveUserName();
                 }
             });
             
