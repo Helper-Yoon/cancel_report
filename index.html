@@ -830,25 +830,6 @@
         </div>
     </div>
 
-    <!-- 이름 설정 모달 -->
-    <div id="nameSetupModal" class="name-setup-modal">
-        <div class="name-setup-content">
-            <h3 class="name-setup-title">
-                <span id="selectedTeamDisplay">팀</span> 정보 설정
-            </h3>
-            <div class="name-input-group">
-                <label for="userNameInput">이름 <span style="color: var(--danger);">*</span></label>
-                <input type="text" id="userNameInput" placeholder="이름을 입력하세요" required>
-            </div>
-            <div class="btn-group" style="justify-content: center;">
-                <button type="button" class="btn btn-primary" onclick="saveUserName()">
-                    <span>✔️</span>
-                    <span>설정하기</span>
-                </button>
-            </div>
-        </div>
-    </div>
-
     <div class="container">
         <div class="header">
             <h1>취소양식 관리 시스템</h1>
@@ -1145,7 +1126,7 @@
         const SUPABASE_URL = 'https://fsviqmumvhrtbztdgjsu.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzdmlxbXVtdmhydGJ6dGRnanN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ5NjI2NTYsImV4cCI6MjA3MDUzODY1Nn0.CXjay7-p0Psu3dYRToI77dBAt0zoHiht468dJKP-Jkk';
         
-        const ADMIN_PASSWORD = '3504';
+        const ADMIN_PASSWORD = '1250';
         
         // 팀별 아이콘
         const teamIcons = {
@@ -1214,7 +1195,7 @@
             currentUserName = name;
             localStorage.setItem('selectedTeam', teamName);
             localStorage.setItem(`userName_${teamName}`, name);
-            localStorage.setItem('lastUserName', name); // 마지막 사용 이름 저장
+            localStorage.setItem('lastUserName', name);
             
             // UI 업데이트
             document.getElementById('currentTeam').textContent = teamName;
@@ -1226,13 +1207,6 @@
             document.getElementById('teamSelection').style.display = 'none';
             window.showToast(`${teamName} - ${name}님 환영합니다!`, 'success');
             window.showMainContainer();
-        }
-        
-        // 팀 선택 (기존 함수 - 팀 변경 시 사용)
-        window.selectTeam = function(teamName) {
-            // 이 함수는 더 이상 직접 사용되지 않음
-            // selectTeamWithName 함수를 사용
-            window.selectTeamWithName(teamName);
         }
         
         // 메인 화면 표시
@@ -2066,6 +2040,17 @@
             
             document.getElementById('date').valueAsDate = new Date();
             
+            // 이름 입력 엔터 처리
+            document.getElementById('teamSelectionNameInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    // 첫 번째 팀 카드 클릭 효과
+                    const firstTeamCard = document.querySelector('.team-card');
+                    if (firstTeamCard) {
+                        firstTeamCard.click();
+                    }
+                }
+            });
+            
             // 전화번호 입력 이벤트
             document.getElementById('customerPhone').addEventListener('input', function(e) {
                 e.target.value = formatPhoneNumber(e.target.value);
@@ -2152,13 +2137,6 @@
                 }
                 
                 window.handleAuthSuccess(name);
-            });
-            
-            // 이름 입력 엔터 처리
-            document.getElementById('userNameInput').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    window.saveUserName();
-                }
             });
             
             // 모달 외부 클릭시 닫기
