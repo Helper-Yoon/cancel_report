@@ -231,6 +231,7 @@
             display: flex;
             gap: 20px;
             align-items: center;
+            flex-wrap: wrap;
         }
 
         .user-info {
@@ -259,13 +260,14 @@
             align-items: center;
             gap: 10px;
             padding: 10px 18px;
-            background: var(--bg-hover);
+            background: linear-gradient(135deg, var(--success), #22c55e);
             border-radius: 20px;
             font-size: 0.95rem;
+            box-shadow: 0 4px 15px rgba(74, 222, 128, 0.3);
         }
 
         .admin-info span {
-            color: var(--primary-blue);
+            color: var(--bg-dark);
             font-weight: 600;
         }
         
@@ -273,6 +275,25 @@
             padding: 4px 10px !important;
             font-size: 0.85rem !important;
             margin-left: 8px;
+        }
+        
+        .btn-admin-login {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, var(--warning), #f59e0b);
+            border: none;
+            border-radius: 20px;
+            color: var(--bg-dark);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-admin-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(251, 191, 36, 0.4);
         }
 
         .connection-status {
@@ -778,6 +799,28 @@
             background: var(--danger);
             color: white;
         }
+        
+        .admin-required {
+            opacity: 0.5;
+            cursor: not-allowed !important;
+            position: relative;
+        }
+        
+        .admin-required::after {
+            content: "🔒";
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1rem;
+        }
+        
+        .no-permission-msg {
+            color: var(--danger);
+            font-size: 0.9rem;
+            margin-top: 10px;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -848,10 +891,14 @@
                         변경
                     </button>
                 </div>
-                <div class="admin-info" id="adminInfo" style="display: none;">
+                <button class="btn-admin-login" id="btnAdminLogin" onclick="window.showAdminLogin()">
                     <span>🔐</span>
-                    <span id="adminName">-</span>
-                    <button class="btn btn-danger" onclick="window.logoutAdmin()" style="padding: 3px 8px; font-size: 0.8rem; margin-left: 8px;">
+                    <span>관리자 로그인</span>
+                </button>
+                <div class="admin-info" id="adminInfo" style="display: none;">
+                    <span>🔑</span>
+                    <span id="adminName">관리자</span>
+                    <button class="btn btn-danger" onclick="window.logoutAdmin()" style="padding: 5px 10px; font-size: 0.85rem; margin-left: 10px;">
                         로그아웃
                     </button>
                 </div>
@@ -1001,7 +1048,7 @@
                     <label for="filterDate">날짜 필터</label>
                     <input type="date" id="filterDate" onchange="window.loadData()">
                 </div>
-                <button class="btn btn-secondary" onclick="window.exportToExcel()">
+                <button class="btn btn-secondary" id="btnExportExcel" onclick="window.handleExportExcel()">
                     <span>📥</span>
                     <span>엑셀 다운로드</span>
                 </button>
@@ -1009,6 +1056,9 @@
                     <span>🔄</span>
                     <span>새로고침</span>
                 </button>
+                <div class="no-permission-msg" id="noPermissionMsg">
+                    관리자 권한이 필요합니다
+                </div>
             </div>
 
             <div style="overflow-x: auto;">
@@ -1145,6 +1195,7 @@
         let pendingFormData = null;
         let currentTeam = '';
         let currentUserName = '';
+        let isAdmin = false;
         
         // 토스트 메시지
         window.showToast = function(message, type = 'success') {
@@ -1156,6 +1207,62 @@
             setTimeout(() => {
                 toast.style.display = 'none';
             }, 3000);
+        };
+        
+        // 관리자 권한 체크 및 UI 업데이트
+        window.updateAdminUI = function() {
+            const btnExportExcel = document.getElementById('btnExportExcel');
+            const noPermissionMsg = document.getElementById('noPermissionMsg');
+            
+            if (isAdmin) {
+                btnExportExcel.classList.remove('admin-required');
+                btnExportExcel.disabled = false;
+                noPermissionMsg.style.display = 'none';
+            } else {
+                btnExportExcel.classList.add('admin-required');
+                btnExportExcel.disabled = true;
+            }
+            
+            // 테이블 업데이트
+            window.loadData();
+        };
+        
+        // 관리자 로그인 화면 표시
+        window.showAdminLogin = function() {
+            currentAuthAction = 'login';
+            currentAuthData = null;
+            document.getElementById('authModal').style.display = 'flex';
+            document.getElementById('authName').focus();
+        };
+        
+        // 엑셀 다운로드 처리
+        window.handleExportExcel = function() {
+            if (!isAdmin) {
+                window.showToast('관리자 권한이 필요합니다. 관리자로 로그인해주세요.', 'error');
+                document.getElementById('noPermissionMsg').style.display = 'block';
+                setTimeout(() => {
+                    document.getElementById('noPermissionMsg').style.display = 'none';
+                }, 3000);
+                return;
+            }
+            window.exportToExcel();
+        };
+        
+        // 관리자 권한 확인
+        window.checkAdminAction = function(action, data) {
+            if (!isAdmin) {
+                window.showToast('관리자 권한이 필요합니다. 관리자로 로그인해주세요.', 'error');
+                return false;
+            }
+            
+            currentAuthAction = action;
+            currentAuthData = data;
+            
+            const adminName = localStorage.getItem('adminName');
+            if (adminName) {
+                window.handleAuthSuccess(adminName);
+            }
+            return true;
         };
         
         // 팀 선택 화면 표시
@@ -1249,6 +1356,11 @@
                 return;
             }
             
+            if (!isAdmin) {
+                window.showToast('관리자 권한이 필요합니다.', 'error');
+                return;
+            }
+            
             try {
                 const updateData = {
                     status: newStatus,
@@ -1284,6 +1396,11 @@
                 return;
             }
             
+            if (!isAdmin) {
+                window.showToast('관리자 권한이 필요합니다.', 'error');
+                return;
+            }
+            
             if (!confirm('정말로 이 기록을 삭제하시겠습니까?\n삭제된 데이터는 복구할 수 없습니다.')) {
                 return;
             }
@@ -1316,7 +1433,15 @@
                 document.getElementById('authForm').reset();
             }
             
-            if (currentAuthAction === 'approve') {
+            if (currentAuthAction === 'login') {
+                // 로그인 성공
+                isAdmin = true;
+                document.getElementById('adminInfo').style.display = 'flex';
+                document.getElementById('adminName').textContent = adminName;
+                document.getElementById('btnAdminLogin').style.display = 'none';
+                window.showToast(`관리자 로그인 성공! (${adminName})`, 'success');
+                window.updateAdminUI();
+            } else if (currentAuthAction === 'approve') {
                 window.updateStatus(currentAuthData, 'approved', adminName);
             } else if (currentAuthAction === 'reject') {
                 window.updateStatus(currentAuthData, 'rejected', adminName);
@@ -1332,22 +1457,8 @@
         
         // openAuthModal 함수
         window.openAuthModal = function(action, data) {
-            currentAuthAction = action;
-            currentAuthData = data;
-            
-            const savedAdmin = localStorage.getItem('adminName');
-            const savedPassword = localStorage.getItem('adminPassword');
-            
-            if (savedAdmin && savedPassword === ADMIN_PASSWORD) {
-                setTimeout(() => {
-                    window.handleAuthSuccess(savedAdmin);
-                }, 100);
-            } else {
-                document.getElementById('authModal').style.display = 'flex';
-                const authNameInput = document.getElementById('authName');
-                if (authNameInput) {
-                    authNameInput.focus();
-                }
+            if (!window.checkAdminAction(action, data)) {
+                return;
             }
         };
         
@@ -1444,6 +1555,36 @@
                     statusClass = 'rejected';
                 }
                 
+                // 관리자 권한에 따른 버튼 표시
+                const actionButtons = isAdmin ? `
+                    <div class="action-buttons">
+                        <button class="btn btn-primary" onclick="window.viewDetail(${item.id})">
+                            상세
+                        </button>
+                        ${item.status === 'pending' ? `
+                            <button class="btn btn-secondary" onclick="window.openAuthModal('approve', ${item.id})">
+                                승인
+                            </button>
+                            <button class="btn btn-danger" onclick="window.openAuthModal('reject', ${item.id})">
+                                거절
+                            </button>
+                        ` : `
+                            <button class="btn btn-warning" onclick="window.openAuthModal('pending', ${item.id})">
+                                재검토
+                            </button>
+                        `}
+                        <button class="btn btn-delete" onclick="window.openAuthModal('delete', ${item.id})" title="삭제">
+                            🗑️
+                        </button>
+                    </div>
+                ` : `
+                    <div class="action-buttons">
+                        <button class="btn btn-primary" onclick="window.viewDetail(${item.id})">
+                            상세
+                        </button>
+                    </div>
+                `;
+                
                 return `
                     <tr data-id="${item.id}">
                         <td>${item.submitter_team || '-'}</td>
@@ -1461,28 +1602,7 @@
                             </span>
                         </td>
                         <td>${item.approved_by || '-'}</td>
-                        <td>
-                            <div class="action-buttons">
-                                <button class="btn btn-primary" onclick="window.viewDetail(${item.id})">
-                                    상세
-                                </button>
-                                ${item.status === 'pending' ? `
-                                    <button class="btn btn-secondary" onclick="window.openAuthModal('approve', ${item.id})">
-                                        승인
-                                    </button>
-                                    <button class="btn btn-danger" onclick="window.openAuthModal('reject', ${item.id})">
-                                        거절
-                                    </button>
-                                ` : `
-                                    <button class="btn btn-warning" onclick="window.openAuthModal('pending', ${item.id})">
-                                        재검토
-                                    </button>
-                                `}
-                                <button class="btn btn-delete" onclick="window.openAuthModal('delete', ${item.id})" title="삭제">
-                                    🗑️
-                                </button>
-                            </div>
-                        </td>
+                        <td>${actionButtons}</td>
                     </tr>
                 `;
             }).join('');
@@ -1512,8 +1632,16 @@
             const savedPassword = localStorage.getItem('adminPassword');
             
             if (savedAdmin && savedPassword === ADMIN_PASSWORD) {
+                isAdmin = true;
                 document.getElementById('adminInfo').style.display = 'flex';
                 document.getElementById('adminName').textContent = savedAdmin;
+                document.getElementById('btnAdminLogin').style.display = 'none';
+                window.updateAdminUI();
+            } else {
+                isAdmin = false;
+                document.getElementById('adminInfo').style.display = 'none';
+                document.getElementById('btnAdminLogin').style.display = 'flex';
+                window.updateAdminUI();
             }
         }
         
@@ -1767,6 +1895,11 @@
                 return;
             }
             
+            if (!isAdmin) {
+                window.showToast('관리자 권한이 필요합니다.', 'error');
+                return;
+            }
+            
             try {
                 let query = supabase
                     .from('cancellations')
@@ -1938,6 +2071,33 @@
                 if (data.status === 'approved') statusDisplay = '승인됨';
                 else if (data.status === 'rejected') statusDisplay = '거절됨';
                 
+                // 관리자 권한에 따른 버튼 표시
+                const actionButtons = isAdmin ? `
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="window.copyToClipboard(\`${crmText.replace(/`/g, '\\`')}\`)">
+                            CRM 양식 복사
+                        </button>
+                        ${data.status === 'pending' ? `
+                            <button class="btn btn-secondary" onclick="window.closeModal(); window.openAuthModal('approve', ${data.id})">
+                                승인하기
+                            </button>
+                            <button class="btn btn-danger" onclick="window.closeModal(); window.openAuthModal('reject', ${data.id})">
+                                거절하기
+                            </button>
+                        ` : `
+                            <button class="btn btn-warning" onclick="window.closeModal(); window.openAuthModal('pending', ${data.id})">
+                                재검토하기
+                            </button>
+                        `}
+                    </div>
+                ` : `
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="window.copyToClipboard(\`${crmText.replace(/`/g, '\\`')}\`)">
+                            CRM 양식 복사
+                        </button>
+                    </div>
+                `;
+                
                 modalBody.innerHTML = `
                     <div class="info-box">
                         <p><strong>상태:</strong> ${statusDisplay}</p>
@@ -1964,23 +2124,7 @@
                         </div>
                     </div>
                     
-                    <div class="btn-group">
-                        <button class="btn btn-primary" onclick="window.copyToClipboard(\`${crmText.replace(/`/g, '\\`')}\`)">
-                            CRM 양식 복사
-                        </button>
-                        ${data.status === 'pending' ? `
-                            <button class="btn btn-secondary" onclick="window.closeModal(); window.openAuthModal('approve', ${data.id})">
-                                승인하기
-                            </button>
-                            <button class="btn btn-danger" onclick="window.closeModal(); window.openAuthModal('reject', ${data.id})">
-                                거절하기
-                            </button>
-                        ` : `
-                            <button class="btn btn-warning" onclick="window.closeModal(); window.openAuthModal('pending', ${data.id})">
-                                재검토하기
-                            </button>
-                        `}
-                    </div>
+                    ${actionButtons}
                 `;
                 
                 modal.style.display = 'flex';
@@ -2005,9 +2149,12 @@
             if (confirm('관리자 권한을 로그아웃하시겠습니까?')) {
                 localStorage.removeItem('adminName');
                 localStorage.removeItem('adminPassword');
+                isAdmin = false;
                 document.getElementById('adminInfo').style.display = 'none';
+                document.getElementById('btnAdminLogin').style.display = 'flex';
                 document.getElementById('adminName').textContent = '-';
                 window.showToast('관리자 로그아웃되었습니다.', 'info');
+                window.updateAdminUI();
             }
         };
         
@@ -2132,8 +2279,6 @@
                 if (saveAuth) {
                     localStorage.setItem('adminName', name);
                     localStorage.setItem('adminPassword', password);
-                    document.getElementById('adminInfo').style.display = 'flex';
-                    document.getElementById('adminName').textContent = name;
                 }
                 
                 window.handleAuthSuccess(name);
