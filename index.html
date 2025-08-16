@@ -1173,8 +1173,8 @@
 
     <script>
         // Supabase 설정
-        const SUPABASE_URL = 'https://fsviqmumvhrtbztdgjsu.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzdmlxbXVtdmhydGJ6dGRnanN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ5NjI2NTYsImV4cCI6MjA3MDUzODY1Nn0.CXjay7-p0Psu3dYRToI77dBAt0zoHiht468dJKP-Jkk';
+        const SUPABASE_URL = 'https://bhtqjipygkawoyieidgp.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJodHFqaXB5Z2thd295aWVpZGdwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0ODg5NjgsImV4cCI6MjA3MDA2NDk2OH0.hu2EAj9RCq436QBtfbEVF4aGOau4WWomLMDKahN4iAA';
         
         const ADMIN_PASSWORD = '1200';
         
@@ -1196,52 +1196,6 @@
         let currentTeam = '';
         let currentUserName = '';
         let isAdmin = false;
-        
-        // 날짜 자동 갱신 함수
-        window.updateDateField = function() {
-            const now = new Date();
-            // 현재 날짜로 설정 (0시~23시 59분: 오늘 날짜)
-            const dateField = document.getElementById('date');
-            if (dateField) {
-                // YYYY-MM-DD 형식으로 직접 설정
-                const year = now.getFullYear();
-                const month = String(now.getMonth() + 1).padStart(2, '0');
-                const day = String(now.getDate()).padStart(2, '0');
-                dateField.value = `${year}-${month}-${day}`;
-                console.log('날짜 설정됨:', dateField.value);
-            }
-        };
-        
-        // 다음 자정(0시)까지 남은 시간 계산
-        window.getTimeUntilMidnight = function() {
-            const now = new Date();
-            const midnight = new Date();
-            midnight.setDate(midnight.getDate() + 1);
-            midnight.setHours(0, 0, 0, 0);
-            
-            return midnight - now;
-        };
-        
-        // 날짜 자동 갱신 타이머 설정
-        window.setupDateAutoUpdate = function() {
-            // 초기 날짜 설정
-            window.updateDateField();
-            
-            // 다음 자정(0시)에 실행될 타이머 설정
-            const timeUntilMidnight = window.getTimeUntilMidnight();
-            
-            setTimeout(() => {
-                // 자정이 되면 날짜 갱신
-                window.updateDateField();
-                window.showToast('날짜가 자동으로 갱신되었습니다.', 'info');
-                
-                // 이후 매일 자정마다 갱신하도록 interval 설정
-                setInterval(() => {
-                    window.updateDateField();
-                    window.showToast('날짜가 자동으로 갱신되었습니다.', 'info');
-                }, 24 * 60 * 60 * 1000); // 24시간마다
-            }, timeUntilMidnight);
-        };
         
         // 토스트 메시지
         window.showToast = function(message, type = 'success') {
@@ -1843,8 +1797,7 @@
         
         window.resetForm = function() {
             document.getElementById('cancellationForm').reset();
-            // 현재 날짜로 설정
-            window.updateDateField();
+            document.getElementById('date').valueAsDate = new Date();
             
             if (currentUserName) {
                 document.getElementById('canceller').value = currentUserName;
@@ -2232,8 +2185,7 @@
                 window.showTeamSelection();
             }
             
-            // 날짜 자동 갱신 설정 (자정 기준)
-            window.setupDateAutoUpdate();
+            document.getElementById('date').valueAsDate = new Date();
             
             // 이름 입력 엔터 처리
             document.getElementById('teamSelectionNameInput').addEventListener('keypress', function(e) {
