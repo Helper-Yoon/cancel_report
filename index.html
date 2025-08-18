@@ -396,7 +396,6 @@
         }
 
         input[type="text"],
-        input[type="tel"],
         input[type="date"],
         input[type="password"],
         select,
@@ -950,8 +949,8 @@
                             <input type="text" id="customerName" placeholder="고객 이름" required>
                         </div>
                         <div class="form-group">
-                            <label for="customerPhone">고객번호 <span style="color: var(--danger);">*</span></label>
-                            <input type="tel" id="customerPhone" placeholder="01012345678 또는 010-1234-5678" maxlength="13" required>
+                            <label for="customerPhone">관리번호 <span style="color: var(--danger);">*</span></label>
+                            <input type="text" id="customerPhone" placeholder="예: AJD20240823001192" maxlength="30" required>
                         </div>
                     </div>
 
@@ -1071,7 +1070,7 @@
                             <th>유치자</th>
                             <th>취소자</th>
                             <th>고객명</th>
-                            <th>고객번호</th>
+                            <th>관리번호</th>
                             <th>분류</th>
                             <th style="min-width: 300px;">취소사유</th>
                             <th>상태</th>
@@ -1484,7 +1483,7 @@
         };
         
         window.generateFullText = function(data) {
-            let text = `${data.customer_name} ${data.customer_phone}
+            let text = `${data.customer_name} / 관리번호: ${data.customer_phone}
 ㅁ취소사유: ${data.reason}`;
             
             if (data.defense1) {
@@ -1714,52 +1713,35 @@
             }, 100);
         }
         
-        function formatPhoneNumber(value) {
-            value = value.replace(/[^0-9]/g, '');
-            let formattedValue = '';
+        function checkPhoneNumberFormat(value) {
+            // 전화번호 패턴 검사
+            const phonePatterns = [
+                /^01[0-9]/,           // 010, 011, 016, 017, 018, 019 등
+                /^02/,                // 서울 지역번호
+                /^0[3-6][0-9]/,       // 기타 지역번호
+                /^\d{3,4}-\d{3,4}-\d{4}$/,  // 하이픈이 있는 전화번호
+                /^\d{9,11}$/          // 연속된 숫자 9-11자리 (전화번호일 가능성)
+            ];
             
-            if (value.startsWith('02')) {
-                if (value.length <= 2) {
-                    formattedValue = value;
-                } else if (value.length <= 5) {
-                    formattedValue = value.slice(0, 2) + '-' + value.slice(2);
-                } else if (value.length <= 9) {
-                    formattedValue = value.slice(0, 2) + '-' + value.slice(2, 5) + '-' + value.slice(5);
-                } else if (value.length <= 10) {
-                    formattedValue = value.slice(0, 2) + '-' + value.slice(2, 6) + '-' + value.slice(6);
-                } else {
-                    value = value.slice(0, 10);
-                    formattedValue = value.slice(0, 2) + '-' + value.slice(2, 6) + '-' + value.slice(6);
-                }
-            }
-            else if (value.startsWith('0') && !value.startsWith('01')) {
-                if (value.length <= 3) {
-                    formattedValue = value;
-                } else if (value.length <= 6) {
-                    formattedValue = value.slice(0, 3) + '-' + value.slice(3);
-                } else if (value.length <= 10) {
-                    formattedValue = value.slice(0, 3) + '-' + value.slice(3, 6) + '-' + value.slice(6);
-                } else if (value.length <= 11) {
-                    formattedValue = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7);
-                } else {
-                    value = value.slice(0, 11);
-                    formattedValue = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7);
-                }
-            }
-            else {
-                if (value.length <= 3) {
-                    formattedValue = value;
-                } else if (value.length <= 7) {
-                    formattedValue = value.slice(0, 3) + '-' + value.slice(3);
-                } else if (value.length <= 11) {
-                    formattedValue = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7);
-                } else {
-                    value = value.slice(0, 11);
-                    formattedValue = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7);
+            // 숫자와 하이픈만 있는지 확인
+            const onlyNumbersAndHyphens = /^[\d-]+$/.test(value);
+            
+            // 전화번호 패턴과 일치하는지 확인
+            if (onlyNumbersAndHyphens) {
+                for (let pattern of phonePatterns) {
+                    if (pattern.test(value.replace(/-/g, ''))) {
+                        return true; // 전화번호 형식임
+                    }
                 }
             }
             
-            return formattedValue;
+            return false; // 전화번호 형식이 아님
+        }
+        
+        function formatManagementNumber(value) {
+            // 관리번호는 특별한 포맷팅 없이 그대로 반환
+            // 공백 제거
+            return value.trim();
         }
         
         function updatePreviewFromForm() {
@@ -1938,7 +1920,7 @@
                 worksheet.getRow(1).height = 31.5;
 
                 // 헤더 설정
-                const headers = ['', '날짜', '유치자', '취소자', '고객명', '고객번호', '분류', '취소사유'];
+                const headers = ['', '날짜', '유치자', '취소자', '고객명', '관리번호', '분류', '취소사유'];
                 const headerRow = worksheet.getRow(2);
                 headerRow.values = headers;
                 headerRow.height = 24.95;
@@ -1965,7 +1947,7 @@
                 // 데이터 추가
                 data.forEach((item, index) => {
                     // 취소사유 텍스트 구성
-                    let cancelReason = `${item.customer_name} ${item.customer_phone}
+                    let cancelReason = `${item.customer_name} / 관리번호: ${item.customer_phone}
 ㅁ취소사유: ${item.reason}`;
                     
                     if (item.defense1) {
@@ -2112,7 +2094,7 @@
                             <p><strong>유치자:</strong> ${data.recruiter}</p>
                             <p><strong>취소자:</strong> ${data.canceller}</p>
                             <p><strong>고객명:</strong> ${data.customer_name}</p>
-                            <p><strong>고객번호:</strong> ${data.customer_phone}</p>
+                            <p><strong>관리번호:</strong> ${data.customer_phone}</p>
                             <p><strong>분류:</strong> ${data.category || '-'}</p>
                         </div>
                     </div>
@@ -2198,16 +2180,40 @@
                 }
             });
             
-            // 전화번호 입력 이벤트
+            // 관리번호 입력 이벤트
             document.getElementById('customerPhone').addEventListener('input', function(e) {
-                e.target.value = formatPhoneNumber(e.target.value);
+                const value = e.target.value;
+                
+                // 전화번호 형식 검사
+                if (checkPhoneNumberFormat(value)) {
+                    e.target.value = '';
+                    e.target.style.borderColor = 'var(--danger)';
+                    window.showToast('⚠️ 전화번호는 더 이상 사용할 수 없습니다. 관리번호를 입력해주세요.', 'error');
+                    setTimeout(() => {
+                        e.target.style.borderColor = '';
+                    }, 3000);
+                    return;
+                }
+                
+                e.target.value = formatManagementNumber(value);
                 updatePreviewFromForm();
             });
             
             document.getElementById('customerPhone').addEventListener('paste', function(e) {
                 e.preventDefault();
                 const pastedText = (e.clipboardData || window.clipboardData).getData('text');
-                e.target.value = formatPhoneNumber(pastedText);
+                
+                // 전화번호 형식 검사
+                if (checkPhoneNumberFormat(pastedText)) {
+                    e.target.style.borderColor = 'var(--danger)';
+                    window.showToast('⚠️ 전화번호는 더 이상 사용할 수 없습니다. 관리번호를 입력해주세요.', 'error');
+                    setTimeout(() => {
+                        e.target.style.borderColor = '';
+                    }, 3000);
+                    return;
+                }
+                
+                e.target.value = formatManagementNumber(pastedText);
                 updatePreviewFromForm();
             });
             
@@ -2231,13 +2237,22 @@
                     return;
                 }
                 
-                const phoneNumber = document.getElementById('customerPhone').value;
-                const mobileRegex = /^01[0-9]-\d{4}-\d{4}$/;
-                const seoulRegex = /^02-\d{3,4}-\d{4}$/;
-                const localRegex = /^0[3-6][0-9]-\d{3,4}-\d{4}$/;
+                const managementNumber = document.getElementById('customerPhone').value.trim();
                 
-                if (!mobileRegex.test(phoneNumber) && !seoulRegex.test(phoneNumber) && !localRegex.test(phoneNumber)) {
-                    window.showToast('올바른 전화번호 형식이 아닙니다.', 'error');
+                // 전화번호 형식 검사
+                if (checkPhoneNumberFormat(managementNumber)) {
+                    window.showToast('⚠️ 전화번호는 사용할 수 없습니다. 관리번호를 입력해주세요.', 'error');
+                    document.getElementById('customerPhone').focus();
+                    document.getElementById('customerPhone').style.borderColor = 'var(--danger)';
+                    setTimeout(() => {
+                        document.getElementById('customerPhone').style.borderColor = '';
+                    }, 3000);
+                    return;
+                }
+                
+                // 관리번호 형식 검사 (최소 5자 이상)
+                if (managementNumber.length < 5) {
+                    window.showToast('관리번호는 최소 5자 이상이어야 합니다.', 'error');
                     document.getElementById('customerPhone').focus();
                     return;
                 }
@@ -2250,7 +2265,7 @@
                     recruiter: document.getElementById('recruiter').value,
                     canceller: document.getElementById('canceller').value,
                     customer_name: document.getElementById('customerName').value,
-                    customer_phone: phoneNumber,
+                    customer_phone: managementNumber,
                     reason: document.getElementById('reason').value,
                     defense1: document.getElementById('defense1').value || null,
                     defense1_result: document.getElementById('defense1Result').value || null,
