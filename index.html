@@ -594,24 +594,58 @@
             width: 100%;
             border-collapse: collapse;
             table-layout: fixed;
+            min-width: 1150px;
         }
 
         th {
             background: var(--primary-blue);
             color: white;
-            padding: 12px 8px;
+            padding: 10px 6px;
             text-align: left;
             font-weight: 600;
-            font-size: 0.95rem;
+            font-size: 0.93rem;
             white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         td {
-            padding: 12px 8px;
+            padding: 10px 6px;
             border-bottom: 1px solid var(--border-color);
             color: var(--text-secondary);
             font-size: 0.9rem;
-            word-break: break-word;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        /* 특정 열 스타일 조정 */
+        th:nth-child(7) {  /* 관리번호 헤더 */
+            font-size: 0.9rem;
+        }
+        
+        td:nth-child(7) {  /* 관리번호 데이터 */
+            font-size: 0.83rem;
+            color: var(--text-muted);
+        }
+        
+        /* 취소사유 열만 특별 처리 */
+        th:nth-child(9) {
+            width: 180px;
+        }
+        
+        td:nth-child(9) {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 180px;
+            max-width: 180px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+        
+        td:nth-child(9):hover {
+            color: var(--text-primary);
         }
 
         tr:hover {
@@ -672,14 +706,14 @@
 
         .action-buttons {
             display: flex;
-            gap: 3px;
+            gap: 1px;
             flex-wrap: nowrap;
             justify-content: center;
         }
 
         .action-buttons .btn {
-            padding: 5px 10px;
-            font-size: 0.85rem;
+            padding: 3px 6px;
+            font-size: 0.82rem;
             white-space: nowrap;
         }
 
@@ -800,7 +834,7 @@
         }
         
         .message-truncate {
-            max-width: 250px;
+            max-width: 200px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -831,8 +865,8 @@
             background: transparent;
             border: 1px solid var(--danger);
             color: var(--danger);
-            padding: 5px 8px !important;
-            font-size: 0.85rem !important;
+            padding: 3px 6px !important;
+            font-size: 0.82rem !important;
             min-width: auto !important;
         }
         
@@ -1106,18 +1140,18 @@
                 <table id="dataTable">
                     <thead>
                         <tr>
-                            <th style="width: 60px;">팀</th>
-                            <th style="width: 45px;">순번</th>
-                            <th style="width: 60px;">날짜</th>
-                            <th style="width: 75px;">유치자</th>
-                            <th style="width: 75px;">취소자</th>
-                            <th style="width: 75px;">고객명</th>
-                            <th style="width: 150px;">관리번호</th>
-                            <th style="width: 65px;">분류</th>
-                            <th style="min-width: 200px;">취소사유</th>
-                            <th style="width: 75px;">상태</th>
-                            <th style="width: 75px;">승인자</th>
-                            <th style="width: 170px;">작업</th>
+                            <th style="width: 70px;">팀</th>
+                            <th style="width: 40px;">순번</th>
+                            <th style="width: 65px;">날짜</th>
+                            <th style="width: 90px;">유치자</th>
+                            <th style="width: 90px;">취소자</th>
+                            <th style="width: 130px;">고객명</th>
+                            <th style="width: 130px;">관리번호</th>
+                            <th style="width: 60px;">분류</th>
+                            <th style="width: 180px;">취소사유</th>
+                            <th style="width: 70px;">상태</th>
+                            <th style="width: 80px;">승인자</th>
+                            <th style="width: 150px;">작업</th>
                         </tr>
                     </thead>
                     <tbody id="tableBody">
@@ -1545,7 +1579,7 @@
             const date = new Date(dateStr);
             const month = (date.getMonth() + 1).toString().padStart(2, '0');
             const day = date.getDate().toString().padStart(2, '0');
-            return `${month}.${day}`;
+            return `${month}/${day}`;
         };
         
         window.updateCRMPreview = function(data) {
@@ -1569,7 +1603,8 @@
         window.getShortTeamName = function(teamName) {
             if (teamName === '의정부 SNS팀') return '의정부';
             if (teamName && teamName.includes('SNS')) {
-                return teamName.replace('SNS ', '').replace('팀', '팀');
+                // SNS 1팀 -> 1팀 형식으로 표시
+                return teamName.replace('SNS ', '');
             }
             return teamName || '-';
         };
@@ -1647,7 +1682,9 @@
                         <td>${item.customer_name}</td>
                         <td>${item.customer_phone}</td>
                         <td>${item.category || '-'}</td>
-                        <td><span class="message-truncate" title="${crmText.replace(/"/g, '&quot;')}">${crmText.replace(/\n/g, ' ')}</span></td>
+                        <td title="${crmText.replace(/"/g, '&quot;')}" style="cursor: help;">
+                            ${item.reason.length > 30 ? item.reason.substring(0, 30) + '...' : item.reason}
+                        </td>
                         <td>
                             <span class="status-badge status-${statusClass}">
                                 ${statusDisplay}
