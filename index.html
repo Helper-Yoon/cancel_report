@@ -1,4 +1,22 @@
-<!DOCTYPE html>
+#btnBulkDelete {
+            background: linear-gradient(135deg, var(--danger), #dc2626);
+        }
+        
+        #btnBulkDelete:hover:not(:disabled) {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(239, 68, 68, 0.3);
+        }
+        
+        #btnBulkDelete:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        #deleteCount {
+            font-weight: bold;
+            color: white;
+        }<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
@@ -620,21 +638,35 @@
         }
         
         /* 특정 열 스타일 조정 */
-        th:nth-child(7) {  /* 관리번호 헤더 */
+        th:nth-child(1).admin-only {  /* 체크박스 헤더 */
+            text-align: center;
+            padding: 10px 4px;
+        }
+        
+        td:nth-child(1).admin-only {  /* 체크박스 데이터 */
+            text-align: center;
+            padding: 10px 4px;
+        }
+        
+        th:nth-child(7):not(.admin-only),
+        th:nth-child(8).admin-only {  /* 관리번호 헤더 */
             font-size: 0.9rem;
         }
         
-        td:nth-child(7) {  /* 관리번호 데이터 */
+        td:nth-child(7):not(.admin-only),
+        td:nth-child(8).admin-only {  /* 관리번호 데이터 */
             font-size: 0.83rem;
             color: var(--text-muted);
         }
         
         /* 취소사유 열만 특별 처리 */
-        th:nth-child(9) {
+        th:nth-child(9):not(.admin-only),
+        th:nth-child(10).admin-only {
             width: 180px;
         }
         
-        td:nth-child(9) {
+        td:nth-child(9):not(.admin-only),
+        td:nth-child(10).admin-only {
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -644,7 +676,8 @@
             color: var(--text-muted);
         }
         
-        td:nth-child(9):hover {
+        td:nth-child(9):not(.admin-only):hover,
+        td:nth-child(10).admin-only:hover {
             color: var(--text-primary);
         }
 
@@ -706,7 +739,7 @@
 
         .action-buttons {
             display: flex;
-            gap: 1px;
+            gap: 2px;
             flex-wrap: nowrap;
             justify-content: center;
         }
@@ -715,6 +748,16 @@
             padding: 3px 6px;
             font-size: 0.82rem;
             white-space: nowrap;
+        }
+        
+        /* 버튼 그룹 간격 조정 */
+        .action-buttons .btn-secondary + .btn-danger,
+        .action-buttons .btn-primary + .btn-warning {
+            margin-left: 4px;
+        }
+        
+        .action-buttons .btn-delete {
+            margin-left: 8px;
         }
 
         .modal {
@@ -859,6 +902,19 @@
             width: 18px;
             height: 18px;
             cursor: pointer;
+        }
+        
+        .row-checkbox {
+            width: 16px;
+            height: 16px;
+        }
+        
+        #selectAll {
+            margin: 0;
+        }
+        
+        .admin-only {
+            display: none;
         }
 
         .btn-delete {
@@ -1119,13 +1175,18 @@
             </div>
             
             <div class="filter-section">
-                <div class="form-group">
+                <div class="form-group" style="max-width: 150px;">
                     <label for="filterDate">날짜 필터</label>
                     <input type="date" id="filterDate" onchange="window.loadData()">
                 </div>
                 <button class="btn btn-secondary" id="btnExportExcel" onclick="window.handleExportExcel()">
                     <span>📥</span>
                     <span>엑셀 다운로드</span>
+                </button>
+                <button class="btn btn-danger" id="btnBulkDelete" onclick="window.handleBulkDelete()" style="display: none;">
+                    <span>🗑️</span>
+                    <span>선택 삭제</span>
+                    <span id="deleteCount"></span>
                 </button>
                 <button class="btn btn-primary" onclick="window.loadData()">
                     <span>🔄</span>
@@ -1140,6 +1201,9 @@
                 <table id="dataTable">
                     <thead>
                         <tr>
+                            <th style="width: 40px; display: none;" class="admin-only">
+                                <input type="checkbox" id="selectAll" onchange="window.toggleSelectAll()">
+                            </th>
                             <th style="width: 70px;">팀</th>
                             <th style="width: 40px;">순번</th>
                             <th style="width: 65px;">날짜</th>
@@ -1156,7 +1220,7 @@
                     </thead>
                     <tbody id="tableBody">
                         <tr>
-                            <td colspan="12" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                            <td colspan="13" style="text-align: center; padding: 40px; color: var(--text-muted);">
                                 데이터를 불러오는 중...
                             </td>
                         </tr>
@@ -1271,6 +1335,122 @@
         let currentTeam = '';
         let currentUserName = '';
         let isAdmin = false;
+        let selectedItems = new Set();
+        
+        // 전체 선택/해제
+        window.toggleSelectAll = function() {
+            const selectAll = document.getElementById('selectAll');
+            const checkboxes = document.querySelectorAll('.row-checkbox');
+            
+            selectedItems.clear();
+            
+            checkboxes.forEach(cb => {
+                cb.checked = selectAll.checked;
+                if (selectAll.checked) {
+                    selectedItems.add(parseInt(cb.dataset.id));
+                }
+            });
+            
+            updateDeleteButton();
+        };
+        
+        // 개별 체크박스 토글
+        window.toggleSelectItem = function(id) {
+            const checkbox = document.querySelector(`.row-checkbox[data-id="${id}"]`);
+            
+            if (checkbox.checked) {
+                selectedItems.add(id);
+            } else {
+                selectedItems.delete(id);
+            }
+            
+            // 전체 선택 체크박스 상태 업데이트
+            const selectAll = document.getElementById('selectAll');
+            const allCheckboxes = document.querySelectorAll('.row-checkbox');
+            const checkedCount = document.querySelectorAll('.row-checkbox:checked').length;
+            
+            if (checkedCount === 0) {
+                selectAll.checked = false;
+                selectAll.indeterminate = false;
+            } else if (checkedCount === allCheckboxes.length) {
+                selectAll.checked = true;
+                selectAll.indeterminate = false;
+            } else {
+                selectAll.checked = false;
+                selectAll.indeterminate = true;
+            }
+            
+            updateDeleteButton();
+        };
+        
+        // 삭제 버튼 업데이트
+        function updateDeleteButton() {
+            const btnBulkDelete = document.getElementById('btnBulkDelete');
+            const deleteCount = document.getElementById('deleteCount');
+            
+            if (selectedItems.size > 0) {
+                deleteCount.textContent = `(${selectedItems.size})`;
+                btnBulkDelete.disabled = false;
+            } else {
+                deleteCount.textContent = '';
+                btnBulkDelete.disabled = true;
+            }
+        }
+        
+        // 일괄 삭제 처리
+        window.handleBulkDelete = async function() {
+            if (!isAdmin) {
+                window.showToast('관리자 권한이 필요합니다.', 'error');
+                return;
+            }
+            
+            if (selectedItems.size === 0) {
+                window.showToast('삭제할 항목을 선택해주세요.', 'error');
+                return;
+            }
+            
+            const confirmMsg = `정말로 선택한 ${selectedItems.size}개 항목을 삭제하시겠습니까?\n\n⚠️ 경고: 삭제된 데이터는 복구할 수 없습니다!`;
+            
+            if (!confirm(confirmMsg)) {
+                return;
+            }
+            
+            // 두 번째 확인
+            const secondConfirm = prompt(`삭제를 진행하려면 "삭제확인"을 입력하세요.`);
+            
+            if (secondConfirm !== '삭제확인') {
+                window.showToast('삭제가 취소되었습니다.', 'info');
+                return;
+            }
+            
+            try {
+                const itemsArray = Array.from(selectedItems);
+                
+                // 각 항목 삭제
+                for (const id of itemsArray) {
+                    const { error } = await supabase
+                        .from('cancellations')
+                        .delete()
+                        .eq('id', id);
+                    
+                    if (error) throw error;
+                }
+                
+                const adminName = localStorage.getItem('adminName') || '관리자';
+                window.showToast(`${selectedItems.size}개 항목이 삭제되었습니다. (삭제자: ${adminName})`, 'success');
+                
+                // 선택 초기화
+                selectedItems.clear();
+                document.getElementById('selectAll').checked = false;
+                updateDeleteButton();
+                
+                // 데이터 새로고침
+                window.loadData();
+                
+            } catch (error) {
+                window.showToast('일괄 삭제 실패: ' + error.message, 'error');
+            }
+        };
         
         // 토스트 메시지
         window.showToast = function(message, type = 'success') {
@@ -1287,16 +1467,34 @@
         // 관리자 권한 체크 및 UI 업데이트
         window.updateAdminUI = function() {
             const btnExportExcel = document.getElementById('btnExportExcel');
+            const btnBulkDelete = document.getElementById('btnBulkDelete');
             const noPermissionMsg = document.getElementById('noPermissionMsg');
+            const adminOnlyElements = document.querySelectorAll('.admin-only');
             
             if (isAdmin) {
                 btnExportExcel.classList.remove('admin-required');
                 btnExportExcel.disabled = false;
+                btnBulkDelete.style.display = 'inline-flex';
                 noPermissionMsg.style.display = 'none';
+                
+                // 관리자 전용 열 표시
+                adminOnlyElements.forEach(el => {
+                    el.style.display = '';
+                });
             } else {
                 btnExportExcel.classList.add('admin-required');
                 btnExportExcel.disabled = true;
+                btnBulkDelete.style.display = 'none';
+                
+                // 관리자 전용 열 숨기기
+                adminOnlyElements.forEach(el => {
+                    el.style.display = 'none';
+                });
             }
+            
+            // 선택 항목 초기화
+            selectedItems.clear();
+            updateDeleteButton();
             
             // 테이블 업데이트
             window.loadData();
@@ -1464,6 +1662,20 @@
             }
         };
         
+        // 개별 삭제 처리
+        window.handleSingleDelete = function(id) {
+            if (!isAdmin) {
+                window.showToast('관리자 권한이 필요합니다.', 'error');
+                return;
+            }
+            
+            const confirmMsg = '정말로 이 기록을 삭제하시겠습니까?\n\n⚠️ 경고: 삭제된 데이터는 복구할 수 없습니다!';
+            
+            if (confirm(confirmMsg)) {
+                window.openAuthModal('delete', id);
+            }
+        };
+        
         // 삭제 함수
         window.deleteRecord = async function(id, adminName) {
             if (!supabase) {
@@ -1613,9 +1825,10 @@
             const tbody = document.getElementById('tableBody');
             
             if (!data || data.length === 0) {
+                const colSpan = isAdmin ? 13 : 12;
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="12" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                        <td colspan="${colSpan}" style="text-align: center; padding: 40px; color: var(--text-muted);">
                             등록된 취소 양식이 없습니다
                         </td>
                     </tr>
@@ -1657,7 +1870,7 @@
                                 재검토
                             </button>
                         `}
-                        <button class="btn btn-delete" onclick="window.openAuthModal('delete', ${item.id})" title="삭제">
+                        <button class="btn btn-delete" onclick="window.handleSingleDelete(${item.id})" title="삭제">
                             🗑️
                         </button>
                     </div>
@@ -1672,8 +1885,18 @@
                 // 팀 이름 간소화
                 const shortTeamName = window.getShortTeamName(item.submitter_team);
                 
+                // 체크박스 열 (관리자만)
+                const checkboxCell = isAdmin ? `
+                    <td class="admin-only">
+                        <input type="checkbox" class="row-checkbox" data-id="${item.id}" 
+                               onchange="window.toggleSelectItem(${item.id})"
+                               ${selectedItems.has(item.id) ? 'checked' : ''}>
+                    </td>
+                ` : '';
+                
                 return `
                     <tr data-id="${item.id}">
+                        ${checkboxCell}
                         <td title="${item.submitter_team || '-'}">${shortTeamName}</td>
                         <td>${index + 1}</td>
                         <td>${window.formatDate(item.date)}</td>
@@ -1695,6 +1918,14 @@
                     </tr>
                 `;
             }).join('');
+            
+            // 체크박스 상태 유지
+            if (isAdmin) {
+                selectedItems.forEach(id => {
+                    const checkbox = document.querySelector(`.row-checkbox[data-id="${id}"]`);
+                    if (checkbox) checkbox.checked = true;
+                });
+            }
         };
         
         window.updateStatistics = function(data) {
@@ -1732,6 +1963,8 @@
                 document.getElementById('btnAdminLogin').style.display = 'flex';
                 window.updateAdminUI();
             }
+            
+            updateDeleteButton();
         }
         
         async function initializeSupabase() {
@@ -1952,8 +2185,14 @@
                 if (error) throw error;
                 
                 allData = data || [];
+                
+                // 존재하지 않는 항목 제거
+                const existingIds = new Set(allData.map(item => item.id));
+                selectedItems = new Set([...selectedItems].filter(id => existingIds.has(id)));
+                
                 window.updateTable(data);
                 window.updateStatistics(data);
+                updateDeleteButton();
                 
             } catch (error) {
                 console.error('Load error:', error);
@@ -2240,6 +2479,7 @@
                 localStorage.removeItem('adminName');
                 localStorage.removeItem('adminPassword');
                 isAdmin = false;
+                selectedItems.clear();
                 document.getElementById('adminInfo').style.display = 'none';
                 document.getElementById('btnAdminLogin').style.display = 'flex';
                 document.getElementById('adminName').textContent = '-';
