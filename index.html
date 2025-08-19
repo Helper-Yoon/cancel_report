@@ -35,7 +35,7 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: var(--bg-dark);
             min-height: 100vh;
-            padding: 20px;
+            padding: 15px;
             color: var(--text-primary);
             font-size: 15px;
         }
@@ -197,7 +197,7 @@
         }
 
         .container {
-            max-width: 1500px;
+            max-width: 1920px;
             margin: 0 auto;
             display: none;
         }
@@ -338,10 +338,17 @@
             margin-bottom: 30px;
         }
 
-        @media (max-width: 1024px) {
+        @media (max-width: 1400px) {
             .main-content {
                 grid-template-columns: 1fr;
             }
+            .container {
+                max-width: 100%;
+                padding: 0 10px;
+            }
+        }
+        
+        @media (max-width: 1024px) {
             .header {
                 flex-direction: column;
                 gap: 15px;
@@ -349,6 +356,11 @@
             .header-right {
                 width: 100%;
                 justify-content: space-between;
+                flex-wrap: wrap;
+            }
+            .table-wrapper {
+                margin: 0;
+                padding: 0;
             }
         }
 
@@ -501,16 +513,40 @@
         .data-table {
             background: var(--bg-card);
             border-radius: 12px;
-            padding: 30px;
+            padding: 25px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-            overflow-x: auto;
             border: 1px solid var(--border-color);
+        }
+        
+        .table-wrapper {
+            overflow-x: auto;
+            overflow-y: hidden;
+            margin: 0 -10px;
+            padding: 0 10px;
+        }
+        
+        .table-wrapper::-webkit-scrollbar {
+            height: 8px;
+        }
+        
+        .table-wrapper::-webkit-scrollbar-track {
+            background: var(--bg-hover);
+            border-radius: 4px;
+        }
+        
+        .table-wrapper::-webkit-scrollbar-thumb {
+            background: var(--primary-blue);
+            border-radius: 4px;
+        }
+        
+        .table-wrapper::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-blue-dark);
         }
 
         .filter-section {
             display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
+            gap: 12px;
+            margin-bottom: 15px;
             flex-wrap: wrap;
             align-items: end;
         }
@@ -523,15 +559,15 @@
 
         .stats-bar {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
         }
 
         .stat-card {
             background: var(--bg-hover);
-            border-radius: 10px;
-            padding: 15px;
+            border-radius: 8px;
+            padding: 12px;
             text-align: center;
             border: 1px solid var(--border-color);
             transition: all 0.3s ease;
@@ -543,37 +579,39 @@
         }
 
         .stat-number {
-            font-size: 1.9rem;
+            font-size: 1.6rem;
             font-weight: bold;
             color: var(--primary-blue);
         }
 
         .stat-label {
             color: var(--text-muted);
-            font-size: 0.9rem;
-            margin-top: 5px;
+            font-size: 0.85rem;
+            margin-top: 3px;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
+            table-layout: fixed;
         }
 
         th {
             background: var(--primary-blue);
             color: white;
-            padding: 15px 10px;
+            padding: 12px 8px;
             text-align: left;
             font-weight: 600;
-            font-size: 1rem;
+            font-size: 0.95rem;
             white-space: nowrap;
         }
 
         td {
-            padding: 15px 10px;
+            padding: 12px 8px;
             border-bottom: 1px solid var(--border-color);
             color: var(--text-secondary);
-            font-size: 0.95rem;
+            font-size: 0.9rem;
+            word-break: break-word;
         }
 
         tr:hover {
@@ -582,10 +620,11 @@
 
         .status-badge {
             display: inline-block;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 0.9rem;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.85rem;
             font-weight: 600;
+            white-space: nowrap;
         }
 
         .status-pending {
@@ -633,13 +672,15 @@
 
         .action-buttons {
             display: flex;
-            gap: 5px;
-            flex-wrap: wrap;
+            gap: 3px;
+            flex-wrap: nowrap;
+            justify-content: center;
         }
 
         .action-buttons .btn {
-            padding: 7px 14px;
-            font-size: 0.9rem;
+            padding: 5px 10px;
+            font-size: 0.85rem;
+            white-space: nowrap;
         }
 
         .modal {
@@ -759,7 +800,7 @@
         }
         
         .message-truncate {
-            max-width: 400px;
+            max-width: 250px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -790,10 +831,11 @@
             background: transparent;
             border: 1px solid var(--danger);
             color: var(--danger);
-            padding: 7px 14px;
-            font-size: 0.9rem;
+            padding: 5px 8px !important;
+            font-size: 0.85rem !important;
+            min-width: auto !important;
         }
-
+        
         .btn-delete:hover {
             background: var(--danger);
             color: white;
@@ -1060,22 +1102,22 @@
                 </div>
             </div>
 
-            <div style="overflow-x: auto;">
+            <div class="table-wrapper">
                 <table id="dataTable">
                     <thead>
                         <tr>
-                            <th>팀</th>
-                            <th>순번</th>
-                            <th>날짜</th>
-                            <th>유치자</th>
-                            <th>취소자</th>
-                            <th>고객명</th>
-                            <th>관리번호</th>
-                            <th>분류</th>
-                            <th style="min-width: 300px;">취소사유</th>
-                            <th>상태</th>
-                            <th>승인자</th>
-                            <th>작업</th>
+                            <th style="width: 60px;">팀</th>
+                            <th style="width: 45px;">순번</th>
+                            <th style="width: 60px;">날짜</th>
+                            <th style="width: 75px;">유치자</th>
+                            <th style="width: 75px;">취소자</th>
+                            <th style="width: 75px;">고객명</th>
+                            <th style="width: 150px;">관리번호</th>
+                            <th style="width: 65px;">분류</th>
+                            <th style="min-width: 200px;">취소사유</th>
+                            <th style="width: 75px;">상태</th>
+                            <th style="width: 75px;">승인자</th>
+                            <th style="width: 170px;">작업</th>
                         </tr>
                     </thead>
                     <tbody id="tableBody">
@@ -1501,10 +1543,9 @@
         
         window.formatDate = function(dateStr) {
             const date = new Date(dateStr);
-            const year = date.getFullYear().toString().slice(-2);
             const month = (date.getMonth() + 1).toString().padStart(2, '0');
             const day = date.getDate().toString().padStart(2, '0');
-            return `${year}.${month}.${day}.`;
+            return `${month}.${day}`;
         };
         
         window.updateCRMPreview = function(data) {
@@ -1522,6 +1563,15 @@
             
             const crmText = window.generateCRMText(data);
             preview.innerHTML = `<pre>${crmText}</pre>`;
+        };
+        
+        // 팀 이름 간소화 함수
+        window.getShortTeamName = function(teamName) {
+            if (teamName === '의정부 SNS팀') return '의정부';
+            if (teamName && teamName.includes('SNS')) {
+                return teamName.replace('SNS ', '').replace('팀', '팀');
+            }
+            return teamName || '-';
         };
         
         window.updateTable = function(data) {
@@ -1584,9 +1634,12 @@
                     </div>
                 `;
                 
+                // 팀 이름 간소화
+                const shortTeamName = window.getShortTeamName(item.submitter_team);
+                
                 return `
                     <tr data-id="${item.id}">
-                        <td>${item.submitter_team || '-'}</td>
+                        <td title="${item.submitter_team || '-'}">${shortTeamName}</td>
                         <td>${index + 1}</td>
                         <td>${window.formatDate(item.date)}</td>
                         <td>${item.recruiter}</td>
@@ -1909,7 +1962,7 @@
 
                 // ExcelJS 워크북 생성
                 const workbook = new ExcelJS.Workbook();
-                const worksheet = workbook.addWorksheet('SNS팀 (날짜)');
+                const worksheet = workbook.addWorksheet('취소양식');
 
                 // 첫 번째 행 (병합된 제목 행)
                 worksheet.mergeCells('A1:H1');
@@ -1944,7 +1997,7 @@
                     };
                 });
 
-                // 데이터 추가
+                // 데이터 추가 (원본 날짜 형식 사용)
                 data.forEach((item, index) => {
                     // 취소사유 텍스트 구성
                     let cancelReason = `${item.customer_name} / 관리번호: ${item.customer_phone}
@@ -1960,9 +2013,16 @@
 2차반론: ${item.defense2} / 결과: ${item.defense2_result || '없음'}`;
                     }
                     
+                    // 엑셀용 날짜 형식 (년.월.일.)
+                    const date = new Date(item.date);
+                    const year = date.getFullYear().toString().slice(-2);
+                    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                    const day = date.getDate().toString().padStart(2, '0');
+                    const excelDateFormat = `${year}.${month}.${day}.`;
+                    
                     const rowData = [
                         index + 1,
-                        window.formatDate(item.date),
+                        excelDateFormat,
                         item.recruiter,
                         item.canceller,
                         item.customer_name,
@@ -2017,9 +2077,20 @@
                 const a = document.createElement('a');
                 a.href = url;
                 
-                const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-                const teamName = currentTeam ? `_${currentTeam.replace(/\s/g, '')}` : '';
-                a.download = `취소양식_${currentTeam}${teamName}_${today}.xlsx`;
+                // 파일명 형식: 취소양식_SNS 2팀_250820.xlsx
+                const today = new Date();
+                const yearShort = today.getFullYear().toString().slice(-2);
+                const month = (today.getMonth() + 1).toString().padStart(2, '0');
+                const day = today.getDate().toString().padStart(2, '0');
+                const dateString = `${yearShort}${month}${day}`;
+                
+                // 팀 이름 처리 (의정부 SNS팀 → 의정부SNS팀)
+                let teamNameForFile = currentTeam;
+                if (currentTeam === '의정부 SNS팀') {
+                    teamNameForFile = '의정부SNS팀';
+                }
+                
+                a.download = `취소양식_${teamNameForFile}_${dateString}.xlsx`;
                 a.click();
                 
                 window.URL.revokeObjectURL(url);
@@ -2089,7 +2160,7 @@
                     <div class="form-group">
                         <label>기본 정보</label>
                         <div style="background: var(--bg-hover); padding: 15px; border-radius: 8px;">
-                            <p><strong>날짜:</strong> ${window.formatDate(data.date)}</p>
+                            <p><strong>날짜:</strong> ${new Date(data.date).getFullYear()}.${(new Date(data.date).getMonth() + 1).toString().padStart(2, '0')}.${new Date(data.date).getDate().toString().padStart(2, '0')}</p>
                             <p><strong>팀:</strong> ${data.submitter_team}</p>
                             <p><strong>유치자:</strong> ${data.recruiter}</p>
                             <p><strong>취소자:</strong> ${data.canceller}</p>
