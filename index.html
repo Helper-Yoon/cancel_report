@@ -915,6 +915,7 @@
         
         #btnBulkDelete {
             background: linear-gradient(135deg, var(--danger), #dc2626);
+            color: white;
         }
         
         #btnBulkDelete:hover:not(:disabled) {
@@ -924,13 +925,15 @@
         }
         
         #btnBulkDelete:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
+            opacity: 0.5 !important;
+            cursor: not-allowed !important;
+            background: linear-gradient(135deg, #999, #666) !important;
         }
         
         #deleteCount {
             font-weight: bold;
             color: white;
+            margin-left: 4px;
         }
         
         .admin-required {
@@ -1185,7 +1188,7 @@
                     <span>📥</span>
                     <span>엑셀 다운로드</span>
                 </button>
-                <button class="btn btn-danger" id="btnBulkDelete" onclick="window.handleBulkDelete()" style="display: none;">
+                <button class="btn btn-danger" id="btnBulkDelete" onclick="window.handleBulkDelete()" style="display: none;" disabled>
                     <span>🗑️</span>
                     <span>일괄 삭제</span>
                     <span id="deleteCount"></span>
@@ -1222,7 +1225,7 @@
                     </thead>
                     <tbody id="tableBody">
                         <tr>
-                            <td colspan="13" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                            <td colspan="12" style="text-align: center; padding: 40px; color: var(--text-muted);">
                                 데이터를 불러오는 중...
                             </td>
                         </tr>
@@ -1353,6 +1356,7 @@
                 }
             });
             
+            console.log('Select all - Selected items:', selectedItems.size); // 디버깅용
             updateDeleteButton();
         };
         
@@ -1360,11 +1364,15 @@
         window.toggleSelectItem = function(id) {
             const checkbox = document.querySelector(`.row-checkbox[data-id="${id}"]`);
             
+            if (!checkbox) return;
+            
             if (checkbox.checked) {
                 selectedItems.add(id);
             } else {
                 selectedItems.delete(id);
             }
+            
+            console.log('Selected items:', selectedItems.size); // 디버깅용
             
             // 전체 선택 체크박스 상태 업데이트
             const selectAll = document.getElementById('selectAll');
@@ -1390,12 +1398,18 @@
             const btnBulkDelete = document.getElementById('btnBulkDelete');
             const deleteCount = document.getElementById('deleteCount');
             
+            if (!btnBulkDelete) return;
+            
             if (selectedItems.size > 0) {
                 deleteCount.textContent = `(${selectedItems.size})`;
                 btnBulkDelete.disabled = false;
+                btnBulkDelete.style.opacity = '1';
+                btnBulkDelete.style.cursor = 'pointer';
             } else {
                 deleteCount.textContent = '';
                 btnBulkDelete.disabled = true;
+                btnBulkDelete.style.opacity = '0.5';
+                btnBulkDelete.style.cursor = 'not-allowed';
             }
         }
         
@@ -1443,7 +1457,8 @@
                 
                 // 선택 초기화
                 selectedItems.clear();
-                document.getElementById('selectAll').checked = false;
+                const selectAll = document.getElementById('selectAll');
+                if (selectAll) selectAll.checked = false;
                 updateDeleteButton();
                 
                 // 데이터 새로고침
@@ -1476,7 +1491,13 @@
             if (isAdmin) {
                 btnExportExcel.classList.remove('admin-required');
                 btnExportExcel.disabled = false;
-                btnBulkDelete.style.display = 'inline-flex';
+                
+                // 일괄 삭제 버튼 표시 및 초기화
+                if (btnBulkDelete) {
+                    btnBulkDelete.style.display = 'inline-flex';
+                    btnBulkDelete.disabled = true; // 초기에는 비활성화
+                }
+                
                 noPermissionMsg.style.display = 'none';
                 
                 // 관리자 전용 열 표시
@@ -1486,7 +1507,10 @@
             } else {
                 btnExportExcel.classList.add('admin-required');
                 btnExportExcel.disabled = true;
-                btnBulkDelete.style.display = 'none';
+                
+                if (btnBulkDelete) {
+                    btnBulkDelete.style.display = 'none';
+                }
                 
                 // 관리자 전용 열 숨기기
                 adminOnlyElements.forEach(el => {
@@ -1921,12 +1945,17 @@
                 `;
             }).join('');
             
-            // 체크박스 상태 유지
+            // 체크박스 상태 유지 및 버튼 업데이트
             if (isAdmin) {
                 selectedItems.forEach(id => {
                     const checkbox = document.querySelector(`.row-checkbox[data-id="${id}"]`);
                     if (checkbox) checkbox.checked = true;
                 });
+                
+                // 테이블 렌더링 후 버튼 상태 업데이트
+                setTimeout(() => {
+                    updateDeleteButton();
+                }, 50);
             }
         };
         
@@ -1966,7 +1995,10 @@
                 window.updateAdminUI();
             }
             
-            updateDeleteButton();
+            // 초기 버튼 상태 설정
+            setTimeout(() => {
+                updateDeleteButton();
+            }, 100);
         }
         
         async function initializeSupabase() {
@@ -2194,7 +2226,13 @@
                 
                 window.updateTable(data);
                 window.updateStatistics(data);
-                updateDeleteButton();
+                
+                // 관리자인 경우에만 삭제 버튼 업데이트
+                if (isAdmin) {
+                    setTimeout(() => {
+                        updateDeleteButton();
+                    }, 100);
+                }
                 
             } catch (error) {
                 console.error('Load error:', error);
