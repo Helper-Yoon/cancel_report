@@ -620,35 +620,21 @@
         }
         
         /* 특정 열 스타일 조정 */
-        th:nth-child(1).admin-only {  /* 체크박스 헤더 */
-            text-align: center;
-            padding: 10px 4px;
-        }
-        
-        td:nth-child(1).admin-only {  /* 체크박스 데이터 */
-            text-align: center;
-            padding: 10px 4px;
-        }
-        
-        th:nth-child(7):not(.admin-only),
-        th:nth-child(8).admin-only {  /* 관리번호 헤더 */
+        th:nth-child(7) {  /* 관리번호 헤더 */
             font-size: 0.9rem;
         }
         
-        td:nth-child(7):not(.admin-only),
-        td:nth-child(8).admin-only {  /* 관리번호 데이터 */
+        td:nth-child(7) {  /* 관리번호 데이터 */
             font-size: 0.83rem;
             color: var(--text-muted);
         }
         
         /* 취소사유 열만 특별 처리 */
-        th:nth-child(9):not(.admin-only),
-        th:nth-child(10).admin-only {
+        th:nth-child(9) {
             width: 180px;
         }
         
-        td:nth-child(9):not(.admin-only),
-        td:nth-child(10).admin-only {
+        td:nth-child(9) {
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -658,8 +644,7 @@
             color: var(--text-muted);
         }
         
-        td:nth-child(9):not(.admin-only):hover,
-        td:nth-child(10).admin-only:hover {
+        td:nth-child(9):hover {
             color: var(--text-primary);
         }
 
@@ -886,17 +871,15 @@
             cursor: pointer;
         }
         
-        .row-checkbox {
-            width: 16px;
-            height: 16px;
+        #btnDeleteAll {
+            background: linear-gradient(135deg, var(--danger), #dc2626);
+            color: white;
         }
         
-        #selectAll {
-            margin: 0;
-        }
-        
-        .admin-only {
-            display: none;
+        #btnDeleteAll:hover {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(239, 68, 68, 0.3);
         }
 
         .btn-delete {
@@ -911,29 +894,6 @@
         .btn-delete:hover {
             background: var(--danger);
             color: white;
-        }
-        
-        #btnBulkDelete {
-            background: linear-gradient(135deg, var(--danger), #dc2626);
-            color: white;
-        }
-        
-        #btnBulkDelete:hover:not(:disabled) {
-            background: linear-gradient(135deg, #dc2626, #b91c1c);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(239, 68, 68, 0.3);
-        }
-        
-        #btnBulkDelete:disabled {
-            opacity: 0.5 !important;
-            cursor: not-allowed !important;
-            background: linear-gradient(135deg, #999, #666) !important;
-        }
-        
-        #deleteCount {
-            font-weight: bold;
-            color: white;
-            margin-left: 4px;
         }
         
         .admin-required {
@@ -1188,10 +1148,9 @@
                     <span>📥</span>
                     <span>엑셀 다운로드</span>
                 </button>
-                <button class="btn btn-danger" id="btnBulkDelete" onclick="window.handleBulkDelete()" style="display: none;" disabled>
-                    <span>🗑️</span>
-                    <span>일괄 삭제</span>
-                    <span id="deleteCount"></span>
+                <button class="btn btn-danger" id="btnDeleteAll" onclick="window.handleDeleteAll()" style="display: none;">
+                    <span>⚠️</span>
+                    <span>전체 삭제</span>
                 </button>
                 <button class="btn btn-primary" onclick="window.loadData()">
                     <span>🔄</span>
@@ -1206,9 +1165,6 @@
                 <table id="dataTable">
                     <thead>
                         <tr>
-                            <th style="width: 40px; display: none;" class="admin-only">
-                                <input type="checkbox" id="selectAll" onchange="window.toggleSelectAll()">
-                            </th>
                             <th style="width: 70px;">팀</th>
                             <th style="width: 40px;">순번</th>
                             <th style="width: 65px;">날짜</th>
@@ -1340,7 +1296,6 @@
         let currentTeam = '';
         let currentUserName = '';
         let isAdmin = false;
-        let selectedItems = new Set();
         
         // 전체 선택/해제
         window.toggleSelectAll = function() {
@@ -1484,43 +1439,27 @@
         // 관리자 권한 체크 및 UI 업데이트
         window.updateAdminUI = function() {
             const btnExportExcel = document.getElementById('btnExportExcel');
-            const btnBulkDelete = document.getElementById('btnBulkDelete');
+            const btnDeleteAll = document.getElementById('btnDeleteAll');
             const noPermissionMsg = document.getElementById('noPermissionMsg');
-            const adminOnlyElements = document.querySelectorAll('.admin-only');
             
             if (isAdmin) {
                 btnExportExcel.classList.remove('admin-required');
                 btnExportExcel.disabled = false;
                 
-                // 일괄 삭제 버튼 표시 및 초기화
-                if (btnBulkDelete) {
-                    btnBulkDelete.style.display = 'inline-flex';
-                    btnBulkDelete.disabled = true; // 초기에는 비활성화
+                // 전체 삭제 버튼 표시
+                if (btnDeleteAll) {
+                    btnDeleteAll.style.display = 'inline-flex';
                 }
                 
                 noPermissionMsg.style.display = 'none';
-                
-                // 관리자 전용 열 표시
-                adminOnlyElements.forEach(el => {
-                    el.style.display = '';
-                });
             } else {
                 btnExportExcel.classList.add('admin-required');
                 btnExportExcel.disabled = true;
                 
-                if (btnBulkDelete) {
-                    btnBulkDelete.style.display = 'none';
+                if (btnDeleteAll) {
+                    btnDeleteAll.style.display = 'none';
                 }
-                
-                // 관리자 전용 열 숨기기
-                adminOnlyElements.forEach(el => {
-                    el.style.display = 'none';
-                });
             }
-            
-            // 선택 항목 초기화
-            selectedItems.clear();
-            updateDeleteButton();
             
             // 테이블 업데이트
             window.loadData();
@@ -1547,23 +1486,7 @@
             window.exportToExcel();
         };
         
-        // 관리자 권한 확인
-        window.checkAdminAction = function(action, data) {
-            if (!isAdmin) {
-                window.showToast('관리자 권한이 필요합니다. 관리자로 로그인해주세요.', 'error');
-                return false;
-            }
-            
-            currentAuthAction = action;
-            currentAuthData = data;
-            
-            const adminName = localStorage.getItem('adminName');
-            if (adminName) {
-                window.handleAuthSuccess(adminName);
-            }
-            return true;
-        };
-        
+
         // 팀 선택 화면 표시
         window.showTeamSelection = function() {
             document.getElementById('teamSelection').style.display = 'flex';
@@ -1702,7 +1625,7 @@
             }
         };
         
-        // 삭제 함수
+        // 삭제 함수 (관리자 인증 후 실행)
         window.deleteRecord = async function(id, adminName) {
             if (!supabase) {
                 window.showToast('데이터베이스가 연결되지 않았습니다.', 'error');
@@ -1711,10 +1634,6 @@
             
             if (!isAdmin) {
                 window.showToast('관리자 권한이 필요합니다.', 'error');
-                return;
-            }
-            
-            if (!confirm('정말로 이 기록을 삭제하시겠습니까?\n삭제된 데이터는 복구할 수 없습니다.')) {
                 return;
             }
             
@@ -1770,8 +1689,22 @@
         
         // openAuthModal 함수
         window.openAuthModal = function(action, data) {
-            if (!window.checkAdminAction(action, data)) {
-                return;
+            currentAuthAction = action;
+            currentAuthData = data;
+            
+            const savedAdmin = localStorage.getItem('adminName');
+            const savedPassword = localStorage.getItem('adminPassword');
+            
+            if (savedAdmin && savedPassword === ADMIN_PASSWORD) {
+                setTimeout(() => {
+                    window.handleAuthSuccess(savedAdmin);
+                }, 100);
+            } else {
+                document.getElementById('authModal').style.display = 'flex';
+                const authNameInput = document.getElementById('authName');
+                if (authNameInput) {
+                    authNameInput.focus();
+                }
             }
         };
         
@@ -1851,10 +1784,9 @@
             const tbody = document.getElementById('tableBody');
             
             if (!data || data.length === 0) {
-                const colSpan = isAdmin ? 13 : 12;
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="${colSpan}" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                        <td colspan="12" style="text-align: center; padding: 40px; color: var(--text-muted);">
                             등록된 취소 양식이 없습니다
                         </td>
                     </tr>
@@ -1911,18 +1843,8 @@
                 // 팀 이름 간소화
                 const shortTeamName = window.getShortTeamName(item.submitter_team);
                 
-                // 체크박스 열 (관리자만)
-                const checkboxCell = isAdmin ? `
-                    <td class="admin-only">
-                        <input type="checkbox" class="row-checkbox" data-id="${item.id}" 
-                               onchange="window.toggleSelectItem(${item.id})"
-                               ${selectedItems.has(item.id) ? 'checked' : ''}>
-                    </td>
-                ` : '';
-                
                 return `
                     <tr data-id="${item.id}">
-                        ${checkboxCell}
                         <td title="${item.submitter_team || '-'}">${shortTeamName}</td>
                         <td>${index + 1}</td>
                         <td>${window.formatDate(item.date)}</td>
@@ -1944,19 +1866,6 @@
                     </tr>
                 `;
             }).join('');
-            
-            // 체크박스 상태 유지 및 버튼 업데이트
-            if (isAdmin) {
-                selectedItems.forEach(id => {
-                    const checkbox = document.querySelector(`.row-checkbox[data-id="${id}"]`);
-                    if (checkbox) checkbox.checked = true;
-                });
-                
-                // 테이블 렌더링 후 버튼 상태 업데이트
-                setTimeout(() => {
-                    updateDeleteButton();
-                }, 50);
-            }
         };
         
         window.updateStatistics = function(data) {
@@ -1994,11 +1903,6 @@
                 document.getElementById('btnAdminLogin').style.display = 'flex';
                 window.updateAdminUI();
             }
-            
-            // 초기 버튼 상태 설정
-            setTimeout(() => {
-                updateDeleteButton();
-            }, 100);
         }
         
         async function initializeSupabase() {
@@ -2220,19 +2124,8 @@
                 
                 allData = data || [];
                 
-                // 존재하지 않는 항목 제거
-                const existingIds = new Set(allData.map(item => item.id));
-                selectedItems = new Set([...selectedItems].filter(id => existingIds.has(id)));
-                
                 window.updateTable(data);
                 window.updateStatistics(data);
-                
-                // 관리자인 경우에만 삭제 버튼 업데이트
-                if (isAdmin) {
-                    setTimeout(() => {
-                        updateDeleteButton();
-                    }, 100);
-                }
                 
             } catch (error) {
                 console.error('Load error:', error);
@@ -2519,7 +2412,6 @@
                 localStorage.removeItem('adminName');
                 localStorage.removeItem('adminPassword');
                 isAdmin = false;
-                selectedItems.clear();
                 document.getElementById('adminInfo').style.display = 'none';
                 document.getElementById('btnAdminLogin').style.display = 'flex';
                 document.getElementById('adminName').textContent = '-';
