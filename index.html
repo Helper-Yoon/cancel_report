@@ -1,22 +1,4 @@
-#btnBulkDelete {
-            background: linear-gradient(135deg, var(--danger), #dc2626);
-        }
-        
-        #btnBulkDelete:hover:not(:disabled) {
-            background: linear-gradient(135deg, #dc2626, #b91c1c);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(239, 68, 68, 0.3);
-        }
-        
-        #btnBulkDelete:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        
-        #deleteCount {
-            font-weight: bold;
-            color: white;
-        }<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
@@ -931,6 +913,26 @@
             color: white;
         }
         
+        #btnBulkDelete {
+            background: linear-gradient(135deg, var(--danger), #dc2626);
+        }
+        
+        #btnBulkDelete:hover:not(:disabled) {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(239, 68, 68, 0.3);
+        }
+        
+        #btnBulkDelete:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        #deleteCount {
+            font-weight: bold;
+            color: white;
+        }
+        
         .admin-required {
             opacity: 0.5;
             cursor: not-allowed !important;
@@ -1185,7 +1187,7 @@
                 </button>
                 <button class="btn btn-danger" id="btnBulkDelete" onclick="window.handleBulkDelete()" style="display: none;">
                     <span>🗑️</span>
-                    <span>선택 삭제</span>
+                    <span>일괄 삭제</span>
                     <span id="deleteCount"></span>
                 </button>
                 <button class="btn btn-primary" onclick="window.loadData()">
