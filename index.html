@@ -16,28 +16,30 @@
         }
 
         :root {
-            --primary-blue: #0080FF;
-            --primary-blue-dark: #0066CC;
-            --primary-blue-light: #3399FF;
-            --bg-dark: #1a1a1a;
-            --bg-card: #242424;
-            --bg-hover: #2a2a2a;
-            --border-color: #333;
-            --text-primary: #ffffff;
-            --text-secondary: #b0b0b0;
+            --primary-blue: #1E6FFF;
+            --primary-blue-dark: #0052E0;
+            --primary-blue-light: #4A8FFF;
+            --bg-dark: #000;
+            --bg-card: #000;
+            --bg-hover: #050505;
+            --border-color: #222;
+            --border-light: #333;
+            --text-primary: #fff;
+            --text-secondary: #b3b3b3;
             --text-muted: #808080;
-            --success: #4ade80;
-            --warning: #fbbf24;
-            --danger: #ef4444;
+            --success: #00FF88;
+            --warning: #FFB800;
+            --danger: #FF3366;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
             background: var(--bg-dark);
             min-height: 100vh;
-            padding: 15px;
+            padding: 40px 20px;
             color: var(--text-primary);
-            font-size: 15px;
+            font-size: 16px;
+            font-weight: 300;
         }
 
         /* 팀 선택 화면 스타일 */
@@ -57,7 +59,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: radial-gradient(circle at center, #1a1a1a 0%, #000000 100%);
+            background: var(--bg-dark);
             animation: fadeIn 0.5s ease;
             position: fixed;
             top: 0;
@@ -70,75 +72,61 @@
         .team-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 2rem;
+            gap: 2px;
             max-width: 900px;
             width: 100%;
-            padding: 2rem;
+            padding: 2px;
+            background: var(--border-color);
         }
         
         .team-card {
-            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-hover) 100%);
-            border: 2px solid var(--border-color);
-            border-radius: 1rem;
-            padding: 2.5rem 2rem;
+            background: var(--bg-dark);
+            padding: 3rem 2rem;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s;
             position: relative;
-            overflow: hidden;
-        }
-        
-        .team-card::before {
-            content: '';
-            position: absolute;
-            top: -2px;
-            left: -2px;
-            right: -2px;
-            bottom: -2px;
-            background: linear-gradient(135deg, var(--primary-blue), var(--primary-blue-dark), var(--primary-blue));
-            border-radius: 1rem;
-            opacity: 0;
-            transition: opacity 0.3s;
-            z-index: -1;
         }
         
         .team-card:hover {
-            transform: translateY(-8px) scale(1.05);
-            border-color: var(--primary-blue);
-            box-shadow: 0 15px 40px rgba(0, 128, 255, 0.3);
+            background: var(--bg-hover);
         }
         
         .team-card:hover .team-icon {
             transform: scale(1.1);
-            filter: drop-shadow(0 0 20px rgba(0, 128, 255, 0.5));
+            color: var(--primary-blue);
         }
         
-        .team-card:hover::before {
-            opacity: 1;
+        .team-card:hover .team-name {
+            color: var(--primary-blue);
         }
         
         .team-icon {
-            font-size: 3.5rem;
-            margin-bottom: 1rem;
-            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.1));
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
             transition: all 0.3s;
         }
         
         .team-name {
-            font-size: 1.25rem;
-            font-weight: bold;
-            color: var(--text-primary);
-            text-shadow: 0 0 10px rgba(0, 128, 255, 0.2);
+            font-size: 15px;
+            font-weight: 400;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.3s;
         }
 
         .team-selection-title {
             text-align: center;
-            margin-bottom: 3rem;
-            font-size: 2rem;
-            background: linear-gradient(135deg, #ffffff 0%, var(--primary-blue) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: none;
+            margin-bottom: 50px;
+            font-size: 48px;
+            font-weight: 200;
+            color: var(--text-primary);
+        }
+
+        .team-selection-title span {
+            color: var(--primary-blue);
+            font-weight: 400;
         }
 
         /* 팀 배지 스타일 */
@@ -146,91 +134,67 @@
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
-            padding: 0.5rem 1rem;
-            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-dark) 100%);
-            border-radius: 2rem;
-            font-size: 0.875rem;
-            font-weight: 600;
-            box-shadow: 0 4px 15px rgba(0, 128, 255, 0.3);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .team-badge::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            animation: shine 3s infinite;
-        }
-        
-        @keyframes shine {
-            0% { left: -100%; }
-            100% { left: 100%; }
+            padding: 10px 20px;
+            border: 1px solid var(--primary-blue);
+            font-size: 13px;
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--primary-blue);
         }
         
         .team-switcher {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 15px;
         }
         
         .btn-switch-team {
-            padding: 0.5rem 1rem;
-            background: var(--bg-hover);
-            border: 1px solid var(--border-color);
-            border-radius: 0.5rem;
+            padding: 10px 20px;
+            background: transparent;
+            border: 1px solid var(--border-light);
             color: var(--text-muted);
-            font-size: 0.875rem;
+            font-size: 13px;
             cursor: pointer;
             transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
         
         .btn-switch-team:hover {
-            background: var(--bg-card);
             border-color: var(--primary-blue);
             color: var(--primary-blue);
-            box-shadow: 0 0 10px rgba(0, 128, 255, 0.2);
         }
 
         .container {
-            max-width: 1920px;
+            max-width: 1400px;
             margin: 0 auto;
             display: none;
         }
 
         .header {
-            background: var(--bg-card);
-            border-radius: 12px;
-            padding: 25px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border: 1px solid var(--border-color);
+            text-align: center;
+            margin-bottom: 50px;
+            padding-bottom: 30px;
+            border-bottom: 1px solid var(--border-color);
         }
 
         .header h1 {
-            color: var(--text-primary);
-            font-size: 2.1rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            font-size: 48px;
+            font-weight: 200;
+            margin-bottom: 30px;
         }
 
-        .header h1::before {
-            content: "📋";
-            font-size: 1.9rem;
+        .header h1 span {
+            color: var(--primary-blue);
+            font-weight: 400;
         }
 
         .header-right {
             display: flex;
             gap: 20px;
             align-items: center;
+            justify-content: center;
             flex-wrap: wrap;
         }
 
@@ -238,77 +202,79 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            padding: 10px 18px;
-            background: var(--bg-hover);
-            border-radius: 20px;
-            font-size: 0.95rem;
+            padding: 10px 20px;
+            border: 1px solid var(--border-color);
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .user-info span {
-            color: var(--primary-blue);
-            font-weight: 600;
+            color: var(--text-secondary);
         }
         
         .user-info .btn {
-            padding: 4px 10px !important;
-            font-size: 0.85rem !important;
-            margin-left: 8px;
+            padding: 5px 10px !important;
+            font-size: 11px !important;
+            margin-left: 10px;
         }
 
         .admin-info {
             display: flex;
             align-items: center;
             gap: 10px;
-            padding: 10px 18px;
-            background: linear-gradient(135deg, var(--success), #22c55e);
-            border-radius: 20px;
-            font-size: 0.95rem;
-            box-shadow: 0 4px 15px rgba(74, 222, 128, 0.3);
+            padding: 10px 20px;
+            border: 1px solid var(--success);
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .admin-info span {
-            color: var(--bg-dark);
-            font-weight: 600;
+            color: var(--success);
         }
         
         .admin-info .btn {
-            padding: 4px 10px !important;
-            font-size: 0.85rem !important;
-            margin-left: 8px;
+            padding: 5px 10px !important;
+            font-size: 11px !important;
+            margin-left: 10px;
         }
         
         .btn-admin-login {
-            padding: 10px 20px;
-            background: linear-gradient(135deg, var(--warning), #f59e0b);
-            border: none;
-            border-radius: 20px;
-            color: var(--bg-dark);
-            font-weight: 600;
+            padding: 10px 25px;
+            background: transparent;
+            border: 1px solid var(--warning);
+            color: var(--warning);
+            font-weight: 400;
             cursor: pointer;
             transition: all 0.3s;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
         
         .btn-admin-login:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(251, 191, 36, 0.4);
+            background: var(--warning);
+            color: var(--bg-dark);
         }
 
         .connection-status {
             display: flex;
             align-items: center;
             gap: 10px;
-            padding: 12px 22px;
-            background: var(--bg-hover);
-            border-radius: 25px;
-            font-size: 0.95rem;
+            padding: 10px 20px;
+            border: 1px solid var(--border-color);
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .status-dot {
-            width: 10px;
-            height: 10px;
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
             animation: pulse 2s infinite;
         }
@@ -326,92 +292,69 @@
         }
 
         @keyframes pulse {
-            0% { opacity: 1; }
+            0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
-            100% { opacity: 1; }
         }
 
         .main-content {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            margin-bottom: 30px;
+            gap: 2px;
+            margin-bottom: 50px;
+            background: var(--border-color);
+            padding: 2px;
         }
 
         @media (max-width: 1400px) {
             .main-content {
                 grid-template-columns: 1fr;
             }
-            .container {
-                max-width: 100%;
-                padding: 0 10px;
-            }
-        }
-        
-        @media (max-width: 1024px) {
-            .header {
-                flex-direction: column;
-                gap: 15px;
-            }
-            .header-right {
-                width: 100%;
-                justify-content: space-between;
-                flex-wrap: wrap;
-            }
-            .table-wrapper {
-                margin: 0;
-                padding: 0;
-            }
         }
 
         .form-section, .crm-section {
             background: var(--bg-card);
-            border-radius: 12px;
-            padding: 30px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-            border: 1px solid var(--border-color);
+            padding: 40px;
         }
 
         .section-title {
-            color: var(--primary-blue);
-            font-size: 1.4rem;
-            margin-bottom: 25px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid var(--primary-blue-dark);
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            font-size: 18px;
+            font-weight: 300;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--text-secondary);
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 30px;
         }
 
         .form-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 15px;
+            gap: 20px;
         }
 
         .form-row-equal {
             display: grid;
             grid-template-columns: 2fr 1fr;
-            gap: 15px;
+            gap: 20px;
         }
 
         label {
             display: block;
-            color: var(--text-secondary);
-            font-weight: 600;
-            margin-bottom: 8px;
-            font-size: 1rem;
+            color: var(--text-muted);
+            font-weight: 400;
+            margin-bottom: 10px;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
         
-        .modal-content label {
-            color: var(--primary-blue);
-            font-size: 1.1rem;
-            margin-bottom: 12px;
-            margin-top: 10px;
+        label span {
+            color: var(--danger);
         }
 
         input[type="text"],
@@ -420,13 +363,13 @@
         select,
         textarea {
             width: 100%;
-            padding: 12px;
+            padding: 12px 15px;
             border: 1px solid var(--border-color);
-            border-radius: 8px;
-            font-size: 1.05rem;
+            font-size: 16px;
             transition: all 0.3s ease;
-            background: var(--bg-hover);
+            background: transparent;
             color: var(--text-primary);
+            font-weight: 300;
         }
 
         input:focus,
@@ -434,8 +377,6 @@
         textarea:focus {
             outline: none;
             border-color: var(--primary-blue);
-            box-shadow: 0 0 0 3px rgba(0, 128, 255, 0.2);
-            background: var(--bg-dark);
         }
 
         select {
@@ -443,7 +384,7 @@
         }
 
         select option {
-            background: var(--bg-card);
+            background: var(--bg-dark);
             color: var(--text-primary);
         }
 
@@ -453,16 +394,19 @@
         }
 
         .btn {
-            padding: 13px 32px;
-            border: none;
-            border-radius: 8px;
-            font-size: 1.05rem;
-            font-weight: 600;
+            padding: 12px 30px;
+            border: 1px solid var(--border-light);
+            background: transparent;
+            font-size: 13px;
+            font-weight: 400;
             cursor: pointer;
             transition: all 0.3s ease;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
         }
 
         .btn:disabled {
@@ -471,89 +415,84 @@
         }
 
         .btn-primary {
-            background: var(--primary-blue);
-            color: white;
+            border-color: var(--primary-blue);
+            color: var(--primary-blue);
         }
 
         .btn-primary:hover:not(:disabled) {
-            background: var(--primary-blue-dark);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 128, 255, 0.3);
+            background: var(--primary-blue);
+            color: var(--bg-dark);
         }
 
         .btn-secondary {
+            border-color: var(--success);
+            color: var(--success);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
             background: var(--success);
             color: var(--bg-dark);
         }
 
-        .btn-secondary:hover:not(:disabled) {
-            background: #22c55e;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(74, 222, 128, 0.3);
-        }
-
         .btn-danger {
-            background: var(--danger);
-            color: white;
+            border-color: var(--danger);
+            color: var(--danger);
         }
 
         .btn-danger:hover:not(:disabled) {
-            background: #dc2626;
+            background: var(--danger);
+            color: var(--text-primary);
         }
 
         .btn-warning {
-            background: var(--warning);
-            color: var(--bg-dark);
+            border-color: var(--warning);
+            color: var(--warning);
         }
 
         .btn-warning:hover:not(:disabled) {
-            background: #f59e0b;
+            background: var(--warning);
+            color: var(--bg-dark);
         }
 
         .btn-group {
             display: flex;
             gap: 15px;
-            margin-top: 25px;
+            margin-top: 30px;
             flex-wrap: wrap;
         }
 
         .data-table {
             background: var(--bg-card);
-            border-radius: 12px;
-            padding: 25px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
             border: 1px solid var(--border-color);
+            padding: 0;
+        }
+        
+        .table-header-section {
+            padding: 30px 40px;
+            border-bottom: 1px solid var(--border-color);
         }
         
         .table-wrapper {
             overflow-x: auto;
-            overflow-y: hidden;
-            margin: 0 -10px;
-            padding: 0 10px;
         }
         
         .table-wrapper::-webkit-scrollbar {
             height: 8px;
-        }
-        
-        .table-wrapper::-webkit-scrollbar-track {
-            background: var(--bg-hover);
-            border-radius: 4px;
+            background: var(--bg-dark);
         }
         
         .table-wrapper::-webkit-scrollbar-thumb {
-            background: var(--primary-blue);
-            border-radius: 4px;
+            background: var(--border-light);
         }
         
         .table-wrapper::-webkit-scrollbar-thumb:hover {
-            background: var(--primary-blue-dark);
+            background: var(--primary-blue);
         }
 
         .filter-section {
             display: flex;
-            gap: 12px;
-            margin-bottom: 15px;
+            gap: 15px;
+            margin-top: 30px;
             flex-wrap: wrap;
             align-items: end;
         }
@@ -566,35 +505,31 @@
 
         .stats-bar {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
-            gap: 10px;
-            margin-bottom: 15px;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 2px;
+            margin-bottom: 30px;
+            background: var(--border-color);
+            padding: 2px;
         }
 
         .stat-card {
-            background: var(--bg-hover);
-            border-radius: 8px;
-            padding: 12px;
+            background: var(--bg-dark);
+            padding: 30px;
             text-align: center;
-            border: 1px solid var(--border-color);
-            transition: all 0.3s ease;
-        }
-
-        .stat-card:hover {
-            border-color: var(--primary-blue);
-            box-shadow: 0 2px 10px rgba(0, 128, 255, 0.2);
         }
 
         .stat-number {
-            font-size: 1.6rem;
-            font-weight: bold;
+            font-size: 36px;
+            font-weight: 200;
             color: var(--primary-blue);
+            margin-bottom: 10px;
         }
 
         .stat-label {
             color: var(--text-muted);
-            font-size: 0.85rem;
-            margin-top: 3px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
         }
 
         table {
@@ -605,54 +540,22 @@
         }
 
         th {
-            background: var(--primary-blue);
-            color: white;
-            padding: 10px 6px;
+            padding: 20px 15px;
             text-align: left;
-            font-weight: 600;
-            font-size: 0.93rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            font-weight: 400;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border-color);
         }
 
         td {
-            padding: 10px 6px;
-            border-bottom: 1px solid var(--border-color);
+            padding: 20px 15px;
+            border-bottom: 1px solid #111;
             color: var(--text-secondary);
-            font-size: 0.9rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        
-        /* 특정 열 스타일 조정 */
-        th:nth-child(7) {  /* 관리번호 헤더 */
-            font-size: 0.9rem;
-        }
-        
-        td:nth-child(7) {  /* 관리번호 데이터 */
-            font-size: 0.83rem;
-            color: var(--text-muted);
-        }
-        
-        /* 취소사유 열만 특별 처리 */
-        th:nth-child(9) {
-            width: 180px;
-        }
-        
-        td:nth-child(9) {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            width: 180px;
-            max-width: 180px;
-            font-size: 0.85rem;
-            color: var(--text-muted);
-        }
-        
-        td:nth-child(9):hover {
-            color: var(--text-primary);
+            font-size: 15px;
+            font-weight: 300;
         }
 
         tr:hover {
@@ -661,79 +564,86 @@
 
         .status-badge {
             display: inline-block;
-            padding: 4px 10px;
-            border-radius: 15px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            white-space: nowrap;
+            padding: 5px 12px;
+            font-size: 11px;
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: 1px solid;
         }
 
         .status-pending {
-            background: rgba(251, 191, 36, 0.2);
             color: var(--warning);
-            border: 1px solid var(--warning);
+            border-color: var(--warning);
         }
 
         .status-approved {
-            background: rgba(74, 222, 128, 0.2);
             color: var(--success);
-            border: 1px solid var(--success);
+            border-color: var(--success);
         }
 
         .status-rejected {
-            background: rgba(239, 68, 68, 0.2);
             color: var(--danger);
-            border: 1px solid var(--danger);
+            border-color: var(--danger);
         }
 
         .crm-output {
-            background: var(--bg-dark);
+            background: transparent;
             border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 20px;
-            margin-top: 20px;
-            font-family: 'Courier New', monospace;
+            padding: 30px;
+            margin-top: 30px;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
             white-space: pre-wrap;
             word-wrap: break-word;
             max-height: 400px;
             overflow-y: auto;
             color: var(--text-secondary);
-            line-height: 1.6;
+            line-height: 1.8;
+            font-size: 15px;
         }
 
         .empty-state {
             text-align: center;
-            padding: 40px;
+            padding: 60px;
             color: var(--text-muted);
         }
 
         .empty-state-icon {
             font-size: 3rem;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        
+        .empty-state p {
+            font-size: 15px;
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
             opacity: 0.5;
         }
 
         .action-buttons {
             display: flex;
-            gap: 2px;
+            gap: 8px;
             flex-wrap: nowrap;
             justify-content: center;
         }
 
         .action-buttons .btn {
-            padding: 3px 6px;
-            font-size: 0.82rem;
-            white-space: nowrap;
+            padding: 6px 12px;
+            font-size: 11px;
+        }
+
+        .btn-delete {
+            border-color: var(--danger);
+            color: var(--danger);
         }
         
-        /* 버튼 그룹 간격 조정 */
-        .action-buttons .btn-secondary + .btn-danger,
-        .action-buttons .btn-primary + .btn-warning {
-            margin-left: 4px;
-        }
-        
-        .action-buttons .btn-delete {
-            margin-left: 8px;
+        .btn-delete:hover {
+            background: var(--danger);
+            color: var(--text-primary);
         }
 
         .modal {
@@ -743,7 +653,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.95);
             align-items: center;
             justify-content: center;
             z-index: 1000;
@@ -751,31 +661,29 @@
 
         .modal-content {
             background: var(--bg-card);
-            border-radius: 12px;
-            padding: 30px;
+            border: 1px solid var(--border-color);
+            padding: 40px;
             max-width: 700px;
             width: 90%;
             max-height: 80vh;
             overflow-y: auto;
-            border: 1px solid var(--border-color);
-        }
-        
-        .modal-content p {
-            word-break: break-word;
-            white-space: normal;
         }
 
         .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid var(--border-color);
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
         }
 
         .modal-header h3 {
-            color: var(--primary-blue);
+            font-size: 20px;
+            font-weight: 300;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--text-primary);
         }
 
         .modal-close {
@@ -798,33 +706,37 @@
         .auth-form {
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 25px;
         }
 
         .toast {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
+            top: 40px;
+            right: 40px;
             padding: 15px 25px;
-            border-radius: 8px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            border: 1px solid;
+            background: var(--bg-dark);
             display: none;
             animation: slideIn 0.3s ease;
             z-index: 2000;
-            color: white;
+            font-size: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .toast.success {
-            background: var(--success);
-            color: var(--bg-dark);
+            border-color: var(--success);
+            color: var(--success);
         }
 
         .toast.error {
-            background: var(--danger);
+            border-color: var(--danger);
+            color: var(--danger);
         }
 
         .toast.info {
-            background: var(--primary-blue);
+            border-color: var(--primary-blue);
+            color: var(--primary-blue);
         }
 
         @keyframes slideIn {
@@ -833,104 +745,75 @@
         }
 
         .info-box {
-            background: var(--bg-hover);
-            border-left: 4px solid var(--primary-blue);
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 5px;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            margin-bottom: 30px;
         }
 
         .info-box p {
             color: var(--text-secondary);
-            margin: 5px 0;
-            word-break: break-word;
-            white-space: normal;
+            margin: 8px 0;
+            font-size: 15px;
         }
 
         .info-box strong {
             color: var(--text-primary);
+            font-weight: 400;
         }
         
         .detail-info-section {
-            background: var(--bg-hover);
-            padding: 15px;
-            border-radius: 8px;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            padding: 20px;
         }
         
         .detail-info-section p {
-            margin: 8px 0;
+            margin: 10px 0;
             color: var(--text-secondary);
-            word-break: break-word;
-            white-space: normal;
-            line-height: 1.6;
+            line-height: 1.8;
+            font-size: 15px;
         }
         
         .detail-info-section strong {
             color: var(--text-primary);
             display: inline-block;
-            min-width: 80px;
-            margin-right: 10px;
-        }
-
-        .truncate {
-            max-width: 300px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            display: inline-block;
-        }
-        
-        .message-truncate {
-            max-width: 200px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            display: inline-block;
-            vertical-align: middle;
+            min-width: 100px;
+            margin-right: 15px;
+            font-weight: 400;
         }
 
         input[type="date"]::-webkit-calendar-picker-indicator {
             filter: invert(1);
             cursor: pointer;
+            opacity: 0.6;
         }
 
         .checkbox-label {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
             color: var(--text-secondary);
             cursor: pointer;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
+            width: 16px;
+            height: 16px;
             cursor: pointer;
         }
         
         #btnDeleteAll {
-            background: linear-gradient(135deg, var(--danger), #dc2626);
-            color: white;
+            border-color: var(--danger);
+            color: var(--danger);
         }
         
         #btnDeleteAll:hover {
-            background: linear-gradient(135deg, #dc2626, #b91c1c);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(239, 68, 68, 0.3);
-        }
-
-        .btn-delete {
-            background: transparent;
-            border: 1px solid var(--danger);
-            color: var(--danger);
-            padding: 3px 6px !important;
-            font-size: 0.82rem !important;
-            min-width: auto !important;
-        }
-        
-        .btn-delete:hover {
             background: var(--danger);
-            color: white;
+            color: var(--text-primary);
         }
         
         .admin-required {
@@ -942,17 +825,41 @@
         .admin-required::after {
             content: "🔒";
             position: absolute;
-            right: 10px;
+            right: 15px;
             top: 50%;
             transform: translateY(-50%);
-            font-size: 1rem;
+            font-size: 14px;
         }
         
         .no-permission-msg {
             color: var(--danger);
-            font-size: 0.9rem;
+            font-size: 12px;
             margin-top: 10px;
             display: none;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* 팀 선택 화면 이름 입력 섹션 */
+        .team-selection input[type="text"] {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 15px;
+            font-size: 17px;
+            font-weight: 300;
+        }
+
+        .team-selection input[type="text"]:focus {
+            border-color: var(--primary-blue);
+        }
+
+        .team-selection label {
+            color: var(--text-secondary);
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
         }
     </style>
 </head>
@@ -960,24 +867,20 @@
     <!-- 팀 선택 화면 -->
     <div id="teamSelection" class="team-selection" style="display: none;">
         <div style="width: 100%; max-width: 900px; padding: 2rem;">
-            <h1 class="team-selection-title">✨ 사용자 정보를 입력하세요 ✨</h1>
+            <h1 class="team-selection-title">사용자 정보를 <span>입력하세요</span></h1>
             
             <!-- 이름 입력 섹션 -->
-            <div style="background: var(--bg-card); border-radius: 1rem; padding: 2rem; margin-bottom: 2rem; border: 2px solid var(--border-color);">
-                <label style="display: block; color: var(--text-secondary); font-weight: 600; margin-bottom: 0.5rem; font-size: 1.1rem;">
-                    이름 <span style="color: var(--danger);">*</span>
+            <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 2rem; margin-bottom: 3rem;">
+                <label style="display: block; margin-bottom: 1rem;">
+                    이름 <span>*</span>
                 </label>
-                <input type="text" id="teamSelectionNameInput" placeholder="이름을 입력하세요" 
-                    style="width: 100%; padding: 1rem; border: 1px solid var(--border-color); border-radius: 0.5rem; 
-                    font-size: 1.1rem; background: var(--bg-hover); color: var(--text-primary); transition: all 0.3s ease;"
-                    onfocus="this.style.borderColor='var(--primary-blue)'; this.style.boxShadow='0 0 0 3px rgba(0, 128, 255, 0.2)'; this.style.background='var(--bg-dark)';"
-                    onblur="this.style.borderColor='var(--border-color)'; this.style.boxShadow='none'; this.style.background='var(--bg-hover)';">
+                <input type="text" id="teamSelectionNameInput" placeholder="이름을 입력하세요">
             </div>
             
             <!-- 팀 선택 섹션 -->
-            <div style="margin-bottom: 1rem;">
-                <label style="display: block; color: var(--text-secondary); font-weight: 600; margin-bottom: 1rem; font-size: 1.1rem; text-align: center;">
-                    소속 팀을 선택하세요 <span style="color: var(--danger);">*</span>
+            <div style="margin-bottom: 2rem;">
+                <label style="display: block; text-align: center; margin-bottom: 2rem;">
+                    소속 팀을 선택하세요 <span>*</span>
                 </label>
             </div>
             
@@ -1008,7 +911,7 @@
 
     <div class="container">
         <div class="header">
-            <h1>취소양식 관리 시스템</h1>
+            <h1>취소양식 <span>관리 시스템</span></h1>
             <div class="header-right">
                 <div class="team-switcher">
                     <div class="team-badge">
@@ -1020,7 +923,7 @@
                 <div class="user-info" id="userInfo">
                     <span>👤</span>
                     <span id="userName">-</span>
-                    <button class="btn btn-primary" onclick="window.changeUserName()" style="padding: 5px 10px; font-size: 0.85rem; margin-left: 10px;">
+                    <button class="btn btn-primary" onclick="window.changeUserName()">
                         변경
                     </button>
                 </div>
@@ -1031,7 +934,7 @@
                 <div class="admin-info" id="adminInfo" style="display: none;">
                     <span>🔑</span>
                     <span id="adminName">관리자</span>
-                    <button class="btn btn-danger" onclick="window.logoutAdmin()" style="padding: 5px 10px; font-size: 0.85rem; margin-left: 10px;">
+                    <button class="btn btn-danger" onclick="window.logoutAdmin()">
                         로그아웃
                     </button>
                 </div>
@@ -1045,18 +948,15 @@
         <!-- 양식 작성 섹션 -->
         <div class="main-content">
             <div class="form-section">
-                <h2 class="section-title">
-                    <span>✍️</span>
-                    <span>취소 양식 작성</span>
-                </h2>
+                <h2 class="section-title">취소 양식 작성</h2>
                 <form id="cancellationForm">
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="date">날짜 <span style="color: var(--danger);">*</span></label>
+                            <label for="date">날짜 <span>*</span></label>
                             <input type="date" id="date" required>
                         </div>
                         <div class="form-group">
-                            <label for="category">분류 <span style="color: var(--danger);">*</span></label>
+                            <label for="category">분류 <span>*</span></label>
                             <select id="category" required>
                                 <option value="">선택하세요</option>
                                 <option value="인터넷">인터넷</option>
@@ -1068,28 +968,28 @@
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="recruiter">유치자 <span style="color: var(--danger);">*</span></label>
+                            <label for="recruiter">유치자 <span>*</span></label>
                             <input type="text" id="recruiter" placeholder="유치자 이름" required>
                         </div>
                         <div class="form-group">
-                            <label for="canceller">취소자 <span style="color: var(--danger);">*</span></label>
+                            <label for="canceller">취소자 <span>*</span></label>
                             <input type="text" id="canceller" placeholder="취소자 이름" required>
                         </div>
                     </div>
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="customerName">고객명 <span style="color: var(--danger);">*</span></label>
+                            <label for="customerName">고객명 <span>*</span></label>
                             <input type="text" id="customerName" placeholder="고객 이름" required>
                         </div>
                         <div class="form-group">
-                            <label for="customerPhone">관리번호 <span style="color: var(--danger);">*</span></label>
+                            <label for="customerPhone">관리번호 <span>*</span></label>
                             <input type="text" id="customerPhone" placeholder="예: AJD20240823001192" maxlength="30" required>
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label for="reason">취소사유 <span style="color: var(--danger);">*</span></label>
+                        <label for="reason">취소사유 <span>*</span></label>
                         <textarea id="reason" placeholder="취소 사유를 상세히 입력하세요" required></textarea>
                     </div>
 
@@ -1129,17 +1029,14 @@
             </div>
 
             <div class="crm-section">
-                <h2 class="section-title">
-                    <span>📝</span>
-                    <span>CRM 출력 미리보기</span>
-                </h2>
+                <h2 class="section-title">CRM 출력 미리보기</h2>
                 <div id="crmPreview" class="crm-output">
                     <div class="empty-state">
                         <div class="empty-state-icon">📭</div>
                         <p>양식을 입력하면 CRM 형식이 여기에 표시됩니다</p>
                     </div>
                 </div>
-                <button class="btn btn-primary" onclick="window.copyCRMPreview()" style="margin-top: 15px; width: 100%;">
+                <button class="btn btn-primary" onclick="window.copyCRMPreview()" style="margin-top: 30px; width: 100%;">
                     <span>📋</span>
                     <span>CRM 양식 복사</span>
                 </button>
@@ -1148,53 +1045,54 @@
 
         <!-- 전체 목록 섹션 -->
         <div class="data-table">
-            <h2 class="section-title">
-                <span>📊</span>
-                <span>취소 신청 전체 목록</span>
-            </h2>
-            
-            <div class="stats-bar">
-                <div class="stat-card">
-                    <div class="stat-number" id="statTotal">0</div>
-                    <div class="stat-label">전체</div>
+            <div class="table-header-section">
+                <h2 class="section-title" style="margin-bottom: 0; padding-bottom: 0; border: none;">
+                    취소 신청 전체 목록
+                </h2>
+                
+                <div class="stats-bar">
+                    <div class="stat-card">
+                        <div class="stat-number" id="statTotal">0</div>
+                        <div class="stat-label">전체</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="statPending">0</div>
+                        <div class="stat-label">확인필요</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="statApproved">0</div>
+                        <div class="stat-label">승인됨</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="statRejected">0</div>
+                        <div class="stat-label">거절됨</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="statToday">0</div>
+                        <div class="stat-label">오늘</div>
+                    </div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="statPending">0</div>
-                    <div class="stat-label">확인필요</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="statApproved">0</div>
-                    <div class="stat-label">승인됨</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="statRejected">0</div>
-                    <div class="stat-label">거절됨</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="statToday">0</div>
-                    <div class="stat-label">오늘</div>
-                </div>
-            </div>
-            
-            <div class="filter-section">
-                <div class="form-group" style="max-width: 150px;">
-                    <label for="filterDate">날짜 필터</label>
-                    <input type="date" id="filterDate" onchange="window.loadData()">
-                </div>
-                <button class="btn btn-secondary" id="btnExportExcel" onclick="window.handleExportExcel()">
-                    <span>📥</span>
-                    <span>엑셀 다운로드</span>
-                </button>
-                <button class="btn btn-danger" id="btnDeleteAll" onclick="window.handleDeleteAll()" style="display: none;">
-                    <span>⚠️</span>
-                    <span>전체 삭제</span>
-                </button>
-                <button class="btn btn-primary" onclick="window.loadData()">
-                    <span>🔄</span>
-                    <span>새로고침</span>
-                </button>
-                <div class="no-permission-msg" id="noPermissionMsg">
-                    관리자 권한이 필요합니다
+                
+                <div class="filter-section">
+                    <div class="form-group" style="max-width: 200px;">
+                        <label for="filterDate">날짜 필터</label>
+                        <input type="date" id="filterDate" onchange="window.loadData()">
+                    </div>
+                    <button class="btn btn-secondary" id="btnExportExcel" onclick="window.handleExportExcel()">
+                        <span>📥</span>
+                        <span>엑셀 다운로드</span>
+                    </button>
+                    <button class="btn btn-danger" id="btnDeleteAll" onclick="window.handleDeleteAll()" style="display: none;">
+                        <span>⚠️</span>
+                        <span>전체 삭제</span>
+                    </button>
+                    <button class="btn btn-primary" onclick="window.loadData()">
+                        <span>🔄</span>
+                        <span>새로고침</span>
+                    </button>
+                    <div class="no-permission-msg" id="noPermissionMsg">
+                        관리자 권한이 필요합니다
+                    </div>
                 </div>
             </div>
 
@@ -1218,7 +1116,7 @@
                     </thead>
                     <tbody id="tableBody">
                         <tr>
-                            <td colspan="12" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                            <td colspan="12" style="text-align: center; padding: 60px; color: var(--text-muted);">
                                 데이터를 불러오는 중...
                             </td>
                         </tr>
@@ -1278,22 +1176,22 @@
     <div id="confirmModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>📋 CRM 양식 복사</h3>
+                <h3>CRM 양식 복사</h3>
                 <button class="modal-close" onclick="window.closeConfirmModal()">✕</button>
             </div>
             <div class="form-group">
-                <label style="color: var(--warning); font-size: 0.95rem;">⚠️ CRM에 입력할 양식을 먼저 복사해주세요</label>
-                <div class="crm-output" id="confirmCRMPreview" style="background: var(--bg-dark); padding: 25px; min-height: 250px; font-size: 1.1rem;">
+                <label style="color: var(--warning); font-size: 13px;">⚠️ CRM에 입력할 양식을 먼저 복사해주세요</label>
+                <div class="crm-output" id="confirmCRMPreview" style="padding: 30px; min-height: 250px; font-size: 15px;">
                     <!-- CRM 미리보기 내용 -->
                 </div>
             </div>
             <div class="btn-group" style="justify-content: center;">
-                <button class="btn btn-primary" onclick="window.copyCRMFromModal()" style="font-size: 1.1rem; padding: 15px 40px;">
+                <button class="btn btn-primary" onclick="window.copyCRMFromModal()" style="font-size: 15px; padding: 15px 40px;">
                     <span>📋</span>
                     <span>CRM 양식 복사하기</span>
                 </button>
             </div>
-            <div class="btn-group" style="justify-content: center; margin-top: 15px;">
+            <div class="btn-group" style="justify-content: center; margin-top: 20px;">
                 <button class="btn btn-secondary" onclick="window.confirmSubmit()">
                     <span>✔️</span>
                     <span>복사 완료, 제출하기</span>
@@ -1309,6 +1207,7 @@
     <div id="toast" class="toast"></div>
 
     <script>
+        // [이전과 동일한 JavaScript 코드 유지]
         // Supabase 설정
         const SUPABASE_URL = 'https://bhtqjipygkawoyieidgp.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJodHFqaXB5Z2thd295aWVpZGdwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0ODg5NjgsImV4cCI6MjA3MDA2NDk2OH0.hu2EAj9RCq436QBtfbEVF4aGOau4WWomLMDKahN4iAA';
@@ -1333,9 +1232,9 @@
         let currentTeam = '';
         let currentUserName = '';
         let isAdmin = false;
-        let selectedItems = new Set(); // 선택된 아이템을 관리하는 Set
+        let selectedItems = new Set();
         
-        // 전체 삭제 처리 함수
+        // [이전과 동일한 모든 함수들 유지]
         window.handleDeleteAll = async function() {
             if (!isAdmin) {
                 window.showToast('관리자 권한이 필요합니다.', 'error');
@@ -1347,7 +1246,6 @@
                 return;
             }
             
-            // 해당 팀의 모든 데이터 가져오기
             try {
                 const { data: teamData, error: fetchError } = await supabase
                     .from('cancellations')
@@ -1361,18 +1259,15 @@
                     return;
                 }
                 
-                // 삭제 확인 메시지
                 const totalCount = teamData.length;
                 const deleteMessage = `${currentTeam}의 모든 데이터 ${totalCount}개를 삭제하시겠습니까?`;
                 
-                // 첫 번째 확인
                 const confirmMsg = `⚠️⚠️ 경고 ⚠️⚠️\n\n${deleteMessage}\n\n이 작업은 되돌릴 수 없습니다!`;
                 
                 if (!confirm(confirmMsg)) {
                     return;
                 }
                 
-                // 두 번째 확인 - 텍스트 입력
                 const secondConfirm = prompt(`정말로 ${currentTeam}의 모든 데이터를 삭제하시겠습니까?\n\n최종 확인을 위해 "전체삭제확인"을 입력하세요.`);
                 
                 if (secondConfirm !== '전체삭제확인') {
@@ -1380,7 +1275,6 @@
                     return;
                 }
                 
-                // 세 번째 최종 확인
                 const finalConfirm = confirm(`⚠️ 최종 경고!\n\n${currentTeam}의 ${totalCount}개의 모든 데이터가 영구적으로 삭제됩니다.\n정말 진행하시겠습니까?`);
                 
                 if (!finalConfirm) {
@@ -1388,7 +1282,6 @@
                     return;
                 }
                 
-                // 삭제 진행
                 let deletedCount = 0;
                 let failedCount = 0;
                 
@@ -1414,10 +1307,7 @@
                     window.showToast(`${currentTeam}의 전체 ${deletedCount}개 항목이 삭제되었습니다. (삭제자: ${adminName})`, 'success');
                 }
                 
-                // 선택 초기화
                 selectedItems.clear();
-                
-                // 데이터 새로고침
                 window.loadData();
                 
             } catch (error) {
@@ -1426,7 +1316,6 @@
             }
         };
         
-        // 토스트 메시지
         window.showToast = function(message, type = 'success') {
             const toast = document.getElementById('toast');
             toast.textContent = message;
@@ -1438,7 +1327,6 @@
             }, 3000);
         };
         
-        // 관리자 권한 체크 및 UI 업데이트
         window.updateAdminUI = function() {
             const btnExportExcel = document.getElementById('btnExportExcel');
             const btnDeleteAll = document.getElementById('btnDeleteAll');
@@ -1448,7 +1336,6 @@
                 btnExportExcel.classList.remove('admin-required');
                 btnExportExcel.disabled = false;
                 
-                // 전체 삭제 버튼 표시 - 관리자일 때만 표시
                 if (btnDeleteAll) {
                     btnDeleteAll.style.display = 'inline-flex';
                 }
@@ -1458,17 +1345,14 @@
                 btnExportExcel.classList.add('admin-required');
                 btnExportExcel.disabled = true;
                 
-                // 일반 사용자는 전체 삭제 버튼 숨김
                 if (btnDeleteAll) {
                     btnDeleteAll.style.display = 'none';
                 }
             }
             
-            // 테이블 업데이트
             window.loadData();
         };
         
-        // 관리자 로그인 화면 표시
         window.showAdminLogin = function() {
             currentAuthAction = 'login';
             currentAuthData = null;
@@ -1476,7 +1360,6 @@
             document.getElementById('authName').focus();
         };
         
-        // 엑셀 다운로드 처리
         window.handleExportExcel = function() {
             if (!isAdmin) {
                 window.showToast('관리자 권한이 필요합니다. 관리자로 로그인해주세요.', 'error');
@@ -1488,30 +1371,24 @@
             }
             window.exportToExcel();
         };
-        
 
-        // 팀 선택 화면 표시
         window.showTeamSelection = function() {
             document.getElementById('teamSelection').style.display = 'flex';
             document.querySelector('.container').style.display = 'none';
             
-            // 저장된 이름이 있으면 표시
             const savedName = localStorage.getItem('lastUserName') || '';
             document.getElementById('teamSelectionNameInput').value = savedName;
             
-            // 이름 입력 필드에 포커스
             setTimeout(() => {
                 document.getElementById('teamSelectionNameInput').focus();
             }, 100);
             
-            // 리얼타임 구독 해제
             if (realtimeChannel) {
                 supabase.removeChannel(realtimeChannel);
                 realtimeChannel = null;
             }
         }
         
-        // 이름과 함께 팀 선택
         window.selectTeamWithName = function(teamName) {
             const nameInput = document.getElementById('teamSelectionNameInput');
             const name = nameInput.value.trim();
@@ -1522,31 +1399,26 @@
                 return;
             }
             
-            // 팀과 이름 저장
             currentTeam = teamName;
             currentUserName = name;
             localStorage.setItem('selectedTeam', teamName);
             localStorage.setItem(`userName_${teamName}`, name);
             localStorage.setItem('lastUserName', name);
             
-            // UI 업데이트
             document.getElementById('currentTeam').textContent = teamName;
             document.getElementById('teamIcon').textContent = teamIcons[teamName] || '✨';
             document.getElementById('userName').textContent = name;
             document.getElementById('canceller').value = name;
             
-            // 팀 선택 화면 숨기고 메인 화면 표시
             document.getElementById('teamSelection').style.display = 'none';
             window.showToast(`${teamName} - ${name}님 환영합니다!`, 'success');
             window.showMainContainer();
         }
         
-        // 메인 화면 표시
         window.showMainContainer = function() {
             document.getElementById('teamSelection').style.display = 'none';
             document.querySelector('.container').style.display = 'block';
             
-            // Supabase 초기화 및 데이터 로드
             if (!supabase) {
                 initializeSupabase();
             } else {
@@ -1554,11 +1426,9 @@
                 window.loadData();
             }
             
-            // 관리자 정보 로드
             loadAdminInfo();
         }
         
-        // 이름 변경
         window.changeUserName = function() {
             const newName = prompt('새로운 이름을 입력하세요:', currentUserName);
             
@@ -1574,7 +1444,6 @@
             }
         }
         
-        // 상태 업데이트 함수
         window.updateStatus = async function(id, newStatus, adminName) {
             if (!supabase) {
                 window.showToast('데이터베이스가 연결되지 않았습니다.', 'error');
@@ -1614,7 +1483,6 @@
             }
         };
         
-        // 개별 삭제 처리
         window.handleSingleDelete = function(id) {
             if (!isAdmin) {
                 window.showToast('관리자 권한이 필요합니다.', 'error');
@@ -1628,7 +1496,6 @@
             }
         };
         
-        // 삭제 함수 (관리자 인증 후 실행)
         window.deleteRecord = async function(id, adminName) {
             if (!supabase) {
                 window.showToast('데이터베이스가 연결되지 않았습니다.', 'error');
@@ -1660,7 +1527,6 @@
             }
         };
         
-        // handleAuthSuccess 함수
         window.handleAuthSuccess = function(adminName) {
             const authModal = document.getElementById('authModal');
             if (authModal) {
@@ -1669,7 +1535,6 @@
             }
             
             if (currentAuthAction === 'login') {
-                // 로그인 성공
                 isAdmin = true;
                 document.getElementById('adminInfo').style.display = 'flex';
                 document.getElementById('adminName').textContent = adminName;
@@ -1690,7 +1555,6 @@
             currentAuthData = null;
         };
         
-        // openAuthModal 함수
         window.openAuthModal = function(action, data) {
             currentAuthAction = action;
             currentAuthData = data;
@@ -1711,7 +1575,6 @@
             }
         };
         
-        // 도우미 함수들
         window.generateCRMText = function(data) {
             let text = `${data.customer_phone} / ${data.customer_name}
 
@@ -1773,11 +1636,9 @@
             preview.innerHTML = `<pre>${crmText}</pre>`;
         };
         
-        // 팀 이름 간소화 함수
         window.getShortTeamName = function(teamName) {
             if (teamName === '의정부 SNS팀') return '의정부';
             if (teamName && teamName.includes('SNS')) {
-                // SNS 1팀 -> 1팀 형식으로 표시
                 return teamName.replace('SNS ', '');
             }
             return teamName || '-';
@@ -1789,7 +1650,7 @@
             if (!data || data.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="12" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                        <td colspan="12" style="text-align: center; padding: 60px; color: var(--text-muted);">
                             등록된 취소 양식이 없습니다
                         </td>
                     </tr>
@@ -1813,7 +1674,6 @@
                     statusClass = 'rejected';
                 }
                 
-                // 관리자 권한에 따른 버튼 표시
                 const actionButtons = isAdmin ? `
                     <div class="action-buttons">
                         <button class="btn btn-primary" onclick="window.viewDetail(${item.id})">
@@ -1843,7 +1703,6 @@
                     </div>
                 `;
                 
-                // 팀 이름 간소화
                 const shortTeamName = window.getShortTeamName(item.submitter_team);
                 
                 return `
@@ -1889,7 +1748,6 @@
             document.getElementById('statToday').textContent = stats.today;
         };
         
-        // 초기화 함수들
         function loadAdminInfo() {
             const savedAdmin = localStorage.getItem('adminName');
             const savedPassword = localStorage.getItem('adminPassword');
@@ -1978,33 +1836,28 @@
         }
         
         function checkPhoneNumberFormat(value) {
-            // 전화번호 패턴 검사
             const phonePatterns = [
-                /^01[0-9]/,           // 010, 011, 016, 017, 018, 019 등
-                /^02/,                // 서울 지역번호
-                /^0[3-6][0-9]/,       // 기타 지역번호
-                /^\d{3,4}-\d{3,4}-\d{4}$/,  // 하이픈이 있는 전화번호
-                /^\d{9,11}$/          // 연속된 숫자 9-11자리 (전화번호일 가능성)
+                /^01[0-9]/,
+                /^02/,
+                /^0[3-6][0-9]/,
+                /^\d{3,4}-\d{3,4}-\d{4}$/,
+                /^\d{9,11}$/
             ];
             
-            // 숫자와 하이픈만 있는지 확인
             const onlyNumbersAndHyphens = /^[\d-]+$/.test(value);
             
-            // 전화번호 패턴과 일치하는지 확인
             if (onlyNumbersAndHyphens) {
                 for (let pattern of phonePatterns) {
                     if (pattern.test(value.replace(/-/g, ''))) {
-                        return true; // 전화번호 형식임
+                        return true;
                     }
                 }
             }
             
-            return false; // 전화번호 형식이 아님
+            return false;
         }
         
         function formatManagementNumber(value) {
-            // 관리번호는 특별한 포맷팅 없이 그대로 반환
-            // 공백 제거
             return value.trim();
         }
         
@@ -2024,7 +1877,6 @@
             }
         }
         
-        // 전역 함수들
         window.closeModal = function() {
             document.getElementById('detailModal').style.display = 'none';
         };
@@ -2111,7 +1963,6 @@
                     .select('*')
                     .order('created_at', { ascending: false });
                 
-                // 팀 필터 적용
                 if (currentTeam) {
                     query = query.eq('submitter_team', currentTeam);
                 }
@@ -2153,7 +2004,6 @@
                     .select('*')
                     .order('date', { ascending: false });
                 
-                // 팀 필터 적용
                 if (currentTeam) {
                     query = query.eq('submitter_team', currentTeam);
                 }
@@ -2172,11 +2022,9 @@
                     return;
                 }
 
-                // ExcelJS 워크북 생성
                 const workbook = new ExcelJS.Workbook();
                 const worksheet = workbook.addWorksheet('취소양식');
 
-                // 첫 번째 행 (병합된 제목 행)
                 worksheet.mergeCells('A1:H1');
                 const titleCell = worksheet.getCell('A1');
                 titleCell.value = '';
@@ -2184,13 +2032,11 @@
                 titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
                 worksheet.getRow(1).height = 31.5;
 
-                // 헤더 설정
                 const headers = ['', '날짜', '유치자', '취소자', '고객명', '관리번호', '분류', '취소사유'];
                 const headerRow = worksheet.getRow(2);
                 headerRow.values = headers;
                 headerRow.height = 24.95;
                 
-                // 헤더 스타일 적용
                 headerRow.eachCell((cell, colNumber) => {
                     cell.font = {
                         bold: true,
@@ -2209,9 +2055,7 @@
                     };
                 });
 
-                // 데이터 추가 (원본 날짜 형식 사용)
                 data.forEach((item, index) => {
-                    // 취소사유 텍스트 구성
                     let cancelReason = `${item.customer_name} / 관리번호: ${item.customer_phone}
 ㅁ취소사유: ${item.reason}`;
                     
@@ -2225,7 +2069,6 @@
 2차반론: ${item.defense2} / 결과: ${item.defense2_result || '없음'}`;
                     }
                     
-                    // 엑셀용 날짜 형식 (년.월.일.)
                     const date = new Date(item.date);
                     const year = date.getFullYear().toString().slice(-2);
                     const month = (date.getMonth() + 1).toString().padStart(2, '0');
@@ -2246,7 +2089,6 @@
                     const row = worksheet.addRow(rowData);
                     row.height = 45;
                     
-                    // 데이터 행 스타일 적용
                     row.eachCell((cell, colNumber) => {
                         cell.font = {
                             size: 11,
@@ -2268,7 +2110,6 @@
                     });
                 });
 
-                // 열 너비 설정
                 worksheet.columns = [
                     { width: 9 },
                     { width: 15 },
@@ -2280,7 +2121,6 @@
                     { width: 63.125 }
                 ];
 
-                // 엑셀 파일 생성 및 다운로드
                 const buffer = await workbook.xlsx.writeBuffer();
                 const blob = new Blob([buffer], { 
                     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
@@ -2289,14 +2129,12 @@
                 const a = document.createElement('a');
                 a.href = url;
                 
-                // 파일명 형식: 취소양식_SNS 2팀_250820.xlsx
                 const today = new Date();
                 const yearShort = today.getFullYear().toString().slice(-2);
                 const month = (today.getMonth() + 1).toString().padStart(2, '0');
                 const day = today.getDate().toString().padStart(2, '0');
                 const dateString = `${yearShort}${month}${day}`;
                 
-                // 팀 이름 처리 (의정부 SNS팀 → 의정부SNS팀)
                 let teamNameForFile = currentTeam;
                 if (currentTeam === '의정부 SNS팀') {
                     teamNameForFile = '의정부SNS팀';
@@ -2336,7 +2174,6 @@
                 if (data.status === 'approved') statusDisplay = '승인됨';
                 else if (data.status === 'rejected') statusDisplay = '거절됨';
                 
-                // 관리자 권한에 따른 버튼 표시
                 const actionButtons = isAdmin ? `
                     <div class="btn-group">
                         <button class="btn btn-primary" onclick="window.copyToClipboard(\`${crmText.replace(/`/g, '\\`')}\`)">
@@ -2434,9 +2271,7 @@
             }
         };
         
-        // 초기화
         window.onload = function() {
-            // 저장된 팀과 이름 확인
             const savedTeam = localStorage.getItem('selectedTeam');
             
             if (savedTeam) {
@@ -2444,7 +2279,6 @@
                 currentUserName = localStorage.getItem(`userName_${savedTeam}`) || '';
                 
                 if (currentUserName) {
-                    // 팀과 이름이 모두 있으면 바로 메인 화면
                     document.getElementById('currentTeam').textContent = savedTeam;
                     document.getElementById('teamIcon').textContent = teamIcons[savedTeam] || '✨';
                     document.getElementById('userName').textContent = currentUserName;
@@ -2453,20 +2287,16 @@
                     initializeSupabase();
                     loadAdminInfo();
                 } else {
-                    // 팀은 있지만 이름이 없으면 팀 선택 화면부터
                     window.showTeamSelection();
                 }
             } else {
-                // 처음 사용하는 경우 팀 선택 화면
                 window.showTeamSelection();
             }
             
             document.getElementById('date').valueAsDate = new Date();
             
-            // 이름 입력 엔터 처리
             document.getElementById('teamSelectionNameInput').addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
-                    // 첫 번째 팀 카드 클릭 효과
                     const firstTeamCard = document.querySelector('.team-card');
                     if (firstTeamCard) {
                         firstTeamCard.click();
@@ -2474,11 +2304,9 @@
                 }
             });
             
-            // 관리번호 입력 이벤트
             document.getElementById('customerPhone').addEventListener('input', function(e) {
                 const value = e.target.value;
                 
-                // 전화번호 형식 검사
                 if (checkPhoneNumberFormat(value)) {
                     e.target.value = '';
                     e.target.style.borderColor = 'var(--danger)';
@@ -2497,7 +2325,6 @@
                 e.preventDefault();
                 const pastedText = (e.clipboardData || window.clipboardData).getData('text');
                 
-                // 전화번호 형식 검사
                 if (checkPhoneNumberFormat(pastedText)) {
                     e.target.style.borderColor = 'var(--danger)';
                     window.showToast('⚠️ 전화번호는 더 이상 사용할 수 없습니다. 관리번호를 입력해주세요.', 'error');
@@ -2511,12 +2338,10 @@
                 updatePreviewFromForm();
             });
             
-            // 입력 시 실시간 미리보기
             ['customerName', 'reason', 'defense1', 'defense1Result', 'defense2', 'defense2Result'].forEach(id => {
                 document.getElementById(id).addEventListener('input', updatePreviewFromForm);
             });
             
-            // 폼 제출 처리
             document.getElementById('cancellationForm').addEventListener('submit', async function(e) {
                 e.preventDefault();
                 
@@ -2533,7 +2358,6 @@
                 
                 const managementNumber = document.getElementById('customerPhone').value.trim();
                 
-                // 전화번호 형식 검사
                 if (checkPhoneNumberFormat(managementNumber)) {
                     window.showToast('⚠️ 전화번호는 사용할 수 없습니다. 관리번호를 입력해주세요.', 'error');
                     document.getElementById('customerPhone').focus();
@@ -2544,7 +2368,6 @@
                     return;
                 }
                 
-                // 관리번호 형식 검사 (최소 5자 이상)
                 if (managementNumber.length < 5) {
                     window.showToast('관리번호는 최소 5자 이상이어야 합니다.', 'error');
                     document.getElementById('customerPhone').focus();
@@ -2571,7 +2394,6 @@
                 showConfirmModal();
             });
             
-            // 인증 폼 처리
             document.getElementById('authForm').addEventListener('submit', function(e) {
                 e.preventDefault();
                 
@@ -2593,7 +2415,6 @@
                 window.handleAuthSuccess(name);
             });
             
-            // 모달 외부 클릭시 닫기
             window.onclick = function(event) {
                 const detailModal = document.getElementById('detailModal');
                 const authModal = document.getElementById('authModal');
