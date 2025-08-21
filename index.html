@@ -4,10 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>취소양식 관리 시스템</title>
-    <meta name="description" content="취소양식 관리 시스템 - 실시간 데이터 동기화">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -15,1359 +13,956 @@
             box-sizing: border-box;
         }
 
-        :root {
-            --primary-blue: #0080FF;
-            --primary-blue-dark: #0066CC;
-            --primary-blue-light: #3399FF;
-            --bg-dark: #1a1a1a;
-            --bg-card: #242424;
-            --bg-hover: #2a2a2a;
-            --border-color: #333;
-            --text-primary: #ffffff;
-            --text-secondary: #b0b0b0;
-            --text-muted: #808080;
-            --success: #4ade80;
-            --warning: #fbbf24;
-            --danger: #ef4444;
-        }
-
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: var(--bg-dark);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            padding: 15px;
-            color: var(--text-primary);
-            font-size: 15px;
-        }
-
-        /* 팀 선택 화면 스타일 */
-        @keyframes fadeIn {
-            from { 
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to { 
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        .team-selection {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: radial-gradient(circle at center, #1a1a1a 0%, #000000 100%);
-            animation: fadeIn 0.5s ease;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            z-index: 9999;
-        }
-        
-        .team-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 2rem;
-            max-width: 900px;
-            width: 100%;
-            padding: 2rem;
-        }
-        
-        .team-card {
-            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-hover) 100%);
-            border: 2px solid var(--border-color);
-            border-radius: 1rem;
-            padding: 2.5rem 2rem;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .team-card::before {
-            content: '';
-            position: absolute;
-            top: -2px;
-            left: -2px;
-            right: -2px;
-            bottom: -2px;
-            background: linear-gradient(135deg, var(--primary-blue), var(--primary-blue-dark), var(--primary-blue));
-            border-radius: 1rem;
-            opacity: 0;
-            transition: opacity 0.3s;
-            z-index: -1;
-        }
-        
-        .team-card:hover {
-            transform: translateY(-8px) scale(1.05);
-            border-color: var(--primary-blue);
-            box-shadow: 0 15px 40px rgba(0, 128, 255, 0.3);
-        }
-        
-        .team-card:hover .team-icon {
-            transform: scale(1.1);
-            filter: drop-shadow(0 0 20px rgba(0, 128, 255, 0.5));
-        }
-        
-        .team-card:hover::before {
-            opacity: 1;
-        }
-        
-        .team-icon {
-            font-size: 3.5rem;
-            margin-bottom: 1rem;
-            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.1));
-            transition: all 0.3s;
-        }
-        
-        .team-name {
-            font-size: 1.25rem;
-            font-weight: bold;
-            color: var(--text-primary);
-            text-shadow: 0 0 10px rgba(0, 128, 255, 0.2);
-        }
-
-        .team-selection-title {
-            text-align: center;
-            margin-bottom: 3rem;
-            font-size: 2rem;
-            background: linear-gradient(135deg, #ffffff 0%, var(--primary-blue) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: none;
-        }
-
-        /* 팀 배지 스타일 */
-        .team-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.5rem 1rem;
-            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-dark) 100%);
-            border-radius: 2rem;
-            font-size: 0.875rem;
-            font-weight: 600;
-            box-shadow: 0 4px 15px rgba(0, 128, 255, 0.3);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .team-badge::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            animation: shine 3s infinite;
-        }
-        
-        @keyframes shine {
-            0% { left: -100%; }
-            100% { left: 100%; }
-        }
-        
-        .team-switcher {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .btn-switch-team {
-            padding: 0.5rem 1rem;
-            background: var(--bg-hover);
-            border: 1px solid var(--border-color);
-            border-radius: 0.5rem;
-            color: var(--text-muted);
-            font-size: 0.875rem;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .btn-switch-team:hover {
-            background: var(--bg-card);
-            border-color: var(--primary-blue);
-            color: var(--primary-blue);
-            box-shadow: 0 0 10px rgba(0, 128, 255, 0.2);
+            padding: 20px;
         }
 
         .container {
-            max-width: 1920px;
+            max-width: 1400px;
             margin: 0 auto;
-            display: none;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
         }
 
         .header {
-            background: var(--bg-card);
-            border-radius: 12px;
-            padding: 25px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border: 1px solid var(--border-color);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            position: relative;
         }
 
         .header h1 {
-            color: var(--text-primary);
-            font-size: 2.1rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
         }
 
-        .header h1::before {
-            content: "📋";
-            font-size: 1.9rem;
-        }
-
-        .header-right {
-            display: flex;
-            gap: 20px;
-            align-items: center;
-            flex-wrap: wrap;
+        .header .team-info {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 1rem;
         }
 
         .user-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 18px;
-            background: var(--bg-hover);
-            border-radius: 20px;
-            font-size: 0.95rem;
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            text-align: right;
+            background: rgba(255,255,255,0.1);
+            padding: 0.5rem 1rem;
+            border-radius: 10px;
         }
 
-        .user-info span {
-            color: var(--primary-blue);
-            font-weight: 600;
-        }
-        
-        .user-info .btn {
-            padding: 4px 10px !important;
-            font-size: 0.85rem !important;
-            margin-left: 8px;
+        .user-info .user-name {
+            font-weight: bold;
+            margin-bottom: 0.25rem;
         }
 
-        .admin-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 18px;
-            background: linear-gradient(135deg, var(--success), #22c55e);
-            border-radius: 20px;
-            font-size: 0.95rem;
-            box-shadow: 0 4px 15px rgba(74, 222, 128, 0.3);
-        }
-
-        .admin-info span {
-            color: var(--bg-dark);
-            font-weight: 600;
-        }
-        
-        .admin-info .btn {
-            padding: 4px 10px !important;
-            font-size: 0.85rem !important;
-            margin-left: 8px;
-        }
-        
-        .btn-admin-login {
-            padding: 10px 20px;
-            background: linear-gradient(135deg, var(--warning), #f59e0b);
-            border: none;
-            border-radius: 20px;
-            color: var(--bg-dark);
-            font-weight: 600;
+        .user-info button {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 0.25rem 0.75rem;
+            border-radius: 5px;
             cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .btn-admin-login:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(251, 191, 36, 0.4);
-        }
-
-        .connection-status {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px 22px;
-            background: var(--bg-hover);
-            border-radius: 25px;
-            font-size: 0.95rem;
-        }
-
-        .status-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            animation: pulse 2s infinite;
-        }
-
-        .status-dot.connected {
-            background: var(--success);
-        }
-
-        .status-dot.disconnected {
-            background: var(--danger);
-        }
-
-        .status-dot.connecting {
-            background: var(--warning);
-        }
-
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
-
-        .main-content {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            margin-bottom: 30px;
-        }
-
-        @media (max-width: 1400px) {
-            .main-content {
-                grid-template-columns: 1fr;
-            }
-            .container {
-                max-width: 100%;
-                padding: 0 10px;
-            }
-        }
-        
-        @media (max-width: 1024px) {
-            .header {
-                flex-direction: column;
-                gap: 15px;
-            }
-            .header-right {
-                width: 100%;
-                justify-content: space-between;
-                flex-wrap: wrap;
-            }
-            .table-wrapper {
-                margin: 0;
-                padding: 0;
-            }
-        }
-
-        .form-section, .crm-section {
-            background: var(--bg-card);
-            border-radius: 12px;
-            padding: 30px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-            border: 1px solid var(--border-color);
-        }
-
-        .section-title {
-            color: var(--primary-blue);
-            font-size: 1.4rem;
-            margin-bottom: 25px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid var(--primary-blue-dark);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-
-        .form-row-equal {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 15px;
-        }
-
-        label {
-            display: block;
-            color: var(--text-secondary);
-            font-weight: 600;
-            margin-bottom: 8px;
-            font-size: 1rem;
-        }
-
-        input[type="text"],
-        input[type="date"],
-        input[type="password"],
-        select,
-        textarea {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            font-size: 1.05rem;
+            font-size: 0.85rem;
+            margin-left: 0.5rem;
             transition: all 0.3s ease;
-            background: var(--bg-hover);
-            color: var(--text-primary);
         }
 
-        input:focus,
-        select:focus,
-        textarea:focus {
-            outline: none;
-            border-color: var(--primary-blue);
-            box-shadow: 0 0 0 3px rgba(0, 128, 255, 0.2);
-            background: var(--bg-dark);
+        .user-info button:hover {
+            background: rgba(255,255,255,0.3);
         }
 
-        select {
-            cursor: pointer;
+        .admin-controls {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
         }
 
-        select option {
-            background: var(--bg-card);
-            color: var(--text-primary);
-        }
-
-        textarea {
-            resize: vertical;
-            min-height: 100px;
-        }
-
-        .btn {
-            padding: 13px 32px;
-            border: none;
-            border-radius: 8px;
-            font-size: 1.05rem;
-            font-weight: 600;
+        .admin-controls button {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
             cursor: pointer;
             transition: all 0.3s ease;
-            display: inline-flex;
+        }
+
+        .admin-controls button:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        #adminInfo {
+            display: none;
             align-items: center;
-            gap: 8px;
-        }
-
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .btn-primary {
-            background: var(--primary-blue);
-            color: white;
-        }
-
-        .btn-primary:hover:not(:disabled) {
-            background: var(--primary-blue-dark);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 128, 255, 0.3);
-        }
-
-        .btn-secondary {
-            background: var(--success);
-            color: var(--bg-dark);
-        }
-
-        .btn-secondary:hover:not(:disabled) {
-            background: #22c55e;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(74, 222, 128, 0.3);
-        }
-
-        .btn-danger {
-            background: var(--danger);
-            color: white;
-        }
-
-        .btn-danger:hover:not(:disabled) {
-            background: #dc2626;
-        }
-
-        .btn-warning {
-            background: var(--warning);
-            color: var(--bg-dark);
-        }
-
-        .btn-warning:hover:not(:disabled) {
-            background: #f59e0b;
-        }
-
-        .btn-group {
-            display: flex;
-            gap: 15px;
-            margin-top: 25px;
-            flex-wrap: wrap;
-        }
-
-        .data-table {
-            background: var(--bg-card);
-            border-radius: 12px;
-            padding: 25px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-            border: 1px solid var(--border-color);
-        }
-        
-        .table-wrapper {
-            overflow-x: auto;
-            overflow-y: hidden;
-            margin: 0 -10px;
-            padding: 0 10px;
-        }
-        
-        .table-wrapper::-webkit-scrollbar {
-            height: 8px;
-        }
-        
-        .table-wrapper::-webkit-scrollbar-track {
-            background: var(--bg-hover);
-            border-radius: 4px;
-        }
-        
-        .table-wrapper::-webkit-scrollbar-thumb {
-            background: var(--primary-blue);
-            border-radius: 4px;
-        }
-        
-        .table-wrapper::-webkit-scrollbar-thumb:hover {
-            background: var(--primary-blue-dark);
+            gap: 1rem;
+            background: rgba(255,255,255,0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
         }
 
         .filter-section {
+            padding: 1.5rem;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
             display: flex;
-            gap: 12px;
-            margin-bottom: 15px;
+            gap: 1rem;
+            align-items: flex-end;
             flex-wrap: wrap;
-            align-items: end;
         }
 
-        .filter-section .form-group {
-            margin-bottom: 0;
-            flex: 1;
-            min-width: 150px;
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
         }
 
-        .stats-bar {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
-            gap: 10px;
-            margin-bottom: 15px;
+        .form-group label {
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.9rem;
         }
 
-        .stat-card {
-            background: var(--bg-hover);
-            border-radius: 8px;
-            padding: 12px;
-            text-align: center;
-            border: 1px solid var(--border-color);
+        .form-group input, .form-group select {
+            padding: 0.5rem;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            font-size: 0.95rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
             transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.95rem;
         }
 
-        .stat-card:hover {
-            border-color: var(--primary-blue);
-            box-shadow: 0 2px 10px rgba(0, 128, 255, 0.2);
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
         }
 
-        .stat-number {
-            font-size: 1.6rem;
-            font-weight: bold;
-            color: var(--primary-blue);
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
         }
 
-        .stat-label {
-            color: var(--text-muted);
-            font-size: 0.85rem;
-            margin-top: 3px;
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4);
+        }
+
+        .no-permission-msg {
+            display: none;
+            background: #fff3cd;
+            color: #856404;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            border: 1px solid #ffeeba;
+            align-items: center;
+            gap: 0.5rem;
+            margin-left: auto;
+        }
+
+        .table-container {
+            padding: 1.5rem;
+            overflow-x: auto;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            table-layout: fixed;
-            min-width: 1150px;
+            font-size: 0.9rem;
         }
 
         th {
-            background: var(--primary-blue);
-            color: white;
-            padding: 10px 6px;
+            background: #f8f9fa;
+            padding: 0.75rem;
             text-align: left;
             font-weight: 600;
-            font-size: 0.93rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            color: #495057;
+            border-bottom: 2px solid #dee2e6;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
 
         td {
-            padding: 10px 6px;
-            border-bottom: 1px solid var(--border-color);
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        
-        /* 특정 열 스타일 조정 */
-        th:nth-child(7) {  /* 관리번호 헤더 */
-            font-size: 0.9rem;
-        }
-        
-        td:nth-child(7) {  /* 관리번호 데이터 */
-            font-size: 0.83rem;
-            color: var(--text-muted);
-        }
-        
-        /* 취소사유 열만 특별 처리 */
-        th:nth-child(9) {
-            width: 180px;
-        }
-        
-        td:nth-child(9) {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            width: 180px;
-            max-width: 180px;
-            font-size: 0.85rem;
-            color: var(--text-muted);
-        }
-        
-        td:nth-child(9):hover {
-            color: var(--text-primary);
+            padding: 0.75rem;
+            border-bottom: 1px solid #e9ecef;
+            color: #212529;
         }
 
         tr:hover {
-            background: var(--bg-hover);
+            background: #f8f9fa;
         }
 
         .status-badge {
-            display: inline-block;
-            padding: 4px 10px;
+            padding: 0.25rem 0.75rem;
             border-radius: 15px;
             font-size: 0.85rem;
             font-weight: 600;
-            white-space: nowrap;
+            display: inline-block;
         }
 
         .status-pending {
-            background: rgba(251, 191, 36, 0.2);
-            color: var(--warning);
-            border: 1px solid var(--warning);
+            background: #fff3cd;
+            color: #856404;
         }
 
         .status-approved {
-            background: rgba(74, 222, 128, 0.2);
-            color: var(--success);
-            border: 1px solid var(--success);
+            background: #d4edda;
+            color: #155724;
         }
 
         .status-rejected {
-            background: rgba(239, 68, 68, 0.2);
-            color: var(--danger);
-            border: 1px solid var(--danger);
+            background: #f8d7da;
+            color: #721c24;
         }
 
-        .crm-output {
-            background: var(--bg-dark);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 20px;
-            margin-top: 20px;
-            font-family: 'Courier New', monospace;
-            white-space: pre-wrap;
-            max-height: 400px;
-            overflow-y: auto;
-            color: var(--text-secondary);
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 40px;
-            color: var(--text-muted);
-        }
-
-        .empty-state-icon {
-            font-size: 3rem;
-            margin-bottom: 15px;
-            opacity: 0.5;
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 2px;
-            flex-wrap: nowrap;
-            justify-content: center;
-        }
-
-        .action-buttons .btn {
-            padding: 3px 6px;
-            font-size: 0.82rem;
-            white-space: nowrap;
-        }
-        
-        /* 버튼 그룹 간격 조정 */
-        .action-buttons .btn-secondary + .btn-danger,
-        .action-buttons .btn-primary + .btn-warning {
-            margin-left: 4px;
-        }
-        
-        .action-buttons .btn-delete {
-            margin-left: 8px;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-        }
-
-        .modal-content {
-            background: var(--bg-card);
-            border-radius: 12px;
-            padding: 30px;
-            max-width: 700px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-            border: 1px solid var(--border-color);
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid var(--border-color);
-        }
-
-        .modal-header h3 {
-            color: var(--primary-blue);
-        }
-
-        .modal-close {
-            background: none;
+        .action-button {
+            padding: 0.25rem 0.5rem;
+            margin: 0 0.25rem;
             border: none;
-            font-size: 1.5rem;
+            border-radius: 5px;
             cursor: pointer;
-            color: var(--text-muted);
-            transition: color 0.3s ease;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
         }
 
-        .modal-close:hover {
-            color: var(--danger);
-        }
-
-        .auth-modal {
-            max-width: 400px;
-        }
-
-        .auth-form {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .toast {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            padding: 15px 25px;
-            border-radius: 8px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
-            display: none;
-            animation: slideIn 0.3s ease;
-            z-index: 2000;
+        .approve-btn {
+            background: #28a745;
             color: white;
         }
 
-        .toast.success {
-            background: var(--success);
-            color: var(--bg-dark);
+        .approve-btn:hover {
+            background: #218838;
         }
 
-        .toast.error {
-            background: var(--danger);
+        .reject-btn {
+            background: #dc3545;
+            color: white;
         }
 
-        .toast.info {
-            background: var(--primary-blue);
+        .reject-btn:hover {
+            background: #c82333;
+        }
+
+        .delete-btn {
+            background: #6c757d;
+            color: white;
+        }
+
+        .delete-btn:hover {
+            background: #5a6268;
+        }
+
+        .detail-btn {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .detail-btn:hover {
+            background: #138496;
+        }
+
+        /* 모달 스타일 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 0;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 5px 30px rgba(0,0,0,0.3);
+            animation: slideIn 0.3s;
         }
 
         @keyframes slideIn {
-            from { transform: translateX(100%); }
-            to { transform: translateX(0); }
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
 
-        .info-box {
-            background: var(--bg-hover);
-            border-left: 4px solid var(--primary-blue);
-            padding: 15px;
-            margin-bottom: 20px;
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 10px 10px 0 0;
+            position: relative;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .modal-footer {
+            padding: 1rem 1.5rem;
+            background: #f8f9fa;
+            border-radius: 0 0 10px 10px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
+        }
+
+        .close {
+            position: absolute;
+            right: 1.5rem;
+            top: 1.5rem;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            opacity: 0.8;
+        }
+
+        .modal-field {
+            margin-bottom: 1rem;
+        }
+
+        .modal-field label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .modal-field p {
+            margin: 0;
+            padding: 0.5rem;
+            background: #f8f9fa;
             border-radius: 5px;
         }
 
-        .info-box p {
-            color: var(--text-secondary);
-            margin: 5px 0;
-        }
-
-        .info-box strong {
-            color: var(--text-primary);
-        }
-
-        .truncate {
-            max-width: 300px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            display: inline-block;
-        }
-        
-        .message-truncate {
-            max-width: 200px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            display: inline-block;
-            vertical-align: middle;
-        }
-
-        input[type="date"]::-webkit-calendar-picker-indicator {
-            filter: invert(1);
-            cursor: pointer;
-        }
-
-        .checkbox-label {
+        /* 토스트 메시지 */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            padding: 1rem 1.5rem;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
             display: flex;
             align-items: center;
-            gap: 8px;
-            color: var(--text-secondary);
-            cursor: pointer;
+            gap: 1rem;
+            animation: slideInRight 0.3s;
+            z-index: 2000;
         }
 
-        input[type="checkbox"] {
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .toast.success {
+            border-left: 4px solid #28a745;
+        }
+
+        .toast.error {
+            border-left: 4px solid #dc3545;
+        }
+
+        .toast.info {
+            border-left: 4px solid #17a2b8;
+        }
+
+        /* 체크박스 스타일 */
+        .checkbox-cell {
+            text-align: center;
+        }
+
+        .checkbox-cell input[type="checkbox"] {
             width: 18px;
             height: 18px;
             cursor: pointer;
         }
-        
-        #btnDeleteAll {
-            background: linear-gradient(135deg, var(--danger), #dc2626);
-            color: white;
-        }
-        
-        #btnDeleteAll:hover {
-            background: linear-gradient(135deg, #dc2626, #b91c1c);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(239, 68, 68, 0.3);
+
+        #deleteCount {
+            background: rgba(255,255,255,0.3);
+            padding: 0.2rem 0.5rem;
+            border-radius: 10px;
+            font-size: 0.85rem;
         }
 
-        .btn-delete {
-            background: transparent;
-            border: 1px solid var(--danger);
-            color: var(--danger);
-            padding: 3px 6px !important;
-            font-size: 0.82rem !important;
-            min-width: auto !important;
+        /* 초기 화면 스타일 */
+        .welcome-screen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
-        
-        .btn-delete:hover {
-            background: var(--danger);
-            color: white;
+
+        .welcome-card {
+            background: white;
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+            min-width: 400px;
         }
-        
-        .admin-required {
-            opacity: 0.5;
-            cursor: not-allowed !important;
-            position: relative;
+
+        .welcome-card h2 {
+            color: #495057;
+            margin-bottom: 2rem;
         }
-        
-        .admin-required::after {
-            content: "🔒";
-            position: absolute;
-            right: 10px;
-            top: 50%;
-            transform: translateY(-50%);
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
             font-size: 1rem;
+            transition: border-color 0.3s;
         }
-        
-        .no-permission-msg {
-            color: var(--danger);
-            font-size: 0.9rem;
-            margin-top: 10px;
-            display: none;
+
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #495057;
+            font-weight: 600;
+            text-align: left;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 0.75rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        /* 취소사유 열만 특별 처리 */
+        td:nth-child(9) {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 200px;
+            font-size: 0.85rem;
+        }
+
+        /* 추가 정보 열도 비슷하게 처리 */
+        td:nth-child(10) {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 250px;
         }
     </style>
 </head>
 <body>
-    <!-- 팀 선택 화면 -->
-    <div id="teamSelection" class="team-selection" style="display: none;">
-        <div style="width: 100%; max-width: 900px; padding: 2rem;">
-            <h1 class="team-selection-title">✨ 사용자 정보를 입력하세요 ✨</h1>
-            
-            <!-- 이름 입력 섹션 -->
-            <div style="background: var(--bg-card); border-radius: 1rem; padding: 2rem; margin-bottom: 2rem; border: 2px solid var(--border-color);">
-                <label style="display: block; color: var(--text-secondary); font-weight: 600; margin-bottom: 0.5rem; font-size: 1.1rem;">
-                    이름 <span style="color: var(--danger);">*</span>
-                </label>
-                <input type="text" id="teamSelectionNameInput" placeholder="이름을 입력하세요" 
-                    style="width: 100%; padding: 1rem; border: 1px solid var(--border-color); border-radius: 0.5rem; 
-                    font-size: 1.1rem; background: var(--bg-hover); color: var(--text-primary); transition: all 0.3s ease;"
-                    onfocus="this.style.borderColor='var(--primary-blue)'; this.style.boxShadow='0 0 0 3px rgba(0, 128, 255, 0.2)'; this.style.background='var(--bg-dark)';"
-                    onblur="this.style.borderColor='var(--border-color)'; this.style.boxShadow='none'; this.style.background='var(--bg-hover)';">
+    <!-- 초기 화면 -->
+    <div id="welcomeScreen" class="welcome-screen">
+        <div class="welcome-card">
+            <h2>취소양식 관리 시스템</h2>
+            <div class="input-group">
+                <label for="userName">이름을 입력하세요</label>
+                <input type="text" id="userName" placeholder="예: 홍길동">
             </div>
-            
-            <!-- 팀 선택 섹션 -->
-            <div style="margin-bottom: 1rem;">
-                <label style="display: block; color: var(--text-secondary); font-weight: 600; margin-bottom: 1rem; font-size: 1.1rem; text-align: center;">
-                    소속 팀을 선택하세요 <span style="color: var(--danger);">*</span>
-                </label>
+            <div class="input-group">
+                <label for="teamSelect">팀을 선택하세요</label>
+                <select id="teamSelect">
+                    <option value="">팀 선택...</option>
+                    <option value="의정부 SNS팀">의정부 SNS팀</option>
+                    <option value="SNS 1팀">SNS 1팀</option>
+                    <option value="SNS 2팀">SNS 2팀</option>
+                    <option value="SNS 3팀">SNS 3팀</option>
+                    <option value="대전마케팅팀">대전마케팅팀</option>
+                    <option value="대구마케팅팀">대구마케팅팀</option>
+                </select>
             </div>
-            
-            <div class="team-grid">
-                <div class="team-card" onclick="window.selectTeamWithName('SNS 1팀')" style="animation: fadeIn 0.5s ease 0.1s both;">
-                    <div class="team-icon">🚀</div>
-                    <div class="team-name">SNS 1팀</div>
-                </div>
-                <div class="team-card" onclick="window.selectTeamWithName('SNS 2팀')" style="animation: fadeIn 0.5s ease 0.2s both;">
-                    <div class="team-icon">⭐</div>
-                    <div class="team-name">SNS 2팀</div>
-                </div>
-                <div class="team-card" onclick="window.selectTeamWithName('SNS 3팀')" style="animation: fadeIn 0.5s ease 0.3s both;">
-                    <div class="team-icon">💎</div>
-                    <div class="team-name">SNS 3팀</div>
-                </div>
-                <div class="team-card" onclick="window.selectTeamWithName('SNS 4팀')" style="animation: fadeIn 0.5s ease 0.4s both;">
-                    <div class="team-icon">🔥</div>
-                    <div class="team-name">SNS 4팀</div>
-                </div>
-                <div class="team-card" onclick="window.selectTeamWithName('의정부 SNS팀')" style="animation: fadeIn 0.5s ease 0.5s both;">
-                    <div class="team-icon">🏆</div>
-                    <div class="team-name">의정부 SNS팀</div>
-                </div>
-            </div>
+            <button class="submit-btn" onclick="window.initializeUser()">시작하기</button>
         </div>
     </div>
 
-    <div class="container">
+    <!-- 메인 화면 -->
+    <div id="mainScreen" class="container" style="display: none;">
         <div class="header">
+            <div class="admin-controls">
+                <button id="btnAdminLogin" onclick="window.showAdminLogin()">🔐 관리자 로그인</button>
+                <div id="adminInfo">
+                    <span>👤 관리자: <strong id="adminName"></strong></span>
+                    <button onclick="window.adminLogout()">로그아웃</button>
+                </div>
+            </div>
             <h1>취소양식 관리 시스템</h1>
-            <div class="header-right">
-                <div class="team-switcher">
-                    <div class="team-badge">
-                        <span id="teamIcon">✨</span>
-                        <span id="currentTeam">팀 미선택</span>
-                    </div>
-                    <button class="btn-switch-team" onclick="window.showTeamSelection()">팀 변경</button>
-                </div>
-                <div class="user-info" id="userInfo">
-                    <span>👤</span>
-                    <span id="userName">-</span>
-                    <button class="btn btn-primary" onclick="window.changeUserName()" style="padding: 5px 10px; font-size: 0.85rem; margin-left: 10px;">
-                        변경
-                    </button>
-                </div>
-                <button class="btn-admin-login" id="btnAdminLogin" onclick="window.showAdminLogin()">
-                    <span>🔐</span>
-                    <span>관리자 로그인</span>
-                </button>
-                <div class="admin-info" id="adminInfo" style="display: none;">
-                    <span>🔑</span>
-                    <span id="adminName">관리자</span>
-                    <button class="btn btn-danger" onclick="window.logoutAdmin()" style="padding: 5px 10px; font-size: 0.85rem; margin-left: 10px;">
-                        로그아웃
-                    </button>
-                </div>
-                <div class="connection-status">
-                    <span class="status-dot connecting" id="statusDot"></span>
-                    <span id="statusText">연결 중...</span>
-                </div>
+            <div class="team-info">
+                <span id="currentTeamDisplay"></span>
+            </div>
+            <div class="user-info">
+                <div class="user-name">👤 <span id="currentUserName"></span></div>
+                <button onclick="window.changeUserName()">변경</button>
+                <button onclick="window.changeTeam()">팀 변경</button>
             </div>
         </div>
 
-        <!-- 양식 작성 섹션 -->
-        <div class="main-content">
-            <div class="form-section">
-                <h2 class="section-title">
-                    <span>✍️</span>
-                    <span>취소 양식 작성</span>
-                </h2>
-                <form id="cancellationForm">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="date">날짜 <span style="color: var(--danger);">*</span></label>
-                            <input type="date" id="date" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="category">분류 <span style="color: var(--danger);">*</span></label>
-                            <select id="category" required>
-                                <option value="">선택하세요</option>
-                                <option value="인터넷">인터넷</option>
-                                <option value="동판">동판</option>
-                                <option value="렌탈">렌탈</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="recruiter">유치자 <span style="color: var(--danger);">*</span></label>
-                            <input type="text" id="recruiter" placeholder="유치자 이름" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="canceller">취소자 <span style="color: var(--danger);">*</span></label>
-                            <input type="text" id="canceller" placeholder="취소자 이름" required>
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="customerName">고객명 <span style="color: var(--danger);">*</span></label>
-                            <input type="text" id="customerName" placeholder="고객 이름" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="customerPhone">관리번호 <span style="color: var(--danger);">*</span></label>
-                            <input type="text" id="customerPhone" placeholder="예: AJD20240823001192" maxlength="30" required>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="reason">취소사유 <span style="color: var(--danger);">*</span></label>
-                        <textarea id="reason" placeholder="취소 사유를 상세히 입력하세요" required></textarea>
-                    </div>
-
-                    <div class="form-row-equal">
-                        <div class="form-group">
-                            <label for="defense1">1차 반론</label>
-                            <textarea id="defense1" placeholder="1차 반론 내용 (선택사항)"></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label for="defense1Result">반론 결과</label>
-                            <textarea id="defense1Result" placeholder="예: 거절, 수긍, 보류 등 (선택사항)" style="min-height: 100px;"></textarea>
-                        </div>
-                    </div>
-
-                    <div class="form-row-equal">
-                        <div class="form-group">
-                            <label for="defense2">2차 반론</label>
-                            <textarea id="defense2" placeholder="2차 반론 내용 (선택사항)"></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label for="defense2Result">반론 결과</label>
-                            <textarea id="defense2Result" placeholder="예: 거절, 수긍, 해당없음" style="min-height: 100px;"></textarea>
-                        </div>
-                    </div>
-
-                    <div class="btn-group">
-                        <button type="submit" class="btn btn-primary" id="submitBtn">
-                            <span>📤</span>
-                            <span>제출하기</span>
-                        </button>
-                        <button type="button" class="btn btn-danger" onclick="window.resetForm()">
-                            <span>🔄</span>
-                            <span>초기화</span>
-                        </button>
-                    </div>
-                </form>
+        <div class="filter-section">
+            <div class="form-group" style="max-width: 150px;">
+                <label for="filterDate">날짜 필터</label>
+                <input type="date" id="filterDate" onchange="window.loadData()">
             </div>
-
-            <div class="crm-section">
-                <h2 class="section-title">
-                    <span>📝</span>
-                    <span>CRM 출력 미리보기</span>
-                </h2>
-                <div id="crmPreview" class="crm-output">
-                    <div class="empty-state">
-                        <div class="empty-state-icon">📭</div>
-                        <p>양식을 입력하면 CRM 형식이 여기에 표시됩니다</p>
-                    </div>
-                </div>
-                <button class="btn btn-primary" onclick="window.copyCRMPreview()" style="margin-top: 15px; width: 100%;">
-                    <span>📋</span>
-                    <span>CRM 양식 복사</span>
-                </button>
+            <button class="btn btn-secondary" id="btnExportExcel" onclick="window.handleExportExcel()">
+                <span>📥</span>
+                <span>엑셀 다운로드</span>
+            </button>
+            <button class="btn btn-danger" id="btnBulkDelete" onclick="window.handleBulkDelete()" style="display: none;">
+                <span>🗑️</span>
+                <span>선택 삭제</span>
+                <span id="deleteCount"></span>
+            </button>
+            <button class="btn btn-danger" id="btnDeleteAll" onclick="window.handleDeleteAll()" style="display: none; background: linear-gradient(135deg, #991b1b, #7f1d1d);">
+                <span>⚠️</span>
+                <span>전체 삭제</span>
+            </button>
+            <button class="btn btn-primary" onclick="window.loadData()">
+                <span>🔄</span>
+                <span>새로고침</span>
+            </button>
+            <div class="no-permission-msg" id="noPermissionMsg">
+                관리자 권한이 필요합니다
             </div>
         </div>
 
-        <!-- 전체 목록 섹션 -->
-        <div class="data-table">
-            <h2 class="section-title">
-                <span>📊</span>
-                <span>취소 신청 전체 목록</span>
-            </h2>
-            
-            <div class="stats-bar">
-                <div class="stat-card">
-                    <div class="stat-number" id="statTotal">0</div>
-                    <div class="stat-label">전체</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="statPending">0</div>
-                    <div class="stat-label">확인필요</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="statApproved">0</div>
-                    <div class="stat-label">승인됨</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="statRejected">0</div>
-                    <div class="stat-label">거절됨</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="statToday">0</div>
-                    <div class="stat-label">오늘</div>
-                </div>
-            </div>
-            
-            <div class="filter-section">
-                <div class="form-group" style="max-width: 150px;">
-                    <label for="filterDate">날짜 필터</label>
-                    <input type="date" id="filterDate" onchange="window.loadData()">
-                </div>
-                <button class="btn btn-secondary" id="btnExportExcel" onclick="window.handleExportExcel()">
-                    <span>📥</span>
-                    <span>엑셀 다운로드</span>
-                </button>
-                <button class="btn btn-danger" id="btnDeleteAll" onclick="window.handleDeleteAll()" style="display: none;">
-                    <span>⚠️</span>
-                    <span>전체 삭제</span>
-                </button>
-                <button class="btn btn-primary" onclick="window.loadData()">
-                    <span>🔄</span>
-                    <span>새로고침</span>
-                </button>
-                <div class="no-permission-msg" id="noPermissionMsg">
-                    관리자 권한이 필요합니다
-                </div>
-            </div>
-
-            <div class="table-wrapper">
-                <table id="dataTable">
-                    <thead>
-                        <tr>
-                            <th style="width: 70px;">팀</th>
-                            <th style="width: 40px;">순번</th>
-                            <th style="width: 65px;">날짜</th>
-                            <th style="width: 90px;">유치자</th>
-                            <th style="width: 90px;">취소자</th>
-                            <th style="width: 130px;">고객명</th>
-                            <th style="width: 130px;">관리번호</th>
-                            <th style="width: 60px;">분류</th>
-                            <th style="width: 180px;">취소사유</th>
-                            <th style="width: 70px;">상태</th>
-                            <th style="width: 80px;">승인자</th>
-                            <th style="width: 150px;">작업</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableBody">
-                        <tr>
-                            <td colspan="12" style="text-align: center; padding: 40px; color: var(--text-muted);">
-                                데이터를 불러오는 중...
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+        <div class="table-container">
+            <table id="dataTable">
+                <thead>
+                    <tr>
+                        <th class="checkbox-cell">
+                            <input type="checkbox" id="selectAll" onchange="window.toggleSelectAll()">
+                        </th>
+                        <th>작성일</th>
+                        <th>팀</th>
+                        <th>작성시간</th>
+                        <th>모집자</th>
+                        <th>취소자</th>
+                        <th>고객명</th>
+                        <th>연락처</th>
+                        <th>구분</th>
+                        <th>취소사유</th>
+                        <th>추가 정보</th>
+                        <th>상태</th>
+                        <th>작업</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- 데이터가 여기에 동적으로 추가됩니다 -->
+                </tbody>
+            </table>
         </div>
     </div>
 
-    <!-- 상세 정보 모달 -->
+    <!-- 상세 모달 -->
     <div id="detailModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>상세 정보</h3>
-                <button class="modal-close" onclick="window.closeModal()">✕</button>
+                <h2>상세 정보</h2>
+                <span class="close" onclick="document.getElementById('detailModal').style.display='none'">&times;</span>
             </div>
-            <div id="modalBody"></div>
+            <div class="modal-body" id="detailContent">
+                <!-- 상세 내용이 여기에 표시됩니다 -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="document.getElementById('detailModal').style.display='none'">닫기</button>
+            </div>
         </div>
     </div>
 
-    <!-- 관리자 인증 모달 -->
+    <!-- 인증 모달 -->
     <div id="authModal" class="modal">
-        <div class="modal-content auth-modal">
+        <div class="modal-content">
             <div class="modal-header">
-                <h3>관리자 인증</h3>
-                <button class="modal-close" onclick="window.closeAuthModal()">✕</button>
+                <h2>관리자 인증</h2>
+                <span class="close" onclick="window.closeAuthModal()">&times;</span>
             </div>
-            <form id="authForm" class="auth-form">
-                <div class="form-group">
-                    <label for="authName">관리자 이름</label>
-                    <input type="text" id="authName" placeholder="이름을 입력하세요" required>
+            <div class="modal-body">
+                <div class="modal-field">
+                    <label for="authAdminName">관리자 이름</label>
+                    <input type="text" id="authAdminName" placeholder="관리자 이름 입력">
                 </div>
-                <div class="form-group">
+                <div class="modal-field">
                     <label for="authPassword">비밀번호</label>
-                    <input type="password" id="authPassword" placeholder="비밀번호를 입력하세요" required>
+                    <input type="password" id="authPassword" placeholder="비밀번호 입력">
                 </div>
-                <div class="form-group">
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="saveAuth">
-                        <span>이 브라우저에 정보 저장</span>
+                <div class="modal-field">
+                    <label>
+                        <input type="checkbox" id="saveAuth"> 로그인 유지
                     </label>
                 </div>
-                <div class="btn-group">
-                    <button type="submit" class="btn btn-primary">
-                        <span>🔐</span>
-                        <span>인증하기</span>
-                    </button>
-                    <button type="button" class="btn btn-danger" onclick="window.closeAuthModal()">
-                        취소
-                    </button>
-                </div>
-            </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="window.closeAuthModal()">취소</button>
+                <button class="btn btn-primary" onclick="window.verifyAdmin()">확인</button>
+            </div>
         </div>
     </div>
 
-    <!-- 제출 확인 모달 -->
+    <!-- 확인 모달 -->
     <div id="confirmModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>📋 CRM 양식 복사</h3>
-                <button class="modal-close" onclick="window.closeConfirmModal()">✕</button>
+                <h2 id="confirmTitle">확인</h2>
+                <span class="close" onclick="window.closeConfirmModal()">&times;</span>
             </div>
-            <div class="form-group">
-                <label style="color: var(--warning); font-size: 0.95rem;">⚠️ CRM에 입력할 양식을 먼저 복사해주세요</label>
-                <div class="crm-output" id="confirmCRMPreview" style="background: var(--bg-dark); padding: 25px; min-height: 250px; font-size: 1.1rem;">
-                    <!-- CRM 미리보기 내용 -->
-                </div>
+            <div class="modal-body">
+                <p id="confirmMessage"></p>
             </div>
-            <div class="btn-group" style="justify-content: center;">
-                <button class="btn btn-primary" onclick="window.copyCRMFromModal()" style="font-size: 1.1rem; padding: 15px 40px;">
-                    <span>📋</span>
-                    <span>CRM 양식 복사하기</span>
-                </button>
-            </div>
-            <div class="btn-group" style="justify-content: center; margin-top: 15px;">
-                <button class="btn btn-secondary" onclick="window.confirmSubmit()">
-                    <span>✔️</span>
-                    <span>복사 완료, 제출하기</span>
-                </button>
-                <button class="btn btn-danger" onclick="window.closeConfirmModal()">
-                    <span>✖️</span>
-                    <span>취소</span>
-                </button>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="window.closeConfirmModal()">취소</button>
+                <button class="btn btn-primary" id="confirmButton">확인</button>
             </div>
         </div>
     </div>
 
-    <div id="toast" class="toast"></div>
-
     <script>
-        // Supabase 설정
-        const SUPABASE_URL = 'https://bhtqjipygkawoyieidgp.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJodHFqaXB5Z2thd295aWVpZGdwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0ODg5NjgsImV4cCI6MjA3MDA2NDk2OH0.hu2EAj9RCq436QBtfbEVF4aGOau4WWomLMDKahN4iAA';
-        
-        const ADMIN_PASSWORD = '1200';
-        
-        // 팀별 아이콘
-        const teamIcons = {
-            'SNS 1팀': '🚀',
-            'SNS 2팀': '⭐',
-            'SNS 3팀': '💎',
-            'SNS 4팀': '🔥',
-            '의정부 SNS팀': '🏆'
-        };
-        
-        let supabase = null;
-        let realtimeChannel = null;
+        // Supabase 클라이언트 초기화
+        const supabaseUrl = 'https://ynyxfpyhmpoepuzozfyt.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlueXhmcHlobXBvZXB1em96Znl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjM2MjU3NTMsImV4cCI6MjAzOTIwMTc1M30.8dSMViCJGnGifDX41s7FbBKVMaQtDpWYVWvQp4VAJzU';
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+        // 전역 변수
+        let currentUser = '';
+        let currentTeam = '';
+        let isAdmin = false;
         let allData = [];
+        let selectedItems = new Set();
         let currentAuthAction = null;
         let currentAuthData = null;
-        let pendingFormData = null;
-        let currentTeam = '';
-        let currentUserName = '';
-        let isAdmin = false;
-        
-        // 전체 선택/해제
-        window.toggleSelectAll = function() {
-            const selectAll = document.getElementById('selectAll');
-            const checkboxes = document.querySelectorAll('.row-checkbox');
+
+        // 팀 이름 간소화 함수
+        window.getShortTeamName = function(teamName) {
+            if (teamName === '의정부 SNS팀') return '의정부';
+            if (teamName && teamName.includes('SNS')) {
+                // SNS 1팀 -> 1팀 형식으로 표시
+                return teamName.replace('SNS ', '');
+            }
+            return teamName;
+        };
+
+        // 초기화
+        window.initializeUser = function() {
+            const userName = document.getElementById('userName').value.trim();
+            const teamSelect = document.getElementById('teamSelect').value;
+
+            if (!userName) {
+                alert('이름을 입력해주세요.');
+                return;
+            }
+
+            if (!teamSelect) {
+                alert('팀을 선택해주세요.');
+                return;
+            }
+
+            currentUser = userName;
+            currentTeam = teamSelect;
+            localStorage.setItem('userName', userName);
+            localStorage.setItem('userTeam', teamSelect);
+
+            document.getElementById('welcomeScreen').style.display = 'none';
+            document.getElementById('mainScreen').style.display = 'block';
+            document.getElementById('currentUserName').textContent = userName;
+            document.getElementById('currentTeamDisplay').textContent = teamSelect;
+
+            // 관리자 상태 확인
+            const savedAdminName = localStorage.getItem('adminName');
+            const savedAdminPassword = localStorage.getItem('adminPassword');
             
-            selectedItems.clear();
+            if (savedAdminName && savedAdminPassword === '1250') {
+                isAdmin = true;
+                document.getElementById('btnAdminLogin').style.display = 'none';
+                document.getElementById('adminInfo').style.display = 'flex';
+                document.getElementById('adminName').textContent = savedAdminName;
+            }
+
+            window.loadData();
+        };
+
+        // 사용자 이름 변경
+        window.changeUserName = function() {
+            const newName = prompt('새로운 이름을 입력하세요:', currentUser);
+            if (newName && newName.trim()) {
+                currentUser = newName.trim();
+                localStorage.setItem('userName', currentUser);
+                document.getElementById('currentUserName').textContent = currentUser;
+                window.showToast('이름이 변경되었습니다.', 'success');
+            }
+        };
+
+        // 팀 변경
+        window.changeTeam = function() {
+            document.getElementById('welcomeScreen').style.display = 'flex';
+            document.getElementById('mainScreen').style.display = 'none';
+            document.getElementById('userName').value = currentUser;
+        };
+
+        // 관리자 로그인 표시
+        window.showAdminLogin = function() {
+            document.getElementById('authModal').style.display = 'block';
+            document.getElementById('authAdminName').value = '';
+            document.getElementById('authPassword').value = '';
+            document.getElementById('authAdminName').focus();
+        };
+
+        // 관리자 인증
+        window.verifyAdmin = function() {
+            const name = document.getElementById('authAdminName').value.trim();
+            const password = document.getElementById('authPassword').value;
+            const saveAuth = document.getElementById('saveAuth').checked;
+
+            if (!name) {
+                window.showToast('관리자 이름을 입력해주세요.', 'error');
+                return;
+            }
+
+            if (password !== '1250') {
+                window.showToast('비밀번호가 올바르지 않습니다.', 'error');
+                document.getElementById('authPassword').value = '';
+                document.getElementById('authPassword').focus();
+                return;
+            }
+
+            isAdmin = true;
             
-            checkboxes.forEach(cb => {
-                cb.checked = selectAll.checked;
-                if (selectAll.checked) {
-                    selectedItems.add(parseInt(cb.dataset.id));
+            if (saveAuth) {
+                localStorage.setItem('adminName', name);
+                localStorage.setItem('adminPassword', password);
+            }
+
+            document.getElementById('btnAdminLogin').style.display = 'none';
+            document.getElementById('adminInfo').style.display = 'flex';
+            document.getElementById('adminName').textContent = name;
+            
+            window.closeAuthModal();
+            window.checkPermissions();
+            window.showToast(`${name}님 관리자로 로그인되었습니다.`, 'success');
+
+            if (currentAuthAction) {
+                window.handleAuthSuccess(name);
+            }
+        };
+
+        // 관리자 로그아웃
+        window.adminLogout = function() {
+            if (confirm('관리자 로그아웃 하시겠습니까?')) {
+                isAdmin = false;
+                localStorage.removeItem('adminName');
+                localStorage.removeItem('adminPassword');
+                document.getElementById('btnAdminLogin').style.display = 'block';
+                document.getElementById('adminInfo').style.display = 'none';
+                window.checkPermissions();
+                window.showToast('로그아웃되었습니다.', 'info');
+            }
+        };
+
+        // 모달 닫기
+        window.closeAuthModal = function() {
+            document.getElementById('authModal').style.display = 'none';
+            currentAuthAction = null;
+            currentAuthData = null;
+        };
+
+        window.closeConfirmModal = function() {
+            document.getElementById('confirmModal').style.display = 'none';
+        };
+
+        // 인증 성공 후 처리
+        window.handleAuthSuccess = function(adminName) {
+            if (!currentAuthAction) return;
+
+            switch (currentAuthAction) {
+                case 'approve':
+                    window.performApprove(currentAuthData, adminName);
+                    break;
+                case 'reject':
+                    window.performReject(currentAuthData, adminName);
+                    break;
+                case 'delete':
+                    window.performDelete(currentAuthData, adminName);
+                    break;
+            }
+
+            currentAuthAction = null;
+            currentAuthData = null;
+        };
+
+        // 권한 확인
+        window.requireAuth = function(action, data) {
+            if (!isAdmin) {
+                currentAuthAction = action;
+                currentAuthData = data;
+                window.showAdminLogin();
+                window.showToast('이 작업을 수행하려면 관리자로 로그인해주세요.', 'error');
+                return false;
+            }
+            
+            currentAuthAction = action;
+            currentAuthData = data;
+            
+            const adminName = localStorage.getItem('adminName');
+            if (adminName) {
+                window.handleAuthSuccess(adminName);
+            }
+            return true;
+        };
+
+        // 승인 처리
+        window.handleApprove = function(id) {
+            window.requireAuth('approve', id);
+        };
+
+        window.performApprove = async function(id, adminName) {
+            try {
+                const { error } = await supabase
+                    .from('cancellations')
+                    .update({ 
+                        status: 'approved',
+                        approved_by: adminName,
+                        approved_at: new Date().toISOString()
+                    })
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                window.showToast(`승인되었습니다. (승인자: ${adminName})`, 'success');
+                window.loadData();
+            } catch (error) {
+                window.showToast('승인 처리 실패: ' + error.message, 'error');
+            }
+        };
+
+        // 거절 처리
+        window.handleReject = function(id) {
+            window.requireAuth('reject', id);
+        };
+
+        window.performReject = async function(id, adminName) {
+            try {
+                const { error } = await supabase
+                    .from('cancellations')
+                    .update({ 
+                        status: 'rejected',
+                        rejected_by: adminName,
+                        rejected_at: new Date().toISOString()
+                    })
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                window.showToast(`거절되었습니다. (거절자: ${adminName})`, 'success');
+                window.loadData();
+            } catch (error) {
+                window.showToast('거절 처리 실패: ' + error.message, 'error');
+            }
+        };
+
+        // 개별 삭제 처리 (간소화)
+        window.handleSingleDelete = async function(id) {
+            if (!isAdmin) {
+                window.showToast('관리자 권한이 필요합니다.', 'error');
+                return;
+            }
+            
+            if (confirm('이 항목을 삭제하시겠습니까?')) {
+                try {
+                    const { error } = await supabase
+                        .from('cancellations')
+                        .delete()
+                        .eq('id', id);
+                    
+                    if (error) throw error;
+                    
+                    const adminName = localStorage.getItem('adminName') || '관리자';
+                    window.showToast(`삭제되었습니다. (삭제자: ${adminName})`, 'success');
+                    window.loadData();
+                    
+                } catch (error) {
+                    window.showToast('삭제 실패: ' + error.message, 'error');
                 }
-            });
-            
-            console.log('Select all - Selected items:', selectedItems.size); // 디버깅용
-            updateDeleteButton();
+            }
         };
-        
-        // 개별 체크박스 토글
-        window.toggleSelectItem = function(id) {
-            const checkbox = document.querySelector(`.row-checkbox[data-id="${id}"]`);
-            
-            if (!checkbox) return;
-            
-            if (checkbox.checked) {
-                selectedItems.add(id);
-            } else {
-                selectedItems.delete(id);
-            }
-            
-            console.log('Selected items:', selectedItems.size); // 디버깅용
-            
-            // 전체 선택 체크박스 상태 업데이트
-            const selectAll = document.getElementById('selectAll');
-            const allCheckboxes = document.querySelectorAll('.row-checkbox');
-            const checkedCount = document.querySelectorAll('.row-checkbox:checked').length;
-            
-            if (checkedCount === 0) {
-                selectAll.checked = false;
-                selectAll.indeterminate = false;
-            } else if (checkedCount === allCheckboxes.length) {
-                selectAll.checked = true;
-                selectAll.indeterminate = false;
-            } else {
-                selectAll.checked = false;
-                selectAll.indeterminate = true;
-            }
-            
-            updateDeleteButton();
-        };
-        
-        // 삭제 버튼 업데이트
-        function updateDeleteButton() {
-            const btnBulkDelete = document.getElementById('btnBulkDelete');
-            const deleteCount = document.getElementById('deleteCount');
-            
-            if (!btnBulkDelete) return;
-            
-            if (selectedItems.size > 0) {
-                deleteCount.textContent = `(${selectedItems.size})`;
-                btnBulkDelete.disabled = false;
-                btnBulkDelete.style.opacity = '1';
-                btnBulkDelete.style.cursor = 'pointer';
-            } else {
-                deleteCount.textContent = '';
-                btnBulkDelete.disabled = true;
-                btnBulkDelete.style.opacity = '0.5';
-                btnBulkDelete.style.cursor = 'not-allowed';
-            }
-        }
-        
+
         // 일괄 삭제 처리
         window.handleBulkDelete = async function() {
             if (!isAdmin) {
@@ -1423,1162 +1018,418 @@
                 window.showToast('일괄 삭제 실패: ' + error.message, 'error');
             }
         };
-        
-        // 토스트 메시지
-        window.showToast = function(message, type = 'success') {
-            const toast = document.getElementById('toast');
-            toast.textContent = message;
-            toast.className = `toast ${type}`;
-            toast.style.display = 'block';
+
+        // 전체 삭제 처리
+        window.handleDeleteAll = async function() {
+            if (!isAdmin) {
+                window.showToast('관리자 권한이 필요합니다.', 'error');
+                return;
+            }
             
-            setTimeout(() => {
-                toast.style.display = 'none';
-            }, 3000);
+            if (!allData || allData.length === 0) {
+                window.showToast('삭제할 데이터가 없습니다.', 'error');
+                return;
+            }
+            
+            // 필터 상태 확인
+            const dateFilter = document.getElementById('filterDate').value;
+            const isFiltered = dateFilter !== '';
+            
+            // 전체 데이터 개수 확인
+            let totalCount = allData.length;
+            let deleteMessage = '';
+            
+            if (isFiltered) {
+                deleteMessage = `현재 필터링된 ${totalCount}개의 데이터를 삭제하시겠습니까?`;
+            } else {
+                deleteMessage = `${currentTeam}의 모든 ${totalCount}개 데이터를 삭제하시겠습니까?`;
+            }
+            
+            const confirmMsg = `⚠️⚠️ 경고 ⚠️⚠️\n\n${deleteMessage}\n\n이 작업은 되돌릴 수 없습니다!`;
+            
+            if (!confirm(confirmMsg)) {
+                return;
+            }
+            
+            // 두 번째 확인
+            const secondConfirm = prompt(`정말로 모든 데이터를 삭제하시겠습니까?\n\n최종 확인을 위해 "전체삭제확인"을 입력하세요.`);
+            
+            if (secondConfirm !== '전체삭제확인') {
+                window.showToast('전체 삭제가 취소되었습니다.', 'info');
+                return;
+            }
+            
+            // 세 번째 확인
+            const finalConfirm = confirm(`⚠️ 최종 경고!\n\n${totalCount}개의 모든 데이터가 영구적으로 삭제됩니다.\n정말 진행하시겠습니까?`);
+            
+            if (!finalConfirm) {
+                window.showToast('전체 삭제가 취소되었습니다.', 'info');
+                return;
+            }
+            
+            try {
+                // 삭제할 데이터 결정
+                let dataToDelete = allData;
+                
+                // 각 항목 삭제
+                for (const item of dataToDelete) {
+                    const { error } = await supabase
+                        .from('cancellations')
+                        .delete()
+                        .eq('id', item.id);
+                    
+                    if (error) throw error;
+                }
+                
+                const adminName = localStorage.getItem('adminName') || '관리자';
+                window.showToast(`전체 ${dataToDelete.length}개 항목이 삭제되었습니다. (삭제자: ${adminName})`, 'success');
+                
+                // 선택 초기화
+                selectedItems.clear();
+                const selectAll = document.getElementById('selectAll');
+                if (selectAll) selectAll.checked = false;
+                updateDeleteButton();
+                
+                // 데이터 새로고침
+                window.loadData();
+                
+            } catch (error) {
+                window.showToast('전체 삭제 실패: ' + error.message, 'error');
+            }
         };
-        
-        // 관리자 권한 체크 및 UI 업데이트
-        window.updateAdminUI = function() {
-            const btnExportExcel = document.getElementById('btnExportExcel');
-            const btnDeleteAll = document.getElementById('btnDeleteAll');
+
+        // 체크박스 전체 선택/해제
+        window.toggleSelectAll = function() {
+            const selectAll = document.getElementById('selectAll');
+            const checkboxes = document.querySelectorAll('.item-checkbox');
+            
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = selectAll.checked;
+                const id = parseInt(checkbox.dataset.id);
+                if (selectAll.checked) {
+                    selectedItems.add(id);
+                } else {
+                    selectedItems.delete(id);
+                }
+            });
+            
+            updateDeleteButton();
+        };
+
+        // 개별 체크박스 토글
+        window.toggleItemSelection = function(id) {
+            const checkbox = document.querySelector(`.item-checkbox[data-id="${id}"]`);
+            if (checkbox.checked) {
+                selectedItems.add(id);
+            } else {
+                selectedItems.delete(id);
+            }
+            
+            // 전체 선택 체크박스 업데이트
+            const allCheckboxes = document.querySelectorAll('.item-checkbox');
+            const selectAll = document.getElementById('selectAll');
+            selectAll.checked = selectedItems.size === allCheckboxes.length && allCheckboxes.length > 0;
+            
+            updateDeleteButton();
+        };
+
+        // 삭제 버튼 업데이트
+        function updateDeleteButton() {
+            const deleteBtn = document.getElementById('btnBulkDelete');
+            const deleteCount = document.getElementById('deleteCount');
+            
+            if (selectedItems.size > 0) {
+                deleteCount.textContent = `(${selectedItems.size})`;
+            } else {
+                deleteCount.textContent = '';
+            }
+        }
+
+        // 권한 체크 및 UI 업데이트
+        window.checkPermissions = function() {
+            const exportBtn = document.getElementById('btnExportExcel');
+            const bulkDeleteBtn = document.getElementById('btnBulkDelete');
+            const deleteAllBtn = document.getElementById('btnDeleteAll');
             const noPermissionMsg = document.getElementById('noPermissionMsg');
             
             if (isAdmin) {
-                btnExportExcel.classList.remove('admin-required');
-                btnExportExcel.disabled = false;
-                
-                // 전체 삭제 버튼 표시
-                if (btnDeleteAll) {
-                    btnDeleteAll.style.display = 'inline-flex';
-                }
-                
+                exportBtn.style.display = 'inline-flex';
+                bulkDeleteBtn.style.display = 'inline-flex';
+                deleteAllBtn.style.display = 'inline-flex';
                 noPermissionMsg.style.display = 'none';
+                document.querySelectorAll('.action-button').forEach(btn => {
+                    btn.style.display = 'inline-block';
+                });
+                // 체크박스 열 표시
+                document.querySelector('th:first-child').style.display = 'table-cell';
+                document.querySelectorAll('td:first-child').forEach(td => {
+                    td.style.display = 'table-cell';
+                });
             } else {
-                btnExportExcel.classList.add('admin-required');
-                btnExportExcel.disabled = true;
-                
-                if (btnDeleteAll) {
-                    btnDeleteAll.style.display = 'none';
-                }
+                exportBtn.style.display = 'none';
+                bulkDeleteBtn.style.display = 'none';
+                deleteAllBtn.style.display = 'none';
+                noPermissionMsg.style.display = 'flex';
+                document.querySelectorAll('.action-button').forEach(btn => {
+                    btn.style.display = 'none';
+                });
+                // 체크박스 열 숨기기
+                document.querySelector('th:first-child').style.display = 'none';
+                document.querySelectorAll('td:first-child').forEach(td => {
+                    td.style.display = 'none';
+                });
             }
-            
-            // 테이블 업데이트
-            window.loadData();
         };
-        
-        // 관리자 로그인 화면 표시
-        window.showAdminLogin = function() {
-            currentAuthAction = 'login';
-            currentAuthData = null;
-            document.getElementById('authModal').style.display = 'flex';
-            document.getElementById('authName').focus();
+
+        // 데이터 로드
+        window.loadData = async function() {
+            try {
+                let query = supabase
+                    .from('cancellations')
+                    .select('*')
+                    .eq('team', currentTeam)
+                    .order('created_at', { ascending: false });
+
+                const filterDate = document.getElementById('filterDate').value;
+                if (filterDate) {
+                    const startDate = new Date(filterDate);
+                    startDate.setHours(0, 0, 0, 0);
+                    const endDate = new Date(filterDate);
+                    endDate.setHours(23, 59, 59, 999);
+
+                    query = query
+                        .gte('created_at', startDate.toISOString())
+                        .lte('created_at', endDate.toISOString());
+                }
+
+                const { data, error } = await query;
+
+                if (error) throw error;
+
+                allData = data || [];
+                displayData(allData);
+                window.checkPermissions();
+
+            } catch (error) {
+                console.error('데이터 로드 실패:', error);
+                window.showToast('데이터를 불러오는데 실패했습니다.', 'error');
+            }
         };
-        
-        // 엑셀 다운로드 처리
+
+        // 데이터 표시
+        function displayData(data) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="13" style="text-align: center; padding: 2rem;">데이터가 없습니다.</td></tr>';
+                return;
+            }
+
+            data.forEach(item => {
+                const date = new Date(item.created_at);
+                const dateStr = date.toLocaleDateString('ko-KR');
+                const timeStr = date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+                
+                const statusClass = item.status === 'approved' ? 'status-approved' : 
+                                  item.status === 'rejected' ? 'status-rejected' : 'status-pending';
+                const statusText = item.status === 'approved' ? '승인' : 
+                                 item.status === 'rejected' ? '거절' : '대기';
+
+                // 팀 이름을 간소화
+                const shortTeamName = window.getShortTeamName(item.team);
+
+                // CRM 입력 메시지 처리
+                const crmText = item.crm_input || '-';
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="checkbox-cell">
+                        <input type="checkbox" class="item-checkbox" data-id="${item.id}" onchange="window.toggleItemSelection(${item.id})">
+                    </td>
+                    <td>${dateStr}</td>
+                    <td>${shortTeamName}</td>
+                    <td>${timeStr}</td>
+                    <td>${item.recruiter}</td>
+                    <td>${item.canceller}</td>
+                    <td>${item.customer_name}</td>
+                    <td>${item.customer_phone}</td>
+                    <td>${item.category || '-'}</td>
+                    <td title="${crmText.replace(/"/g, '&quot;')}">${crmText.replace(/\n/g, ' ')}</td>
+                    <td>${item.additional_info || '-'}</td>
+                    <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                    <td>
+                        <button class="action-button detail-btn" onclick="window.showDetail(${item.id})">상세</button>
+                        <button class="action-button approve-btn" onclick="window.handleApprove(${item.id})">승인</button>
+                        <button class="action-button reject-btn" onclick="window.handleReject(${item.id})">거절</button>
+                        <button class="action-button delete-btn" onclick="window.handleSingleDelete(${item.id})">삭제</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            // 선택 상태 초기화
+            selectedItems.clear();
+            document.getElementById('selectAll').checked = false;
+            updateDeleteButton();
+        }
+
+        // 상세 정보 표시
+        window.showDetail = function(id) {
+            const item = allData.find(d => d.id === id);
+            if (!item) return;
+
+            const date = new Date(item.created_at);
+            const content = `
+                <div class="modal-field">
+                    <label>작성일시</label>
+                    <p>${date.toLocaleString('ko-KR')}</p>
+                </div>
+                <div class="modal-field">
+                    <label>팀</label>
+                    <p>${item.team}</p>
+                </div>
+                <div class="modal-field">
+                    <label>모집자</label>
+                    <p>${item.recruiter}</p>
+                </div>
+                <div class="modal-field">
+                    <label>취소자</label>
+                    <p>${item.canceller}</p>
+                </div>
+                <div class="modal-field">
+                    <label>고객명</label>
+                    <p>${item.customer_name}</p>
+                </div>
+                <div class="modal-field">
+                    <label>연락처</label>
+                    <p>${item.customer_phone}</p>
+                </div>
+                <div class="modal-field">
+                    <label>구분</label>
+                    <p>${item.category || '-'}</p>
+                </div>
+                <div class="modal-field">
+                    <label>CRM 입력 메시지</label>
+                    <p style="white-space: pre-wrap;">${item.crm_input || '-'}</p>
+                </div>
+                <div class="modal-field">
+                    <label>추가 정보</label>
+                    <p>${item.additional_info || '-'}</p>
+                </div>
+                <div class="modal-field">
+                    <label>상태</label>
+                    <p>${item.status === 'approved' ? '승인' : item.status === 'rejected' ? '거절' : '대기'}</p>
+                </div>
+                ${item.approved_by ? `
+                <div class="modal-field">
+                    <label>승인자</label>
+                    <p>${item.approved_by} (${new Date(item.approved_at).toLocaleString('ko-KR')})</p>
+                </div>
+                ` : ''}
+                ${item.rejected_by ? `
+                <div class="modal-field">
+                    <label>거절자</label>
+                    <p>${item.rejected_by} (${new Date(item.rejected_at).toLocaleString('ko-KR')})</p>
+                </div>
+                ` : ''}
+            `;
+
+            document.getElementById('detailContent').innerHTML = content;
+            document.getElementById('detailModal').style.display = 'block';
+        };
+
+        // 엑셀 다운로드
         window.handleExportExcel = function() {
             if (!isAdmin) {
-                window.showToast('관리자 권한이 필요합니다. 관리자로 로그인해주세요.', 'error');
-                document.getElementById('noPermissionMsg').style.display = 'block';
-                setTimeout(() => {
-                    document.getElementById('noPermissionMsg').style.display = 'none';
-                }, 3000);
-                return;
-            }
-            window.exportToExcel();
-        };
-        
-
-        // 팀 선택 화면 표시
-        window.showTeamSelection = function() {
-            document.getElementById('teamSelection').style.display = 'flex';
-            document.querySelector('.container').style.display = 'none';
-            
-            // 저장된 이름이 있으면 표시
-            const savedName = localStorage.getItem('lastUserName') || '';
-            document.getElementById('teamSelectionNameInput').value = savedName;
-            
-            // 이름 입력 필드에 포커스
-            setTimeout(() => {
-                document.getElementById('teamSelectionNameInput').focus();
-            }, 100);
-            
-            // 리얼타임 구독 해제
-            if (realtimeChannel) {
-                supabase.removeChannel(realtimeChannel);
-                realtimeChannel = null;
-            }
-        }
-        
-        // 이름과 함께 팀 선택
-        window.selectTeamWithName = function(teamName) {
-            const nameInput = document.getElementById('teamSelectionNameInput');
-            const name = nameInput.value.trim();
-            
-            if (!name) {
-                window.showToast('이름을 먼저 입력해주세요', 'error');
-                nameInput.focus();
-                return;
-            }
-            
-            // 팀과 이름 저장
-            currentTeam = teamName;
-            currentUserName = name;
-            localStorage.setItem('selectedTeam', teamName);
-            localStorage.setItem(`userName_${teamName}`, name);
-            localStorage.setItem('lastUserName', name);
-            
-            // UI 업데이트
-            document.getElementById('currentTeam').textContent = teamName;
-            document.getElementById('teamIcon').textContent = teamIcons[teamName] || '✨';
-            document.getElementById('userName').textContent = name;
-            document.getElementById('canceller').value = name;
-            
-            // 팀 선택 화면 숨기고 메인 화면 표시
-            document.getElementById('teamSelection').style.display = 'none';
-            window.showToast(`${teamName} - ${name}님 환영합니다!`, 'success');
-            window.showMainContainer();
-        }
-        
-        // 메인 화면 표시
-        window.showMainContainer = function() {
-            document.getElementById('teamSelection').style.display = 'none';
-            document.querySelector('.container').style.display = 'block';
-            
-            // Supabase 초기화 및 데이터 로드
-            if (!supabase) {
-                initializeSupabase();
-            } else {
-                setupRealtimeSubscription();
-                window.loadData();
-            }
-            
-            // 관리자 정보 로드
-            loadAdminInfo();
-        }
-        
-        // 이름 변경
-        window.changeUserName = function() {
-            const newName = prompt('새로운 이름을 입력하세요:', currentUserName);
-            
-            if (newName && newName.trim()) {
-                currentUserName = newName.trim();
-                localStorage.setItem(`userName_${currentTeam}`, currentUserName);
-                localStorage.setItem('lastUserName', currentUserName);
-                
-                document.getElementById('userName').textContent = currentUserName;
-                document.getElementById('canceller').value = currentUserName;
-                
-                window.showToast('이름이 변경되었습니다!', 'success');
-            }
-        }
-        
-        // 상태 업데이트 함수
-        window.updateStatus = async function(id, newStatus, adminName) {
-            if (!supabase) {
-                window.showToast('데이터베이스가 연결되지 않았습니다.', 'error');
-                return;
-            }
-            
-            if (!isAdmin) {
                 window.showToast('관리자 권한이 필요합니다.', 'error');
                 return;
             }
-            
-            try {
-                const updateData = {
-                    status: newStatus,
-                    approved_by: adminName,
-                    approved_at: new Date().toISOString()
-                };
-                
-                const { data, error } = await supabase
-                    .from('cancellations')
-                    .update(updateData)
-                    .eq('id', id)
-                    .select();
-                
-                if (error) throw error;
-                
-                const statusText = newStatus === 'approved' ? '승인됨' : 
-                                  newStatus === 'rejected' ? '거절됨' : '확인필요';
-                window.showToast(`상태가 ${statusText}로 변경되었습니다 (처리자: ${adminName})`, 'success');
-                
-                if (window.loadData) {
-                    window.loadData();
-                }
-                
-            } catch (error) {
-                window.showToast('상태 변경 실패: ' + error.message, 'error');
-            }
-        };
-        
-        // 개별 삭제 처리
-        window.handleSingleDelete = function(id) {
-            if (!isAdmin) {
-                window.showToast('관리자 권한이 필요합니다.', 'error');
-                return;
-            }
-            
-            const confirmMsg = '정말로 이 기록을 삭제하시겠습니까?\n\n⚠️ 경고: 삭제된 데이터는 복구할 수 없습니다!';
-            
-            if (confirm(confirmMsg)) {
-                window.openAuthModal('delete', id);
-            }
-        };
-        
-        // 삭제 함수 (관리자 인증 후 실행)
-        window.deleteRecord = async function(id, adminName) {
-            if (!supabase) {
-                window.showToast('데이터베이스가 연결되지 않았습니다.', 'error');
-                return;
-            }
-            
-            if (!isAdmin) {
-                window.showToast('관리자 권한이 필요합니다.', 'error');
-                return;
-            }
-            
-            try {
-                const { data, error } = await supabase
-                    .from('cancellations')
-                    .delete()
-                    .eq('id', id)
-                    .select();
-                
-                if (error) throw error;
-                
-                window.showToast(`기록이 삭제되었습니다 (삭제자: ${adminName})`, 'success');
-                
-                if (window.loadData) {
-                    window.loadData();
-                }
-                
-            } catch (error) {
-                window.showToast('삭제 실패: ' + error.message, 'error');
-            }
-        };
-        
-        // handleAuthSuccess 함수
-        window.handleAuthSuccess = function(adminName) {
-            const authModal = document.getElementById('authModal');
-            if (authModal) {
-                authModal.style.display = 'none';
-                document.getElementById('authForm').reset();
-            }
-            
-            if (currentAuthAction === 'login') {
-                // 로그인 성공
-                isAdmin = true;
-                document.getElementById('adminInfo').style.display = 'flex';
-                document.getElementById('adminName').textContent = adminName;
-                document.getElementById('btnAdminLogin').style.display = 'none';
-                window.showToast(`관리자 로그인 성공! (${adminName})`, 'success');
-                window.updateAdminUI();
-            } else if (currentAuthAction === 'approve') {
-                window.updateStatus(currentAuthData, 'approved', adminName);
-            } else if (currentAuthAction === 'reject') {
-                window.updateStatus(currentAuthData, 'rejected', adminName);
-            } else if (currentAuthAction === 'pending') {
-                window.updateStatus(currentAuthData, 'pending', adminName);
-            } else if (currentAuthAction === 'delete') {
-                window.deleteRecord(currentAuthData, adminName);
-            }
-            
-            currentAuthAction = null;
-            currentAuthData = null;
-        };
-        
-        // openAuthModal 함수
-        window.openAuthModal = function(action, data) {
-            currentAuthAction = action;
-            currentAuthData = data;
-            
-            const savedAdmin = localStorage.getItem('adminName');
-            const savedPassword = localStorage.getItem('adminPassword');
-            
-            if (savedAdmin && savedPassword === ADMIN_PASSWORD) {
-                setTimeout(() => {
-                    window.handleAuthSuccess(savedAdmin);
-                }, 100);
-            } else {
-                document.getElementById('authModal').style.display = 'flex';
-                const authNameInput = document.getElementById('authName');
-                if (authNameInput) {
-                    authNameInput.focus();
-                }
-            }
-        };
-        
-        // 도우미 함수들
-        window.generateCRMText = function(data) {
-            let text = `${data.customer_phone} / ${data.customer_name}
 
-※ 고객취소 양식
+            if (allData.length === 0) {
+                window.showToast('다운로드할 데이터가 없습니다.', 'error');
+                return;
+            }
 
-ㅇ 사유 : ${data.reason}`;
-            
-            if (data.defense1) {
-                text += `
-ㅇ 1차반론 / 수긍여부 : ${data.defense1} / ${data.defense1_result || '없음'}`;
-            }
-            
-            if (data.defense2) {
-                text += `
-ㅇ 2차반론 / 수긍여부 : ${data.defense2} / ${data.defense2_result || '없음'}`;
-            }
-            
-            return text;
-        };
-        
-        window.generateFullText = function(data) {
-            let text = `${data.customer_name} / 관리번호: ${data.customer_phone}
-ㅁ취소사유: ${data.reason}`;
-            
-            if (data.defense1) {
-                text += `
-1차반론: ${data.defense1} / 결과: ${data.defense1_result || '없음'}`;
-            }
-            
-            if (data.defense2) {
-                text += `
-2차반론: ${data.defense2} / 결과: ${data.defense2_result || '없음'}`;
-            }
-            
-            return text;
-        };
-        
-        window.formatDate = function(dateStr) {
-            const date = new Date(dateStr);
-            const month = (date.getMonth() + 1).toString().padStart(2, '0');
-            const day = date.getDate().toString().padStart(2, '0');
-            return `${month}/${day}`;
-        };
-        
-        window.updateCRMPreview = function(data) {
-            const preview = document.getElementById('crmPreview');
-            
-            if (!data) {
-                preview.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-icon">📭</div>
-                        <p>양식을 입력하면 CRM 형식이 여기에 표시됩니다</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            const crmText = window.generateCRMText(data);
-            preview.innerHTML = `<pre>${crmText}</pre>`;
-        };
-        
-        // 팀 이름 간소화 함수
-        window.getShortTeamName = function(teamName) {
-            if (teamName === '의정부 SNS팀') return '의정부';
-            if (teamName && teamName.includes('SNS')) {
-                // SNS 1팀 -> 1팀 형식으로 표시
-                return teamName.replace('SNS ', '');
-            }
-            return teamName || '-';
-        };
-        
-        window.updateTable = function(data) {
-            const tbody = document.getElementById('tableBody');
-            
-            if (!data || data.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="12" style="text-align: center; padding: 40px; color: var(--text-muted);">
-                            등록된 취소 양식이 없습니다
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-            
-            tbody.innerHTML = data.map((item, index) => {
-                const crmText = window.generateCRMText(item);
-                let statusDisplay = item.status;
-                let statusClass = 'pending';
-                
-                if (item.status === 'pending') {
-                    statusDisplay = '확인필요';
-                    statusClass = 'pending';
-                } else if (item.status === 'approved') {
-                    statusDisplay = '승인됨';
-                    statusClass = 'approved';
-                } else if (item.status === 'rejected') {
-                    statusDisplay = '거절됨';
-                    statusClass = 'rejected';
-                }
-                
-                // 관리자 권한에 따른 버튼 표시
-                const actionButtons = isAdmin ? `
-                    <div class="action-buttons">
-                        <button class="btn btn-primary" onclick="window.viewDetail(${item.id})">
-                            상세
-                        </button>
-                        ${item.status === 'pending' ? `
-                            <button class="btn btn-secondary" onclick="window.openAuthModal('approve', ${item.id})">
-                                승인
-                            </button>
-                            <button class="btn btn-danger" onclick="window.openAuthModal('reject', ${item.id})">
-                                거절
-                            </button>
-                        ` : `
-                            <button class="btn btn-warning" onclick="window.openAuthModal('pending', ${item.id})">
-                                재검토
-                            </button>
-                        `}
-                        <button class="btn btn-delete" onclick="window.handleSingleDelete(${item.id})" title="삭제">
-                            🗑️
-                        </button>
-                    </div>
-                ` : `
-                    <div class="action-buttons">
-                        <button class="btn btn-primary" onclick="window.viewDetail(${item.id})">
-                            상세
-                        </button>
-                    </div>
-                `;
-                
-                // 팀 이름 간소화
-                const shortTeamName = window.getShortTeamName(item.submitter_team);
-                
-                return `
-                    <tr data-id="${item.id}">
-                        <td title="${item.submitter_team || '-'}">${shortTeamName}</td>
-                        <td>${index + 1}</td>
-                        <td>${window.formatDate(item.date)}</td>
-                        <td>${item.recruiter}</td>
-                        <td>${item.canceller}</td>
-                        <td>${item.customer_name}</td>
-                        <td>${item.customer_phone}</td>
-                        <td>${item.category || '-'}</td>
-                        <td title="${crmText.replace(/"/g, '&quot;')}" style="cursor: help;">
-                            ${item.reason.length > 30 ? item.reason.substring(0, 30) + '...' : item.reason}
-                        </td>
-                        <td>
-                            <span class="status-badge status-${statusClass}">
-                                ${statusDisplay}
-                            </span>
-                        </td>
-                        <td>${item.approved_by || '-'}</td>
-                        <td>${actionButtons}</td>
-                    </tr>
-                `;
-            }).join('');
-        };
-        
-        window.updateStatistics = function(data) {
-            const today = new Date().toDateString();
-            
-            const stats = {
-                total: data.length,
-                pending: data.filter(item => item.status === 'pending').length,
-                approved: data.filter(item => item.status === 'approved').length,
-                rejected: data.filter(item => item.status === 'rejected').length,
-                today: data.filter(item => new Date(item.created_at).toDateString() === today).length
-            };
-            
-            document.getElementById('statTotal').textContent = stats.total;
-            document.getElementById('statPending').textContent = stats.pending;
-            document.getElementById('statApproved').textContent = stats.approved;
-            document.getElementById('statRejected').textContent = stats.rejected;
-            document.getElementById('statToday').textContent = stats.today;
-        };
-        
-        // 초기화 함수들
-        function loadAdminInfo() {
-            const savedAdmin = localStorage.getItem('adminName');
-            const savedPassword = localStorage.getItem('adminPassword');
-            
-            if (savedAdmin && savedPassword === ADMIN_PASSWORD) {
-                isAdmin = true;
-                document.getElementById('adminInfo').style.display = 'flex';
-                document.getElementById('adminName').textContent = savedAdmin;
-                document.getElementById('btnAdminLogin').style.display = 'none';
-                window.updateAdminUI();
-            } else {
-                isAdmin = false;
-                document.getElementById('adminInfo').style.display = 'none';
-                document.getElementById('btnAdminLogin').style.display = 'flex';
-                window.updateAdminUI();
-            }
-        }
-        
-        async function initializeSupabase() {
             try {
-                document.getElementById('statusDot').className = 'status-dot connecting';
-                document.getElementById('statusText').textContent = '연결 중...';
-                
-                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-                
-                const { data, error } = await supabase
-                    .from('cancellations')
-                    .select('count')
-                    .limit(1);
-                
-                if (error) throw error;
-                
-                document.getElementById('statusDot').className = 'status-dot connected';
-                document.getElementById('statusText').textContent = '연결됨';
-                
-                window.showToast('데이터베이스 연결 성공!', 'success');
-                
-                setupRealtimeSubscription();
-                window.loadData();
-                
-            } catch (error) {
-                console.error('Connection error:', error);
-                document.getElementById('statusDot').className = 'status-dot disconnected';
-                document.getElementById('statusText').textContent = '연결 실패';
-                window.showToast('연결 실패: ' + error.message, 'error');
-            }
-        }
-        
-        function setupRealtimeSubscription() {
-            if (realtimeChannel) {
-                supabase.removeChannel(realtimeChannel);
-            }
-            
-            realtimeChannel = supabase
-                .channel('cancellations-changes')
-                .on('postgres_changes', 
-                    { event: '*', schema: 'public', table: 'cancellations' },
-                    (payload) => {
-                        console.log('Change received!', payload);
-                        window.loadData();
-                        window.showToast('데이터가 업데이트되었습니다.', 'info');
-                    }
-                )
-                .subscribe();
-        }
-        
-        function showConfirmModal() {
-            const modal = document.getElementById('confirmModal');
-            const crmPreview = document.getElementById('confirmCRMPreview');
-            
-            const crmText = window.generateCRMText(pendingFormData);
-            crmPreview.innerHTML = `<pre>${crmText}</pre>`;
-            
-            modal.style.display = 'flex';
-            
-            setTimeout(() => {
-                const preElement = crmPreview.querySelector('pre');
-                if (preElement && window.getSelection) {
-                    const selection = window.getSelection();
-                    const range = document.createRange();
-                    range.selectNodeContents(preElement);
-                    selection.removeAllRanges();
-                    selection.addRange(range);
-                }
-            }, 100);
-        }
-        
-        function checkPhoneNumberFormat(value) {
-            // 전화번호 패턴 검사
-            const phonePatterns = [
-                /^01[0-9]/,           // 010, 011, 016, 017, 018, 019 등
-                /^02/,                // 서울 지역번호
-                /^0[3-6][0-9]/,       // 기타 지역번호
-                /^\d{3,4}-\d{3,4}-\d{4}$/,  // 하이픈이 있는 전화번호
-                /^\d{9,11}$/          // 연속된 숫자 9-11자리 (전화번호일 가능성)
-            ];
-            
-            // 숫자와 하이픈만 있는지 확인
-            const onlyNumbersAndHyphens = /^[\d-]+$/.test(value);
-            
-            // 전화번호 패턴과 일치하는지 확인
-            if (onlyNumbersAndHyphens) {
-                for (let pattern of phonePatterns) {
-                    if (pattern.test(value.replace(/-/g, ''))) {
-                        return true; // 전화번호 형식임
-                    }
-                }
-            }
-            
-            return false; // 전화번호 형식이 아님
-        }
-        
-        function formatManagementNumber(value) {
-            // 관리번호는 특별한 포맷팅 없이 그대로 반환
-            // 공백 제거
-            return value.trim();
-        }
-        
-        function updatePreviewFromForm() {
-            const data = {
-                customer_phone: document.getElementById('customerPhone').value,
-                customer_name: document.getElementById('customerName').value,
-                reason: document.getElementById('reason').value,
-                defense1: document.getElementById('defense1').value || null,
-                defense1_result: document.getElementById('defense1Result').value || null,
-                defense2: document.getElementById('defense2').value || null,
-                defense2_result: document.getElementById('defense2Result').value || null
-            };
-            
-            if (data.customer_phone || data.customer_name) {
-                window.updateCRMPreview(data);
-            }
-        }
-        
-        // 전역 함수들
-        window.closeModal = function() {
-            document.getElementById('detailModal').style.display = 'none';
-        };
-        
-        window.closeAuthModal = function() {
-            document.getElementById('authModal').style.display = 'none';
-            document.getElementById('authForm').reset();
-            currentAuthAction = null;
-            currentAuthData = null;
-        };
-        
-        window.closeConfirmModal = function() {
-            document.getElementById('confirmModal').style.display = 'none';
-            pendingFormData = null;
-        };
-        
-        window.resetForm = function() {
-            document.getElementById('cancellationForm').reset();
-            document.getElementById('date').valueAsDate = new Date();
-            
-            if (currentUserName) {
-                document.getElementById('canceller').value = currentUserName;
-            }
-            
-            window.updateCRMPreview(null);
-        };
-        
-        window.copyCRMPreview = function() {
-            const preview = document.getElementById('crmPreview');
-            const text = preview.innerText;
-            
-            if (text.includes('양식을 입력하면')) {
-                window.showToast('복사할 내용이 없습니다.', 'error');
-                return;
-            }
-            
-            window.copyToClipboard(text);
-        };
-        
-        window.copyCRMFromModal = function() {
-            const crmPreview = document.getElementById('confirmCRMPreview');
-            const text = crmPreview.innerText;
-            window.copyToClipboard(text);
-            
-            const copyBtn = event.target.closest('.btn');
-            const originalHTML = copyBtn.innerHTML;
-            copyBtn.innerHTML = '<span>✅</span><span>복사 완료!</span>';
-            copyBtn.disabled = true;
-            
-            setTimeout(() => {
-                copyBtn.innerHTML = originalHTML;
-                copyBtn.disabled = false;
-            }, 2000);
-        };
-        
-        window.confirmSubmit = async function() {
-            if (!pendingFormData) return;
-            
-            try {
-                const { data, error } = await supabase
-                    .from('cancellations')
-                    .insert([pendingFormData])
-                    .select();
-                
-                if (error) throw error;
-                
-                window.closeConfirmModal();
-                window.showToast('취소 양식이 제출되었습니다!', 'success');
-                window.resetForm();
-                window.updateCRMPreview(null);
-                
-            } catch (error) {
-                console.error('Submit error:', error);
-                window.showToast('제출 실패: ' + error.message, 'error');
-            }
-        };
-        
-        window.loadData = async function() {
-            if (!supabase) return;
-            
-            try {
-                let query = supabase
-                    .from('cancellations')
-                    .select('*')
-                    .order('created_at', { ascending: false });
-                
-                // 팀 필터 적용
-                if (currentTeam) {
-                    query = query.eq('submitter_team', currentTeam);
-                }
-                
-                const dateFilter = document.getElementById('filterDate').value;
-                if (dateFilter) {
-                    query = query.eq('date', dateFilter);
-                }
-                
-                const { data, error } = await query;
-                
-                if (error) throw error;
-                
-                allData = data || [];
-                
-                window.updateTable(data);
-                window.updateStatistics(data);
-                
-            } catch (error) {
-                console.error('Load error:', error);
-                window.showToast('데이터 로드 실패: ' + error.message, 'error');
-            }
-        };
-        
-        window.exportToExcel = async function() {
-            if (!supabase) {
-                window.showToast('데이터베이스가 연결되지 않았습니다.', 'error');
-                return;
-            }
-            
-            if (!isAdmin) {
-                window.showToast('관리자 권한이 필요합니다.', 'error');
-                return;
-            }
-            
-            try {
-                let query = supabase
-                    .from('cancellations')
-                    .select('*')
-                    .order('date', { ascending: false });
-                
-                // 팀 필터 적용
-                if (currentTeam) {
-                    query = query.eq('submitter_team', currentTeam);
-                }
-                
-                const dateFilter = document.getElementById('filterDate').value;
-                if (dateFilter) {
-                    query = query.eq('date', dateFilter);
-                }
-                
-                const { data, error } = await query;
-                
-                if (error) throw error;
-                
-                if (!data || data.length === 0) {
-                    window.showToast('다운로드할 데이터가 없습니다.', 'error');
-                    return;
-                }
-
-                // ExcelJS 워크북 생성
-                const workbook = new ExcelJS.Workbook();
-                const worksheet = workbook.addWorksheet('취소양식');
-
-                // 첫 번째 행 (병합된 제목 행)
-                worksheet.mergeCells('A1:H1');
-                const titleCell = worksheet.getCell('A1');
-                titleCell.value = '';
-                titleCell.font = { size: 14, bold: true };
-                titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
-                worksheet.getRow(1).height = 31.5;
-
-                // 헤더 설정
-                const headers = ['', '날짜', '유치자', '취소자', '고객명', '관리번호', '분류', '취소사유'];
-                const headerRow = worksheet.getRow(2);
-                headerRow.values = headers;
-                headerRow.height = 24.95;
-                
-                // 헤더 스타일 적용
-                headerRow.eachCell((cell, colNumber) => {
-                    cell.font = {
-                        bold: true,
-                        size: 11,
-                        name: '맑은 고딕'
-                    };
-                    cell.alignment = {
-                        vertical: 'middle',
-                        horizontal: 'center'
-                    };
-                    cell.border = {
-                        top: { style: 'thin', color: { argb: 'FF000000' } },
-                        left: { style: 'thin', color: { argb: 'FF000000' } },
-                        bottom: { style: 'thin', color: { argb: 'FF000000' } },
-                        right: { style: 'thin', color: { argb: 'FF000000' } }
+                const excelData = allData.map(item => {
+                    const date = new Date(item.created_at);
+                    return {
+                        '작성일': date.toLocaleDateString('ko-KR'),
+                        '작성시간': date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }),
+                        '팀': item.team,
+                        '모집자': item.recruiter,
+                        '취소자': item.canceller,
+                        '고객명': item.customer_name,
+                        '연락처': item.customer_phone,
+                        '구분': item.category || '',
+                        'CRM 입력 메시지': item.crm_input || '',
+                        '추가 정보': item.additional_info || '',
+                        '상태': item.status === 'approved' ? '승인' : item.status === 'rejected' ? '거절' : '대기',
+                        '승인자': item.approved_by || '',
+                        '승인일시': item.approved_at ? new Date(item.approved_at).toLocaleString('ko-KR') : '',
+                        '거절자': item.rejected_by || '',
+                        '거절일시': item.rejected_at ? new Date(item.rejected_at).toLocaleString('ko-KR') : ''
                     };
                 });
 
-                // 데이터 추가 (원본 날짜 형식 사용)
-                data.forEach((item, index) => {
-                    // 취소사유 텍스트 구성
-                    let cancelReason = `${item.customer_name} / 관리번호: ${item.customer_phone}
-ㅁ취소사유: ${item.reason}`;
-                    
-                    if (item.defense1) {
-                        cancelReason += `
-1차반론: ${item.defense1} / 결과: ${item.defense1_result || '없음'}`;
-                    }
-                    
-                    if (item.defense2) {
-                        cancelReason += `
-2차반론: ${item.defense2} / 결과: ${item.defense2_result || '없음'}`;
-                    }
-                    
-                    // 엑셀용 날짜 형식 (년.월.일.)
-                    const date = new Date(item.date);
-                    const year = date.getFullYear().toString().slice(-2);
-                    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-                    const day = date.getDate().toString().padStart(2, '0');
-                    const excelDateFormat = `${year}.${month}.${day}.`;
-                    
-                    const rowData = [
-                        index + 1,
-                        excelDateFormat,
-                        item.recruiter,
-                        item.canceller,
-                        item.customer_name,
-                        item.customer_phone,
-                        item.category || '',
-                        cancelReason
-                    ];
-                    
-                    const row = worksheet.addRow(rowData);
-                    row.height = 45;
-                    
-                    // 데이터 행 스타일 적용
-                    row.eachCell((cell, colNumber) => {
-                        cell.font = {
-                            size: 11,
-                            name: '맑은 고딕'
-                        };
-                        
-                        cell.alignment = {
-                            vertical: 'middle',
-                            horizontal: 'center',
-                            wrapText: colNumber === 8
-                        };
-                        
-                        cell.border = {
-                            top: { style: 'thin', color: { argb: 'FF000000' } },
-                            left: { style: 'thin', color: { argb: 'FF000000' } },
-                            bottom: { style: 'thin', color: { argb: 'FF000000' } },
-                            right: { style: 'thin', color: { argb: 'FF000000' } }
-                        };
-                    });
-                });
+                const ws = XLSX.utils.json_to_sheet(excelData);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, '취소양식');
 
-                // 열 너비 설정
-                worksheet.columns = [
-                    { width: 9 },
-                    { width: 15 },
-                    { width: 13.625 },
-                    { width: 13.625 },
-                    { width: 13.625 },
-                    { width: 15.75 },
-                    { width: 10.625 },
-                    { width: 63.125 }
-                ];
+                const fileName = `취소양식_${currentTeam}_${new Date().toISOString().split('T')[0]}.xlsx`;
+                XLSX.writeFile(wb, fileName);
 
-                // 엑셀 파일 생성 및 다운로드
-                const buffer = await workbook.xlsx.writeBuffer();
-                const blob = new Blob([buffer], { 
-                    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
-                });
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                
-                // 파일명 형식: 취소양식_SNS 2팀_250820.xlsx
-                const today = new Date();
-                const yearShort = today.getFullYear().toString().slice(-2);
-                const month = (today.getMonth() + 1).toString().padStart(2, '0');
-                const day = today.getDate().toString().padStart(2, '0');
-                const dateString = `${yearShort}${month}${day}`;
-                
-                // 팀 이름 처리 (의정부 SNS팀 → 의정부SNS팀)
-                let teamNameForFile = currentTeam;
-                if (currentTeam === '의정부 SNS팀') {
-                    teamNameForFile = '의정부SNS팀';
-                }
-                
-                a.download = `취소양식_${teamNameForFile}_${dateString}.xlsx`;
-                a.click();
-                
-                window.URL.revokeObjectURL(url);
-                window.showToast('엑셀 파일이 다운로드되었습니다!', 'success');
-                
+                const adminName = localStorage.getItem('adminName') || '관리자';
+                window.showToast(`엑셀 다운로드 완료 (다운로드: ${adminName})`, 'success');
+
             } catch (error) {
-                console.error('Export error:', error);
                 window.showToast('엑셀 다운로드 실패: ' + error.message, 'error');
             }
         };
-        
-        window.viewDetail = async function(id) {
-            if (!supabase) return;
-            
-            try {
-                const { data, error } = await supabase
-                    .from('cancellations')
-                    .select('*')
-                    .eq('id', id)
-                    .single();
-                
-                if (error) throw error;
-                
-                const modal = document.getElementById('detailModal');
-                const modalBody = document.getElementById('modalBody');
-                
-                const crmText = window.generateCRMText(data);
-                const fullText = window.generateFullText(data);
-                
-                let statusDisplay = '확인필요';
-                if (data.status === 'approved') statusDisplay = '승인됨';
-                else if (data.status === 'rejected') statusDisplay = '거절됨';
-                
-                // 관리자 권한에 따른 버튼 표시
-                const actionButtons = isAdmin ? `
-                    <div class="btn-group">
-                        <button class="btn btn-primary" onclick="window.copyToClipboard(\`${crmText.replace(/`/g, '\\`')}\`)">
-                            CRM 양식 복사
-                        </button>
-                        ${data.status === 'pending' ? `
-                            <button class="btn btn-secondary" onclick="window.closeModal(); window.openAuthModal('approve', ${data.id})">
-                                승인하기
-                            </button>
-                            <button class="btn btn-danger" onclick="window.closeModal(); window.openAuthModal('reject', ${data.id})">
-                                거절하기
-                            </button>
-                        ` : `
-                            <button class="btn btn-warning" onclick="window.closeModal(); window.openAuthModal('pending', ${data.id})">
-                                재검토하기
-                            </button>
-                        `}
-                    </div>
-                ` : `
-                    <div class="btn-group">
-                        <button class="btn btn-primary" onclick="window.copyToClipboard(\`${crmText.replace(/`/g, '\\`')}\`)">
-                            CRM 양식 복사
-                        </button>
-                    </div>
-                `;
-                
-                modalBody.innerHTML = `
-                    <div class="info-box">
-                        <p><strong>상태:</strong> ${statusDisplay}</p>
-                        ${data.approved_by ? `<p><strong>처리자:</strong> ${data.approved_by}</p>` : ''}
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>기본 정보</label>
-                        <div style="background: var(--bg-hover); padding: 15px; border-radius: 8px;">
-                            <p><strong>날짜:</strong> ${new Date(data.date).getFullYear()}.${(new Date(data.date).getMonth() + 1).toString().padStart(2, '0')}.${new Date(data.date).getDate().toString().padStart(2, '0')}</p>
-                            <p><strong>팀:</strong> ${data.submitter_team}</p>
-                            <p><strong>유치자:</strong> ${data.recruiter}</p>
-                            <p><strong>취소자:</strong> ${data.canceller}</p>
-                            <p><strong>고객명:</strong> ${data.customer_name}</p>
-                            <p><strong>관리번호:</strong> ${data.customer_phone}</p>
-                            <p><strong>분류:</strong> ${data.category || '-'}</p>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>CRM 입력 양식</label>
-                        <div class="crm-output">
-                            <pre>${crmText}</pre>
-                        </div>
-                    </div>
-                    
-                    ${actionButtons}
-                `;
-                
-                modal.style.display = 'flex';
-                
-            } catch (error) {
-                console.error('Detail error:', error);
-                window.showToast('상세 정보 로드 실패: ' + error.message, 'error');
-            }
+
+        // 토스트 메시지
+        window.showToast = function(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <span>${type === 'success' ? '✓' : type === 'error' ? '✗' : 'ℹ'}</span>
+                <span>${message}</span>
+            `;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.animation = 'slideOutRight 0.3s';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
         };
-        
-        window.copyToClipboard = function(text) {
-            const textarea = document.createElement('textarea');
-            textarea.value = text;
-            document.body.appendChild(textarea);
-            textarea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textarea);
-            window.showToast('클립보드에 복사되었습니다!', 'success');
-        };
-        
-        window.logoutAdmin = function() {
-            if (confirm('관리자 권한을 로그아웃하시겠습니까?')) {
-                localStorage.removeItem('adminName');
-                localStorage.removeItem('adminPassword');
-                isAdmin = false;
-                document.getElementById('adminInfo').style.display = 'none';
-                document.getElementById('btnAdminLogin').style.display = 'flex';
-                document.getElementById('adminName').textContent = '-';
-                window.showToast('관리자 로그아웃되었습니다.', 'info');
-                window.updateAdminUI();
-            }
-        };
-        
-        // 초기화
+
+        // 페이지 로드 시 초기화
         window.onload = function() {
-            // 저장된 팀과 이름 확인
-            const savedTeam = localStorage.getItem('selectedTeam');
-            
-            if (savedTeam) {
+            const savedUserName = localStorage.getItem('userName');
+            const savedTeam = localStorage.getItem('userTeam');
+
+            if (savedUserName && savedTeam) {
+                currentUser = savedUserName;
                 currentTeam = savedTeam;
-                currentUserName = localStorage.getItem(`userName_${savedTeam}`) || '';
-                
-                if (currentUserName) {
-                    // 팀과 이름이 모두 있으면 바로 메인 화면
-                    document.getElementById('currentTeam').textContent = savedTeam;
-                    document.getElementById('teamIcon').textContent = teamIcons[savedTeam] || '✨';
-                    document.getElementById('userName').textContent = currentUserName;
-                    document.getElementById('canceller').value = currentUserName;
-                    document.querySelector('.container').style.display = 'block';
-                    initializeSupabase();
-                    loadAdminInfo();
-                } else {
-                    // 팀은 있지만 이름이 없으면 팀 선택 화면부터
-                    window.showTeamSelection();
-                }
-            } else {
-                // 처음 사용하는 경우 팀 선택 화면
-                window.showTeamSelection();
+                document.getElementById('userName').value = savedUserName;
+                document.getElementById('teamSelect').value = savedTeam;
+                window.initializeUser();
             }
-            
-            document.getElementById('date').valueAsDate = new Date();
-            
-            // 이름 입력 엔터 처리
-            document.getElementById('teamSelectionNameInput').addEventListener('keypress', function(e) {
+
+            // Enter 키 이벤트 리스너
+            document.getElementById('userName').addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
-                    // 첫 번째 팀 카드 클릭 효과
-                    const firstTeamCard = document.querySelector('.team-card');
-                    if (firstTeamCard) {
-                        firstTeamCard.click();
-                    }
+                    window.initializeUser();
                 }
             });
-            
-            // 관리번호 입력 이벤트
-            document.getElementById('customerPhone').addEventListener('input', function(e) {
-                const value = e.target.value;
-                
-                // 전화번호 형식 검사
-                if (checkPhoneNumberFormat(value)) {
-                    e.target.value = '';
-                    e.target.style.borderColor = 'var(--danger)';
-                    window.showToast('⚠️ 전화번호는 더 이상 사용할 수 없습니다. 관리번호를 입력해주세요.', 'error');
-                    setTimeout(() => {
-                        e.target.style.borderColor = '';
-                    }, 3000);
-                    return;
+
+            document.getElementById('authPassword').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    window.verifyAdmin();
                 }
-                
-                e.target.value = formatManagementNumber(value);
-                updatePreviewFromForm();
             });
-            
-            document.getElementById('customerPhone').addEventListener('paste', function(e) {
-                e.preventDefault();
-                const pastedText = (e.clipboardData || window.clipboardData).getData('text');
-                
-                // 전화번호 형식 검사
-                if (checkPhoneNumberFormat(pastedText)) {
-                    e.target.style.borderColor = 'var(--danger)';
-                    window.showToast('⚠️ 전화번호는 더 이상 사용할 수 없습니다. 관리번호를 입력해주세요.', 'error');
-                    setTimeout(() => {
-                        e.target.style.borderColor = '';
-                    }, 3000);
-                    return;
-                }
-                
-                e.target.value = formatManagementNumber(pastedText);
-                updatePreviewFromForm();
-            });
-            
-            // 입력 시 실시간 미리보기
-            ['customerName', 'reason', 'defense1', 'defense1Result', 'defense2', 'defense2Result'].forEach(id => {
-                document.getElementById(id).addEventListener('input', updatePreviewFromForm);
-            });
-            
-            // 폼 제출 처리
-            document.getElementById('cancellationForm').addEventListener('submit', async function(e) {
-                e.preventDefault();
-                
-                if (!supabase) {
-                    window.showToast('데이터베이스가 연결되지 않았습니다.', 'error');
-                    return;
-                }
-                
-                if (!currentTeam || !currentUserName) {
-                    window.showToast('팀과 이름을 먼저 설정해주세요.', 'error');
-                    window.showTeamSelection();
-                    return;
-                }
-                
-                const managementNumber = document.getElementById('customerPhone').value.trim();
-                
-                // 전화번호 형식 검사
-                if (checkPhoneNumberFormat(managementNumber)) {
-                    window.showToast('⚠️ 전화번호는 사용할 수 없습니다. 관리번호를 입력해주세요.', 'error');
-                    document.getElementById('customerPhone').focus();
-                    document.getElementById('customerPhone').style.borderColor = 'var(--danger)';
-                    setTimeout(() => {
-                        document.getElementById('customerPhone').style.borderColor = '';
-                    }, 3000);
-                    return;
-                }
-                
-                // 관리번호 형식 검사 (최소 5자 이상)
-                if (managementNumber.length < 5) {
-                    window.showToast('관리번호는 최소 5자 이상이어야 합니다.', 'error');
-                    document.getElementById('customerPhone').focus();
-                    return;
-                }
-                
-                pendingFormData = {
-                    date: document.getElementById('date').value,
-                    category: document.getElementById('category').value,
-                    submitter_team: currentTeam,
-                    submitter_name: currentUserName,
-                    recruiter: document.getElementById('recruiter').value,
-                    canceller: document.getElementById('canceller').value,
-                    customer_name: document.getElementById('customerName').value,
-                    customer_phone: managementNumber,
-                    reason: document.getElementById('reason').value,
-                    defense1: document.getElementById('defense1').value || null,
-                    defense1_result: document.getElementById('defense1Result').value || null,
-                    defense2: document.getElementById('defense2').value || null,
-                    defense2_result: document.getElementById('defense2Result').value || null,
-                    status: 'pending'
-                };
-                
-                showConfirmModal();
-            });
-            
-            // 인증 폼 처리
-            document.getElementById('authForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                const name = document.getElementById('authName').value;
-                const password = document.getElementById('authPassword').value;
-                const saveAuth = document.getElementById('saveAuth').checked;
-                
-                if (password !== ADMIN_PASSWORD) {
-                    window.showToast('비밀번호가 올바르지 않습니다.', 'error');
-                    document.getElementById('authPassword').focus();
-                    return;
-                }
-                
-                if (saveAuth) {
-                    localStorage.setItem('adminName', name);
-                    localStorage.setItem('adminPassword', password);
-                }
-                
-                window.handleAuthSuccess(name);
-            });
-            
+
             // 모달 외부 클릭시 닫기
             window.onclick = function(event) {
                 const detailModal = document.getElementById('detailModal');
