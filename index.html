@@ -406,6 +406,13 @@
             margin-bottom: 8px;
             font-size: 1rem;
         }
+        
+        .modal-content label {
+            color: var(--primary-blue);
+            font-size: 1.1rem;
+            margin-bottom: 12px;
+            margin-top: 10px;
+        }
 
         input[type="text"],
         input[type="date"],
@@ -687,9 +694,11 @@
             margin-top: 20px;
             font-family: 'Courier New', monospace;
             white-space: pre-wrap;
+            word-wrap: break-word;
             max-height: 400px;
             overflow-y: auto;
             color: var(--text-secondary);
+            line-height: 1.6;
         }
 
         .empty-state {
@@ -749,6 +758,11 @@
             max-height: 80vh;
             overflow-y: auto;
             border: 1px solid var(--border-color);
+        }
+        
+        .modal-content p {
+            word-break: break-word;
+            white-space: normal;
         }
 
         .modal-header {
@@ -829,10 +843,33 @@
         .info-box p {
             color: var(--text-secondary);
             margin: 5px 0;
+            word-break: break-word;
+            white-space: normal;
         }
 
         .info-box strong {
             color: var(--text-primary);
+        }
+        
+        .detail-info-section {
+            background: var(--bg-hover);
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .detail-info-section p {
+            margin: 8px 0;
+            color: var(--text-secondary);
+            word-break: break-word;
+            white-space: normal;
+            line-height: 1.6;
+        }
+        
+        .detail-info-section strong {
+            color: var(--text-primary);
+            display: inline-block;
+            min-width: 80px;
+            margin-right: 10px;
         }
 
         .truncate {
@@ -2334,7 +2371,7 @@
                     
                     <div class="form-group">
                         <label>기본 정보</label>
-                        <div style="background: var(--bg-hover); padding: 15px; border-radius: 8px;">
+                        <div class="detail-info-section">
                             <p><strong>날짜:</strong> ${new Date(data.date).getFullYear()}.${(new Date(data.date).getMonth() + 1).toString().padStart(2, '0')}.${new Date(data.date).getDate().toString().padStart(2, '0')}</p>
                             <p><strong>팀:</strong> ${data.submitter_team}</p>
                             <p><strong>유치자:</strong> ${data.recruiter}</p>
@@ -2342,6 +2379,17 @@
                             <p><strong>고객명:</strong> ${data.customer_name}</p>
                             <p><strong>관리번호:</strong> ${data.customer_phone}</p>
                             <p><strong>분류:</strong> ${data.category || '-'}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>취소 상세 정보</label>
+                        <div class="detail-info-section">
+                            <p><strong>취소사유:</strong><br/>${data.reason}</p>
+                            ${data.defense1 ? `<p><strong>1차 반론:</strong><br/>${data.defense1}</p>` : ''}
+                            ${data.defense1_result ? `<p><strong>1차 반론 결과:</strong> ${data.defense1_result}</p>` : ''}
+                            ${data.defense2 ? `<p><strong>2차 반론:</strong><br/>${data.defense2}</p>` : ''}
+                            ${data.defense2_result ? `<p><strong>2차 반론 결과:</strong> ${data.defense2_result}</p>` : ''}
                         </div>
                     </div>
                     
