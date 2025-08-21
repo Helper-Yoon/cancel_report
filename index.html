@@ -167,7 +167,7 @@
         }
 
         .container {
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto;
             display: none;
         }
@@ -305,7 +305,7 @@
             padding: 2px;
         }
 
-        @media (max-width: 1400px) {
+        @media (max-width: 1600px) {
             .main-content {
                 grid-template-columns: 1fr;
             }
@@ -536,7 +536,7 @@
             width: 100%;
             border-collapse: collapse;
             table-layout: fixed;
-            min-width: 1150px;
+            min-width: 1400px;
         }
 
         th {
@@ -564,12 +564,13 @@
 
         .status-badge {
             display: inline-block;
-            padding: 5px 12px;
+            padding: 6px 14px;
             font-size: 11px;
             font-weight: 400;
             text-transform: uppercase;
             letter-spacing: 1px;
             border: 1px solid;
+            white-space: nowrap;
         }
 
         .status-pending {
@@ -626,14 +627,15 @@
 
         .action-buttons {
             display: flex;
-            gap: 8px;
+            gap: 6px;
             flex-wrap: nowrap;
             justify-content: center;
         }
 
         .action-buttons .btn {
-            padding: 6px 12px;
+            padding: 7px 14px;
             font-size: 11px;
+            white-space: nowrap;
         }
 
         .btn-delete {
@@ -1100,18 +1102,18 @@
                 <table id="dataTable">
                     <thead>
                         <tr>
-                            <th style="width: 70px;">팀</th>
-                            <th style="width: 40px;">순번</th>
-                            <th style="width: 65px;">날짜</th>
-                            <th style="width: 90px;">유치자</th>
-                            <th style="width: 90px;">취소자</th>
-                            <th style="width: 130px;">고객명</th>
-                            <th style="width: 130px;">관리번호</th>
-                            <th style="width: 60px;">분류</th>
-                            <th style="width: 180px;">취소사유</th>
-                            <th style="width: 70px;">상태</th>
-                            <th style="width: 80px;">승인자</th>
-                            <th style="width: 150px;">작업</th>
+                            <th style="width: 80px;">팀</th>
+                            <th style="width: 50px;">순번</th>
+                            <th style="width: 75px;">날짜</th>
+                            <th style="width: 100px;">유치자</th>
+                            <th style="width: 100px;">취소자</th>
+                            <th style="width: 140px;">고객명</th>
+                            <th style="width: 160px;">관리번호</th>
+                            <th style="width: 70px;">분류</th>
+                            <th style="width: 200px;">취소사유</th>
+                            <th style="width: 100px;">상태</th>
+                            <th style="width: 100px;">승인자</th>
+                            <th style="width: 220px;">작업</th>
                         </tr>
                     </thead>
                     <tbody id="tableBody">
